@@ -3,8 +3,9 @@ Title: Facet Theory Partitioning of 2D Configurations
 Version: 0.1.0
 Date: 2026-05-20
 Authors@R:
-    person("Hans-Ruediger", "Pfister", email = "rpfister57@gmail.com",
-           role = c("aut", "cre"), comment = c(ORCID = "0000-0002-3802-4222"))
+    c(person("Hans-Ruediger", "Pfister", email = "rpfister57@gmail.com",
+           role = c("aut", "cre"), comment = c(ORCID = "0000-0002-3802-4222")),
+      person("Claude Code", "AI", role = c("ctb")))
 Maintainer: Hans-Ruediger Pfister <rpfister57@gmail.com>
 Description: Tools for partitioning 2-dimensional configurations (such as
     multidimensional-scaling output) according to facet theory, supporting axial (parallel
