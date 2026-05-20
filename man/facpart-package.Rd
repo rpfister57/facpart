@@ -31,11 +31,11 @@ minimum-area ellipses.
 }
 
 \author{
-\strong{Maintainer}: Package Hans-Ruediger Pfister \email{rpfister57@gmail.com}
+\strong{Maintainer}: Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID})
 
 Authors:
 \itemize{
-  \item Package Hans-Ruediger Pfister \email{rpfister57@gmail.com}
+  \item Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID})
 }
 
 }
