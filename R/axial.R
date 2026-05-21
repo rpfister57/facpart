@@ -13,6 +13,21 @@
 #' vertical: `slope` is returned as `Inf` and `intercept` carries the
 #' x-position of the line.
 #'
+#' **Not a special case of [axialLines()].** `axialLine()` returns the
+#' classical LDA Bayes-rule boundary (closed-form: LD1 direction, midpoint
+#' of class means as cut) — optimal under multivariate-normal classes with
+#' equal covariances, and the standard reference object in psychometric /
+#' Facet Theory pipelines. The return value includes `predicted`, the LDA
+#' class assignment per point.
+#'
+#' [axialLines()] with `k = 2`, in contrast, searches the full
+#' `(angle, cut)` space for the empirical minimum-misclass parallel line.
+#' Its direction need not be LD1 and its cut need not match the midpoint of
+#' means; it can overfit the training sample when classes are non-Gaussian
+#' or have unequal covariances. Use it when you want the empirically best
+#' linear separator; use `axialLine()` when you want the classical LDA
+#' classifier.
+#'
 #' @param crd Numeric matrix or data frame with exactly 2 columns (x, y).
 #' @param group Factor, character, or integer vector with exactly 2 levels.
 #' @param fill If `TRUE`, shade the two half-planes (default `FALSE`).
@@ -25,6 +40,9 @@
 #'
 #' @return If `output = TRUE`, a list with `slope`, `intercept`, `misclass`
 #'   (integer), and `predicted` (LDA-predicted class factor).
+#'
+#' @seealso [axialLines()] for the empirically-optimal parallel-line
+#'   partition over both angle and cut position (any `k >= 2`).
 #'
 #' @examples
 #' \dontrun{
@@ -47,11 +65,11 @@ axialLine <- function(crd,
                     lty = 1) {
 
     # ---- Input validation ----
-    if (!is.numeric(crd))      stop("Coordinate data must be numeric!")
-    if (length(dim(crd)) != 2) stop("Coordinates must have two dimensions!")
-    if (dim(crd)[2] != 2)      stop("Coordinates must be 2-dimensional!")
-    if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
-
+    if (length(dim(crd)) != 2)       stop("Coordinates must have two dimensions!")
+    if (dim(crd)[2] != 2)            stop("Coordinates must be 2-dimensional!")
+    if (nrow(crd) != length(group))  stop("nrow(crd) must equal length(group)!")
+    if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
+    
     group <- as.factor(group)
     if (nlevels(group) != 2) stop("group must have exactly 2 levels!")
 
@@ -173,6 +191,11 @@ axialLine <- function(crd,
 #'   approximately 1-degree resolution); LDA's direction is added as an
 #'   extra candidate.
 #'
+#' @seealso [axialLine()] for the classical LDA Bayes-rule boundary
+#'   (closed-form, binary only). Use [axialLine()] when you want the
+#'   statistical LDA classifier; use `axialLines()` when you want the
+#'   empirically optimal parallel-line partition.
+#'
 #' @return If `output = TRUE`, a list with:
 #'   - `slope` — shared slope of the lines (`Inf` if vertical)
 #'   - `intercepts` — `numeric[k-1]`, y-intercepts (or x-positions if vertical)
@@ -206,19 +229,19 @@ axialLines <- function(crd,
                      n_angles = 180L) {
 
     # ---- Input validation ----
-    if (!is.numeric(crd))      stop("Coordinate data must be numeric!")
     if (length(dim(crd)) != 2) stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)      stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
     if (n_angles < 1L)         stop("n_angles must be >= 1!")
-
+    if (!is.numeric(crd))      stop("Coordinate data must be numeric!")
+    
     group <- as.factor(group)
     k     <- nlevels(group)
     if (k < 2) stop("group must have at least 2 levels!")
 
     coords  <- as.matrix(crd)
     levels_ <- levels(group)
-    grp_int <- as.integer(group)   # 1..k
+    grp_int <- as.integer(group)
     n_pts   <- nrow(coords)
 
     # ---- Candidate angles ----

@@ -133,10 +133,10 @@ angularPartition <- function(crd,
                               lty = 1) {
 
     # ---- Input validation ----
-    if (!is.numeric(crd))           stop("Coordinate data must be numeric!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)           stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
+    if (!is.numeric(as.matrix(crd)))  stop("Coordinate data must be numeric!")
 
     group <- as.factor(group)
     k <- nlevels(group)
@@ -229,118 +229,7 @@ angularPartition <- function(crd,
 }
 
 
-#' Three-way angular partition (original fixed-k=3 version)
-#'
-#' Original implementation specialised to `k = 3` groups. Kept for reference;
-#' [angularPartition()] generalises this and is recommended for new code.
-#' Algorithm: for each rotation of the angular sort and each internal split
-#' pair `(i, j)`, compute total misclassification across the three sectors;
-#' keep the minimum.
-#'
-#' @inheritParams angularPartition
-#'
-#' @return List with `cuts` (numeric[3] in `(-pi, pi]`), `misclass`,
-#'   `sector` (integer with values in 1..3), `majority` (character[3]),
-#'   and `center`.
-#'
-#' @examples
-#' \dontrun{
-#' angularPartition3(crd, grp)
-#' }
-#'
-#' @export
-angularPartition3 <- function(crd,
-                               group,
-                               cx = NULL,
-                               cy = NULL,
-                               output = TRUE,
-                               col = "darkorange",
-                               lwd = 2,
-                               lty = 1) {
-
-    # ---- Input validation ----
-    if (!is.numeric(crd))           stop("Coordinate data must be numeric!")
-    if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
-    if (dim(crd)[2] != 2)           stop("Coordinates must be 2-dimensional!")
-    if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
-
-    group <- as.factor(group)
-    if (nlevels(group) != 3) stop("group must have exactly 3 levels!")
-    if (nrow(crd) < 3)       stop("At least 3 points are required!")
-
-    coords <- as.matrix(crd)
-    n_pts  <- nrow(coords)
-
-    if (is.null(cx)) cx <- mean(coords[, 1])
-    if (is.null(cy)) cy <- mean(coords[, 2])
-
-    grp_int <- as.integer(group)
-
-    pt_angles <- atan2(coords[, 2] - cy, coords[, 1] - cx)
-    ord   <- order(pt_angles)
-    s_ang <- pt_angles[ord]
-    s_grp <- grp_int[ord]
-
-    arc_mid <- function(a, b) {
-        delta <- (b - a) %% (2 * pi)
-        atan2(sin(a + delta / 2), cos(a + delta / 2))
-    }
-
-    best_err  <- Inf
-    best_cuts <- NULL
-
-    for (start in 0:(n_pts - 1)) {
-        ri <- ((seq_len(n_pts) - 1 + start) %% n_pts) + 1
-        rg <- s_grp[ri]
-        ra <- s_ang[ri]
-
-        for (i in 1:(n_pts - 2)) {
-            for (j in (i + 1):(n_pts - 1)) {
-                err <-
-                    (i         - max(tabulate(rg[seq_len(i)],        nbins = 3))) +
-                    (j - i     - max(tabulate(rg[seq(i + 1, j)],     nbins = 3))) +
-                    (n_pts - j - max(tabulate(rg[seq(j + 1, n_pts)], nbins = 3)))
-
-                if (err < best_err) {
-                    best_err  <- err
-                    best_cuts <- c(
-                        arc_mid(ra[i],     ra[i + 1]),
-                        arc_mid(ra[j],     ra[j + 1]),
-                        arc_mid(ra[n_pts], ra[1])
-                    )
-                }
-            }
-        }
-    }
-
-    usr     <- par("usr")
-    ray_len <- 2 * sqrt((usr[2] - usr[1])^2 + (usr[4] - usr[3])^2)
-
-    for (ang in best_cuts) {
-        segments(cx, cy,
-                 cx + ray_len * cos(ang),
-                 cy + ray_len * sin(ang),
-                 col = col, lwd = lwd, lty = lty)
-    }
-
-    if (!output) return(invisible(NULL))
-
-    sc       <- sort(best_cuts %% (2 * pi))
-    norm_pts <- pt_angles %% (2 * pi)
-
-    sector <- ifelse(norm_pts >= sc[1] & norm_pts < sc[2], 1L,
-              ifelse(norm_pts >= sc[2] & norm_pts < sc[3], 2L, 3L))
-
-    majority <- sapply(1:3, function(s) {
-        pts <- grp_int[sector == s]
-        levels(group)[which.max(tabulate(pts, nbins = 3))]
-    })
-
-    list(
-        cuts     = best_cuts,
-        misclass = best_err,
-        sector   = sector,
-        majority = majority,
-        center   = c(cx, cy)
-    )
-}
+# Note: the original fixed-k=3 reference implementation `angularPartition3()`
+# is intentionally not part of the package; [angularPartition()] subsumes it
+# (any k >= 2, optimised center, margin tie-breaker). The reference code
+# remains available in the script-layer file `Angular3.R`.

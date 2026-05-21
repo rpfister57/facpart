@@ -91,3 +91,9 @@ axialLines(crd, grp, fill = TRUE)
 }
 
 }
+\seealso{
+\code{\link[=axialLine]{axialLine()}} for the classical LDA Bayes-rule boundary
+(closed-form, binary only). Use \code{\link[=axialLine]{axialLine()}} when you want the
+statistical LDA classifier; use \code{axialLines()} when you want the
+empirically optimal parallel-line partition.
+}

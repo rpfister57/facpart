@@ -46,6 +46,21 @@ class means — on the current plot.
 When LD1 is along the x-axis (\code{abs(w[2]) < 1e-10}) the separator is
 vertical: \code{slope} is returned as \code{Inf} and \code{intercept} carries the
 x-position of the line.
+
+\strong{Not a special case of \code{\link[=axialLines]{axialLines()}}.} \code{axialLine()} returns the
+classical LDA Bayes-rule boundary (closed-form: LD1 direction, midpoint
+of class means as cut) — optimal under multivariate-normal classes with
+equal covariances, and the standard reference object in psychometric /
+Facet Theory pipelines. The return value includes \code{predicted}, the LDA
+class assignment per point.
+
+\code{\link[=axialLines]{axialLines()}} with \code{k = 2}, in contrast, searches the full
+\verb{(angle, cut)} space for the empirical minimum-misclass parallel line.
+Its direction need not be LD1 and its cut need not match the midpoint of
+means; it can overfit the training sample when classes are non-Gaussian
+or have unequal covariances. Use it when you want the empirically best
+linear separator; use \code{axialLine()} when you want the classical LDA
+classifier.
 }
 \examples{
 \dontrun{
@@ -57,4 +72,8 @@ plot(crd, asp = 1)
 axialLine(crd, grp, fill = TRUE)
 }
 
+}
+\seealso{
+\code{\link[=axialLines]{axialLines()}} for the empirically-optimal parallel-line
+partition over both angle and cut position (any \code{k >= 2}).
 }

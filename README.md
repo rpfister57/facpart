@@ -8,7 +8,7 @@ output) into facets, with three types of partion schemes:
 - **Axial** — parallel separating lines: `axialLine()`, `axialLines()`
 - **Radial** — nested circles or ellipses: `radialCircle()`, `radialCircles()`,
   `radialEllipse()`, `radialEllipses()`
-- **Angular** — wedge-shaped sectors: `angularPartition()`, `angularPartition3()`
+- **Angular** — wedge-shaped sectors: `angularPartition()`
 
 Plus ellipse-fitting utilities: `ellipseInConfig()`, `inoutEllipse()`.
 

@@ -10,7 +10,7 @@
 #' - [axialLine()], [axialLines()] — parallel-line partitions
 #' - [radialCircle()], [radialCircles()] — nested-circle partitions
 #' - [radialEllipse()], [radialEllipses()] — nested-ellipse partitions
-#' - [angularPartition()], [angularPartition3()] — wedge partitions
+#' - [angularPartition()] — wedge partitions
 #'
 #' @section Ellipse utilities:
 #' - [ellipseInConfig()] — fit and draw a bounding/best-fit/minimum ellipse
