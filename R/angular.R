@@ -15,7 +15,7 @@
 
 
 #' @noRd
-#' given: center cx, cy; find: best partitions
+#' given: center cx, cy; find: best partitions by brute force search
 .angular_search <- function(coords, grp_int, 
                             cx, cy, 
                             k, n_pts, combos) {
