@@ -144,7 +144,7 @@
 #'
 #' @return If `output = TRUE`, a list with `center`, `radius`, `misclass`
 #'   (integer), `sector` (`1` inside / `2` outside per point), and
-#'   `majority` (character[2]).
+#'   `majority` (`character[2]`).
 #'
 #' @examples
 #' \dontrun{
@@ -292,9 +292,9 @@ radialCircle <- function(crd,
 #' @param .method `"Nelder-Mead"` (default) or `"SANN"`; ignored when
 #'   `cx` and `cy` are both supplied.
 #'
-#' @return If `output = TRUE`, a list with `cx`, `cy` (numeric[k-1]),
-#'   `radii` (innermost to outermost), `misclass`, `sector` (integer[n]),
-#'   and `majority` (character[k]).
+#' @return If `output = TRUE`, a list with `cx`, `cy` (`numeric[k-1]`),
+#'   `radii` (innermost to outermost), `misclass`, `sector` (`integer[n]`),
+#'   and `majority` (`character[k]`).
 #'
 #' @examples
 #' \dontrun{

@@ -42,7 +42,7 @@ radialCircle(
 \value{
 If \code{output = TRUE}, a list with \code{center}, \code{radius}, \code{misclass}
 (integer), \code{sector} (\code{1} inside / \code{2} outside per point), and
-\code{majority} (character\link{2}).
+\code{majority} (\code{character[2]}).
 }
 \description{
 Finds the circle minimising misclassification between two groups of 2D

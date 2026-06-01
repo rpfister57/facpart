@@ -6,14 +6,21 @@
 # ---- Internal helpers ----
 
 #' @noRd
+#' e.g.: two radians b > a, delta is the diff b - a
+#' returns the radiant of the line bisecting b - a
 .arc_mid <- function(a, b) {
     delta <- (b - a) %% (2 * pi)
-    atan2(sin(a + delta / 2), cos(a + delta / 2))
+    return(atan2(sin(a + delta / 2), cos(a + delta / 2)))
 }
 
 
 #' @noRd
-.angular_search <- function(coords, grp_int, cx, cy, k, n_pts, combos) {
+#' given: center cx, cy; find: best partitions
+.angular_search <- function(coords, grp_int, 
+                            cx, cy, 
+                            k, n_pts, combos) {
+    
+    # order points according to their angles
     pt_angles <- atan2(coords[, 2] - cy, coords[, 1] - cx)
     pt_radii  <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)
     ord       <- order(pt_angles)
@@ -25,17 +32,21 @@
     best_margin <- -Inf
     best_cuts   <- NULL
 
+    # loop over point sequences:
     for (start in 0L:(n_pts - 1L)) {
         ri <- ((seq_len(n_pts) - 1L + start) %% n_pts) + 1L
         rg <- s_grp[ri]
         ra <- s_ang[ri]
         rr <- s_rad[ri]
 
+        # loop over all k-1 combinations of n-1 points:
         for (ci in seq_len(ncol(combos))) {
             sp     <- combos[, ci]
-            bounds <- c(0L, sp, n_pts)
+            bounds <- c(0, sp, n_pts)
 
-            err <- 0L
+            err <- 0
+            
+            # loop over 1..k partitions:
             for (s in seq_len(k)) {
                 seg <- rg[seq(bounds[s] + 1L, bounds[s + 1L])]
                 err <- err + length(seg) - max(tabulate(seg, nbins = k))
@@ -72,41 +83,42 @@
 }
 
 
-#' K-way angular (wedge) partition of a 2D configuration
+#' Angular k-way (wedge) partition of a 2D configuration
 #'
 #' Finds `k` rays emanating from a center point that partition a 2D
-#' configuration into `k` angular sectors, minimising total
+#' configuration of `n` points into `k` angular sectors, minimising total
 #' misclassification (points whose group differs from the majority group
 #' in their sector).
 #'
-#' **Cut search at fixed center.** Points are sorted by their angle from
+#' **Search at fixed center.** Points are sorted by their angle from
 #' the center. For each circular rotation (n choices, implicitly placing
-#' the wrap-around cut) and each of `C(n-1, k-1)` ways to choose the
+#' the wrap-around cut) and each of `combn(n-1, k-1)` ways to choose the
 #' internal split positions, total misclassification is computed.
 #' Cut angles are placed at the arc midpoint between adjacent points.
 #' Tie-breaker: among k-tuples with the same misclass count, the one with
 #' the largest minimum 2D perpendicular distance from a cut ray to the
 #' nearest point wins.
 #'
-#' **Center search.** When `cx` and `cy` are `NULL` (default), the center
+#' **Search optimal center.** When `cx` and `cy` are `NULL` (default), the center
 #' is optimised by multi-start Nelder-Mead — the brute-force above runs
 #' as the inner objective at each candidate center. Starts are the data
 #' centroid plus the centroid of each non-empty group. `parscale` is set
 #' to the data range. When `cx` and `cy` are supplied, they are used
 #' directly (no optimisation).
 #'
-#' @param crd Numeric matrix or data frame with exactly 2 columns.
-#' @param group Factor with `k >= 2` levels.
+#' @param crd Numeric matrix or data frame with exactly 2 columns; no NAs.
+#' @param group Factor with `k >= 2` levels, same nrow as crd.
 #' @param cx,cy Center; optimised when either is `NULL`.
-#' @param output If `TRUE` (default), return results list.
+#' @param output If `TRUE` (default), return list of results.
 #' @param col Ray colour (default `"darkorange"`).
 #' @param lwd Line width (default `2`).
 #' @param lty Line type (default `1`).
+#' @param add If `TRUE` (default), add to existing plot, else plot configuration.
 #'
 #' @return If `output = TRUE`, a list with:
-#'   - `cuts` — `numeric[k]`, cut angles in radians
-#'   - `margin` — minimum 2D distance from any cut ray to nearest point
-#'   - `misclass` — integer
+#'   - `cuts` — `numeric[k]`, cut angles of rays in radians.
+#'   - `margin` — minimum distance from any cut ray to nearest point.
+#'   - `misclass` — integer, number of misclassified points.
 #'   - `sector` — `integer[n]`, sector `1..k` per point
 #'   - `majority` — `character[k]`, majority group per sector
 #'   - `center` — `c(cx, cy)`
@@ -124,13 +136,14 @@
 #'
 #' @export
 angularPartition <- function(crd,
-                              group,
-                              cx = NULL,
-                              cy = NULL,
-                              output = TRUE,
-                              col = "darkorange",
-                              lwd = 2,
-                              lty = 1) {
+                             group,
+                             cx = NULL,
+                             cy = NULL,
+                             output = TRUE,
+                             col = "darkorange",
+                             lwd = 2,
+                             lty = 1,
+                             add = TRUE) {
 
     # ---- Input validation ----
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
@@ -139,15 +152,18 @@ angularPartition <- function(crd,
     if (!is.numeric(as.matrix(crd)))  stop("Coordinate data must be numeric!")
 
     group <- as.factor(group)
+    coords  <- as.matrix(crd)
+    
     k <- nlevels(group)
     if (k < 2)         stop("group must have at least 2 levels!")
     if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
 
-    coords  <- as.matrix(crd)
     n_pts   <- nrow(coords)
     grp_int <- as.integer(group)
 
-    # Pre-generate split-position combinations once.
+    # Generate split-position combinations.
+    # Note: Instead of (n over k), 
+    # the parameterization n * (n-1 over k-1) is used.
     combos <- combn(n_pts - 1L, k - 1L)
 
     # ---- Center: optimise if NULL, use as given otherwise ----
@@ -187,11 +203,21 @@ angularPartition <- function(crd,
     }
 
     # ---- Final search at chosen center ----
-    res         <- .angular_search(coords, grp_int, cx, cy, k, n_pts, combos)
+    res         <- .angular_search(coords, grp_int, 
+                                   cx, cy, 
+                                   k, n_pts, combos)
     best_err    <- res$misclass
     best_cuts   <- res$cuts
     best_margin <- res$margin
     pt_angles   <- res$pt_angles
+    
+    if (!add) {
+        plot(coords, pch = 19, col = "blue",
+             xlim = c(-1.5, 1.5), ylim = c(-1, 1),
+             asp = 1)
+        text(coords, labels = group,
+             cex = 0.7, pos = 4)
+    }
 
     # ---- Draw rays from center at the optimal cut angles ----
     usr     <- par("usr")
@@ -228,8 +254,3 @@ angularPartition <- function(crd,
     )
 }
 
-
-# Note: the original fixed-k=3 reference implementation `angularPartition3()`
-# is intentionally not part of the package; [angularPartition()] subsumes it
-# (any k >= 2, optimised center, margin tie-breaker). The reference code
-# remains available in the script-layer file `Angular3.R`.

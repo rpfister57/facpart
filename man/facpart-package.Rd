@@ -18,7 +18,7 @@ minimum-area ellipses.
 \item \code{\link[=axialLine]{axialLine()}}, \code{\link[=axialLines]{axialLines()}} — parallel-line partitions
 \item \code{\link[=radialCircle]{radialCircle()}}, \code{\link[=radialCircles]{radialCircles()}} — nested-circle partitions
 \item \code{\link[=radialEllipse]{radialEllipse()}}, \code{\link[=radialEllipses]{radialEllipses()}} — nested-ellipse partitions
-\item \code{\link[=angularPartition]{angularPartition()}}, \code{\link[=angularPartition3]{angularPartition3()}} — wedge partitions
+\item \code{\link[=angularPartition]{angularPartition()}} — wedge partitions
 }
 }
 
@@ -36,6 +36,11 @@ minimum-area ellipses.
 Authors:
 \itemize{
   \item Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID})
+}
+
+Other contributors:
+\itemize{
+  \item Claude Code AI [contributor]
 }
 
 }

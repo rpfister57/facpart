@@ -44,9 +44,9 @@ each center is optimised.}
 \code{cx} and \code{cy} are both supplied.}
 }
 \value{
-If \code{output = TRUE}, a list with \code{cx}, \code{cy} (numeric\link{k-1}),
-\code{radii} (innermost to outermost), \code{misclass}, \code{sector} (integer\link{n}),
-and \code{majority} (character\link{k}).
+If \code{output = TRUE}, a list with \code{cx}, \code{cy} (\code{numeric[k-1]}),
+\code{radii} (innermost to outermost), \code{misclass}, \code{sector} (\code{integer[n]}),
+and \code{majority} (\code{character[k]}).
 }
 \description{
 Generalises \code{\link[=radialCircle]{radialCircle()}} to \code{k >= 2} groups using \code{k-1} nested

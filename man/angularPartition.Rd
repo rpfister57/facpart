@@ -2,7 +2,7 @@
 % Please edit documentation in R/angular.R
 \name{angularPartition}
 \alias{angularPartition}
-\title{K-way angular (wedge) partition of a 2D configuration}
+\title{Angular k-way (wedge) partition of a 2D configuration}
 \usage{
 angularPartition(
   crd,
@@ -12,30 +12,33 @@ angularPartition(
   output = TRUE,
   col = "darkorange",
   lwd = 2,
-  lty = 1
+  lty = 1,
+  add = TRUE
 )
 }
 \arguments{
-\item{crd}{Numeric matrix or data frame with exactly 2 columns.}
+\item{crd}{Numeric matrix or data frame with exactly 2 columns; no NAs.}
 
-\item{group}{Factor with \code{k >= 2} levels.}
+\item{group}{Factor with \code{k >= 2} levels, same nrow as crd.}
 
 \item{cx, cy}{Center; optimised when either is \code{NULL}.}
 
-\item{output}{If \code{TRUE} (default), return results list.}
+\item{output}{If \code{TRUE} (default), return list of results.}
 
 \item{col}{Ray colour (default \code{"darkorange"}).}
 
 \item{lwd}{Line width (default \code{2}).}
 
 \item{lty}{Line type (default \code{1}).}
+
+\item{add}{If \code{TRUE} (default), add to existing plot, else plot configuration.}
 }
 \value{
 If \code{output = TRUE}, a list with:
 \itemize{
-\item \code{cuts} — \code{numeric[k]}, cut angles in radians
-\item \code{margin} — minimum 2D distance from any cut ray to nearest point
-\item \code{misclass} — integer
+\item \code{cuts} — \code{numeric[k]}, cut angles of rays in radians.
+\item \code{margin} — minimum distance from any cut ray to nearest point.
+\item \code{misclass} — integer, number of misclassified points.
 \item \code{sector} — \code{integer[n]}, sector \verb{1..k} per point
 \item \code{majority} — \code{character[k]}, majority group per sector
 \item \code{center} — \code{c(cx, cy)}
@@ -43,21 +46,21 @@ If \code{output = TRUE}, a list with:
 }
 \description{
 Finds \code{k} rays emanating from a center point that partition a 2D
-configuration into \code{k} angular sectors, minimising total
+configuration of \code{n} points into \code{k} angular sectors, minimising total
 misclassification (points whose group differs from the majority group
 in their sector).
 }
 \details{
-\strong{Cut search at fixed center.} Points are sorted by their angle from
+\strong{Search at fixed center.} Points are sorted by their angle from
 the center. For each circular rotation (n choices, implicitly placing
-the wrap-around cut) and each of \code{C(n-1, k-1)} ways to choose the
+the wrap-around cut) and each of \code{combn(n-1, k-1)} ways to choose the
 internal split positions, total misclassification is computed.
 Cut angles are placed at the arc midpoint between adjacent points.
 Tie-breaker: among k-tuples with the same misclass count, the one with
 the largest minimum 2D perpendicular distance from a cut ray to the
 nearest point wins.
 
-\strong{Center search.} When \code{cx} and \code{cy} are \code{NULL} (default), the center
+\strong{Search optimal center.} When \code{cx} and \code{cy} are \code{NULL} (default), the center
 is optimised by multi-start Nelder-Mead — the brute-force above runs
 as the inner objective at each candidate center. Starts are the data
 centroid plus the centroid of each non-empty group. \code{parscale} is set
