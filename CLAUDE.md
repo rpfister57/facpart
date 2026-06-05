@@ -84,8 +84,9 @@ Private helpers use a `.` prefix (e.g., `.circle_pts`, `.in_ellipse`, `.arc_mid`
 `ellipseInConfig()` supports `mid = "centroid"` (default) or `mid = "nullnull"` (forces center at origin). The `angle` in all ellipse output is in **radians**.
 
 ### Axial partitions (`axial.R`)
-- **`axialLine()`**: binary split. Classical LDA Bayes-rule boundary — perpendicular to LD1 through the midpoint of class means. Requires exactly 2 group levels. Vertical-line guard: when `|w[2]| < 1e-10`, `slope = Inf` and `intercept` carries the x-position.
+- **`axialLine()`**: binary split. Classical LDA Bayes-rule boundary — perpendicular to LD1 through the midpoint of class means. Requires exactly 2 group levels. Vertical-line guard: when `|w[2]| < 1e-10`, `slope = Inf` and `intercept` carries the x-position. Returns `predicted` (LDA class factor); the only function that does.
 - **`axialLines()`**: k ≥ 2 groups, k−1 parallel lines. Joint search over **angle and cuts**: grid of `n_angles` angles in [0, π) plus LDA's LD1 direction; for each angle, exhaustive enumeration of C(n−1, k−1) cut placements. Ties broken by **largest minimum margin** (perpendicular distance from a cut line to the nearest point). Same vertical-line guard as `axialLine()`.
+- **When to use which**: use `axialLine()` for the classical LDA classifier (optimal under Gaussian equal-covariance classes); use `axialLines()` for the empirically best parallel-line separator (can find a non-LD1 direction that beats LDA on the training sample).
 
 ### Radial / nested circles (`radial-circle.R`)
 - **`radialCircle()`** / **`radialCircles()`**: nested (inclusive) circles. Center optimised by **multi-start Nelder-Mead with `parscale`** set to the data range. Starts include the overall centroid, each group's centroid, and (for `radialCircles()`) the previous circle's center. Nesting constraint `r_s ≥ dist(center_s, center_{s−1}) + r_{s−1}` enforced via minimum radius during a brute-force radius scan (`.best_radius()`). `misclass` is a plain **integer**. Supplying both `cx, cy` to `radialCircles()` makes all circles **concentric**.
@@ -104,6 +105,8 @@ Private helpers use a `.` prefix (e.g., `.circle_pts`, `.in_ellipse`, `.arc_mid`
 - Never use function names as object names (e.g., avoid `levels <- levels(x)`).
 - Private helpers are prefixed with `.` and tagged `#' @noRd`.
 - Do not add top-level `require()` calls — package imports handle dependencies.
+- Every exported function returns `invisible(NULL)` when `output = FALSE`; this is a package-wide convention.
+- `ellipseInConfig()` has a `labs` parameter that is currently unused but kept for backward compatibility — do not remove it.
 
 ## Known R CMD check Issues (as of v0.1.0)
 
