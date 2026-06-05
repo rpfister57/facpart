@@ -51,13 +51,13 @@ misclassification (points whose group differs from the majority group
 in their sector).
 }
 \details{
-\strong{Search at fixed center.} Points are sorted by their angle from
-the center. For each circular rotation (n choices, implicitly placing
-the wrap-around cut) and each of \code{combn(n-1, k-1)} ways to choose the
-internal split positions, total misclassification is computed.
-Cut angles are placed at the arc midpoint between adjacent points.
-Tie-breaker: among k-tuples with the same misclass count, the one with
-the largest minimum 2D perpendicular distance from a cut ray to the
+\strong{Search at fixed center.} Points are sorted by their angle from the
+center. A partition is a choice of \code{k} cut-gaps among the \code{n} gaps
+between consecutive points (\code{combn(n, k)} candidates); per-arc majority
+counts are read from a cumulative count table and total misclassification
+is minimised. Cut angles are placed at the arc midpoint between adjacent
+points. Tie-breaker: among k-tuples with the same misclass count, the one
+with the largest minimum 2D perpendicular distance from a cut ray to the
 nearest point wins.
 
 \strong{Search optimal center.} When \code{cx} and \code{cy} are \code{NULL} (default), the center
