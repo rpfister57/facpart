@@ -225,12 +225,15 @@ radialCircle <- function(crd,
     radius <- res$radius
     sector <- res$sector
 
-    # ---- Majority labels ----
-    majority <- character(2L)
-    for (s in 1L:2L) {
-        pts_s <- grp_int[sector == s]
-        majority[s] <- levels(group)[which.max(tabulate(pts_s, nbins = 2L))]
+    # ---- Unique group assignment ----
+    count_mat <- matrix(0L, nrow = 2L, ncol = 2L)
+    for (r in 1L:2L) {
+        pts_r <- grp_int[sector == r]
+        if (length(pts_r) > 0L)
+            count_mat[, r] <- tabulate(pts_r, nbins = 2L)
     }
+    assignment <- .assign_groups(count_mat)
+    majority   <- levels(group)[assignment]
 
     if (!add) {
         plot(coords, asp = 1)
@@ -271,7 +274,7 @@ radialCircle <- function(crd,
     list(
         center          = c(cx, cy),
         radius          = radius,
-        misclass        = res$misclass,
+        misclass        = length(misclass_idx),
         misclass_points = misclass_points,
         sector          = sector,
         majority        = majority
@@ -412,19 +415,15 @@ radialCircles <- function(crd,
         sector[d <= radii_vec[s]] <- s
     }
 
-    # ---- Majority labels and total misclassification ----
-    majority <- character(k)
-    misclass <- 0L
-    for (s in seq_len(k)) {
-        pts_s <- grp_int[sector == s]
-        if (length(pts_s) == 0L) {
-            majority[s] <- NA_character_
-        } else {
-            maj          <- which.max(tabulate(pts_s, nbins = k))
-            majority[s]  <- levels(group)[maj]
-            misclass     <- misclass + sum(pts_s != maj)
-        }
+    # ---- Unique group assignment ----
+    count_mat <- matrix(0L, nrow = k, ncol = k)
+    for (r in seq_len(k)) {
+        pts_r <- grp_int[sector == r]
+        if (length(pts_r) > 0L)
+            count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
+    assignment <- .assign_groups(count_mat)
+    majority   <- levels(group)[assignment]
 
     if (!add) {
         plot(coords, asp = 1)
@@ -481,7 +480,7 @@ radialCircles <- function(crd,
         cx              = cx_vec,
         cy              = cy_vec,
         radii           = radii_vec,
-        misclass        = misclass,
+        misclass        = length(misclass_idx),
         misclass_points = misclass_points,
         sector          = sector,
         majority        = majority

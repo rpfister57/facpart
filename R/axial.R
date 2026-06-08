@@ -341,16 +341,15 @@ axialLines <- function(crd,
     proj_best <- as.numeric(coords %*% w)
     sector    <- findInterval(proj_best, sort(best_cuts)) + 1L
 
-    # ---- Majority labels per sector ----
-    majority <- character(k)
-    for (s in seq_len(k)) {
-        pts_s <- grp_int[sector == s]
-        if (length(pts_s) == 0L) {
-            majority[s] <- NA_character_
-        } else {
-            majority[s] <- levels_[which.max(tabulate(pts_s, nbins = k))]
-        }
+    # ---- Unique group assignment ----
+    count_mat <- matrix(0L, nrow = k, ncol = k)
+    for (r in seq_len(k)) {
+        pts_r <- grp_int[sector == r]
+        if (length(pts_r) > 0L)
+            count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
+    assignment <- .assign_groups(count_mat)
+    majority   <- levels_[assignment]
 
     if (!add) {
         plot(coords, asp = 1)
@@ -429,7 +428,7 @@ axialLines <- function(crd,
         intercepts      = intercepts,
         angle           = best_theta,
         margin          = best_margin,
-        misclass        = best_err,
+        misclass        = length(misclass_idx),
         misclass_points = misclass_points,
         sector          = sector,
         majority        = majority

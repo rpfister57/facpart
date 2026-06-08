@@ -196,11 +196,14 @@ radialEllipse <- function(crd,
     sector <- res$sector
 
     # ---- Majority labels and misclassification ----
-    majority <- character(2L)
-    for (s in 1L:2L) {
-        pts_s       <- grp_int[sector == s]
-        majority[s] <- levels(group)[which.max(tabulate(pts_s, nbins = 2L))]
+    count_mat <- matrix(0L, nrow = 2L, ncol = 2L)
+    for (r in 1L:2L) {
+        pts_r <- grp_int[sector == r]
+        if (length(pts_r) > 0L)
+            count_mat[, r] <- tabulate(pts_r, nbins = 2L)
     }
+    assignment      <- .assign_groups(count_mat)
+    majority        <- levels(group)[assignment]
     misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
     misclass        <- list(n = length(misclass_idx), indices = misclass_idx)
     misclass_points <- data.frame(
@@ -434,15 +437,14 @@ radialEllipses <- function(crd,
     }
 
     # ---- Majority labels and misclassification ----
-    majority <- character(k)
-    for (s in seq_len(k)) {
-        pts_s <- grp_int[sector == s]
-        if (length(pts_s) == 0L) {
-            majority[s] <- NA_character_
-        } else {
-            majority[s] <- levels(group)[which.max(tabulate(pts_s, nbins = k))]
-        }
+    count_mat <- matrix(0L, nrow = k, ncol = k)
+    for (r in seq_len(k)) {
+        pts_r <- grp_int[sector == r]
+        if (length(pts_r) > 0L)
+            count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
+    assignment      <- .assign_groups(count_mat)
+    majority        <- levels(group)[assignment]
     misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
     misclass        <- list(n = length(misclass_idx), indices = misclass_idx)
     misclass_points <- data.frame(

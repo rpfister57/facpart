@@ -286,11 +286,15 @@ angularPartition <- function(crd,
     fi       <- findInterval(norm_pts, sc)
     sector   <- ifelse(fi == 0L | fi == k, k, fi)
 
-    # ---- Majority group label in each sector ----
-    majority <- sapply(seq_len(k), function(s) {
-        pts <- grp_int[sector == s]
-        levels(group)[which.max(tabulate(pts, nbins = k))]
-    })
+    # ---- Unique group assignment ----
+    count_mat <- matrix(0L, nrow = k, ncol = k)
+    for (r in seq_len(k)) {
+        pts_r <- grp_int[sector == r]
+        if (length(pts_r) > 0L)
+            count_mat[, r] <- tabulate(pts_r, nbins = k)
+    }
+    assignment <- .assign_groups(count_mat)
+    majority   <- levels(group)[assignment]
 
     misclass_idx    <- which(as.character(group) != majority[sector])
     misclass_points <- data.frame(
@@ -303,7 +307,7 @@ angularPartition <- function(crd,
     else return(list(
         cuts            = best_cuts,
         margin          = best_margin,
-        misclass        = best_err,
+        misclass        = length(misclass_idx),
         misclass_points = misclass_points,
         sector          = sector,
         majority        = majority,
