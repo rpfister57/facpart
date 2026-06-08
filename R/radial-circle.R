@@ -141,10 +141,13 @@
 #' @param lwd Line width (default `2`).
 #' @param lty Line type (default `1`).
 #' @param .method `"Nelder-Mead"` (default) or `"SANN"`.
+#' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
+#'   `plot()` first.
 #'
 #' @return If `output = TRUE`, a list with `center`, `radius`, `misclass`
-#'   (integer), `sector` (`1` inside / `2` outside per point), and
-#'   `majority` (`character[2]`).
+#'   (integer), `misclass_points` (data frame with columns `x`, `y`, `label`
+#'   for each misclassified point), `sector` (`1` inside / `2` outside per
+#'   point), and `majority` (`character[2]`).
 #'
 #' @examples
 #' \dontrun{
@@ -154,8 +157,7 @@
 #' outer <- cbind(2 * cos(th), 2 * sin(th)) + matrix(rnorm(40, 0, 0.1), 20)
 #' crd <- rbind(inner, outer)
 #' grp <- factor(c(rep("in", 20), rep("out", 20)))
-#' plot(crd, asp = 1)
-#' radialCircle(crd, grp, fill = TRUE)
+#' radialCircle(crd, grp, fill = TRUE, add = FALSE)
 #' }
 #'
 #' @export
@@ -169,7 +171,8 @@ radialCircle <- function(crd,
                        cols = c("steelblue", "tomato"),
                        lwd = 2,
                        lty = 1,
-                       .method = "Nelder-Mead") {
+                       .method = "Nelder-Mead",
+                       add = TRUE) {
 
     # ---- Input validation ----
     if (!is.numeric(crd))           stop("Coordinate data must be numeric!")
@@ -229,6 +232,11 @@ radialCircle <- function(crd,
         majority[s] <- levels(group)[which.max(tabulate(pts_s, nbins = 2L))]
     }
 
+    if (!add) {
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
+    }
+
     # ---- Optional fill ----
     if (fill) {
         usr    <- par("usr")
@@ -251,14 +259,22 @@ radialCircle <- function(crd,
     # ---- Draw circle ----
     draw.circle(cx, cy, radius, border = col, lwd = lwd, lty = lty)
 
+    misclass_idx    <- which(as.character(group) != majority[sector])
+    misclass_points <- data.frame(
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
+        label = group[misclass_idx]
+    )
+
     if (!output) return(invisible(NULL))
 
     list(
-        center   = c(cx, cy),
-        radius   = radius,
-        misclass = res$misclass,
-        sector   = sector,
-        majority = majority
+        center          = c(cx, cy),
+        radius          = radius,
+        misclass        = res$misclass,
+        misclass_points = misclass_points,
+        sector          = sector,
+        majority        = majority
     )
 }
 
@@ -291,10 +307,13 @@ radialCircle <- function(crd,
 #' @param lty Line type (default `1`).
 #' @param .method `"Nelder-Mead"` (default) or `"SANN"`; ignored when
 #'   `cx` and `cy` are both supplied.
+#' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
+#'   `plot()` first.
 #'
 #' @return If `output = TRUE`, a list with `cx`, `cy` (`numeric[k-1]`),
-#'   `radii` (innermost to outermost), `misclass`, `sector` (`integer[n]`),
-#'   and `majority` (`character[k]`).
+#'   `radii` (innermost to outermost), `misclass`, `misclass_points` (data
+#'   frame with columns `x`, `y`, `label` for each misclassified point),
+#'   `sector` (`integer[n]`), and `majority` (`character[k]`).
 #'
 #' @examples
 #' \dontrun{
@@ -306,8 +325,7 @@ radialCircle <- function(crd,
 #' g3 <- cbind(2.5 * cos(th3), 2.5 * sin(th3)) + matrix(rnorm(30, 0, 0.1), 15)
 #' crd <- rbind(g1, g2, g3)
 #' grp <- factor(c(rep("a", 15), rep("b", 15), rep("c", 15)))
-#' plot(crd, asp = 1)
-#' radialCircles(crd, grp, fill = TRUE)
+#' radialCircles(crd, grp, fill = TRUE, add = FALSE)
 #' }
 #'
 #' @export
@@ -321,7 +339,8 @@ radialCircles <- function(crd,
                         cols = NULL,
                         lwd = 2,
                         lty = 1,
-                        .method = "Nelder-Mead") {
+                        .method = "Nelder-Mead",
+                        add = TRUE) {
 
     # ---- Input validation ----
     if (!is.numeric(crd))           stop("Coordinate data must be numeric!")
@@ -407,6 +426,11 @@ radialCircles <- function(crd,
         }
     }
 
+    if (!add) {
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
+    }
+
     # ---- Optional fill ----
     if (fill) {
         usr <- par("usr")
@@ -444,14 +468,22 @@ radialCircles <- function(crd,
         draw.circle(cx_vec[s], cy_vec[s], radii_vec[s], border = col, lwd = lwd, lty = lty)
     }
 
+    misclass_idx    <- which(as.character(group) != majority[sector])
+    misclass_points <- data.frame(
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
+        label = group[misclass_idx]
+    )
+
     if (!output) return(invisible(NULL))
 
     list(
-        cx       = cx_vec,
-        cy       = cy_vec,
-        radii    = radii_vec,
-        misclass = misclass,
-        sector   = sector,
-        majority = majority
+        cx              = cx_vec,
+        cy              = cy_vec,
+        radii           = radii_vec,
+        misclass        = misclass,
+        misclass_points = misclass_points,
+        sector          = sector,
+        majority        = majority
     )
 }

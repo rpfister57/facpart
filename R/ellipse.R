@@ -29,6 +29,8 @@
 #' @param fill Fill colour, or `NA` (default) for no fill.
 #' @param lwd Line width (default `2`).
 #' @param lty Line type (default `2`).
+#' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
+#'   `plot()` first.
 #'
 #' @return If `output = TRUE`, a list with elements `cx`, `cy`, `a`, `b`,
 #'   `angle` (in radians).
@@ -37,8 +39,7 @@
 #' \dontrun{
 #' set.seed(1)
 #' crd <- cbind(rnorm(30), 0.5 * rnorm(30))
-#' plot(crd, asp = 1)
-#' ellipseInConfig(crd, typ = "maxdist")
+#' ellipseInConfig(crd, typ = "maxdist", add = FALSE)
 #' ellipseInConfig(crd, typ = "bestfit", col = "blue")
 #' ellipseInConfig(crd, typ = "minbound", col = "red")
 #' }
@@ -52,7 +53,8 @@ ellipseInConfig <- function(crd,
                             col = "black",
                             fill = NA,
                             lwd = 2,
-                            lty = 2) {
+                            lty = 2,
+                            add = TRUE) {
     available_mid <- c("centroid", "nullnull")
     available_typ <- c("maxdist", "bestfit", "minbound")
 
@@ -74,6 +76,8 @@ ellipseInConfig <- function(crd,
     }
 
     center <- c(centroid_x, centroid_y)
+
+    if (!add) plot(coords, asp = 1)
 
     # covariance structure of the point cloud (starting geometry)
     S     <- cov(coords)

@@ -68,9 +68,11 @@ From `DESCRIPTION`:
 
 All partition and ellipse-drawing functions draw on the **currently active plot window**. Call `plot()` before any of these functions.
 
+`inoutEllipse()` has no `output` parameter — it always returns a character vector. All other exported functions follow the `output = TRUE/FALSE` convention.
+
 ## Internal Dependencies
 
-`radial-ellipse.R` calls `.best_radius()` which is defined in `radial-circle.R`. When loading the package this is invisible, but if sourcing files interactively, source `radial-circle.R` first.
+`radial-ellipse.R` calls `.best_radius()` which is defined in `radial-circle.R`. This cross-file dependency exists in two places: the independent-center ellipse path (nesting constraint) and the fixed-shape `radialEllipses()` path (scale-factor scan). When loading the package this is invisible, but if sourcing files interactively, source `radial-circle.R` first.
 
 Private helpers use a `.` prefix (e.g., `.circle_pts`, `.in_ellipse`, `.arc_mid`) and are tagged `#' @noRd`. They are internal to their file.
 
@@ -93,9 +95,11 @@ Private helpers use a `.` prefix (e.g., `.circle_pts`, `.in_ellipse`, `.arc_mid`
 
 ### Radial / nested ellipses (`radial-ellipse.R`)
 - **`radialEllipse()`** / **`radialEllipses()`**: elliptic analogue of the radial circle functions. Each ellipse has 5 parameters `(cx, cy, a, b, angle)` optimised by Nelder-Mead with `parscale = c(x_range, y_range, max_range, max_range, pi)`. Multi-start includes the covariance ellipse of the inner groups plus an inflated copy of the previous ellipse. `misclass` is a **list `(n, indices)`** — count plus row indices. Angles are in radians internally; converted to degrees only for `draw.ellipse()`. When `ellipse` (a 5-vector) is supplied to `radialEllipses()`, outer ellipses are uniform scalings sharing the fixed center/orientation/ratio; scale factors found by exact 1D scan via `.best_radius()`.
+- **`misclass` type differs from circle functions**: `radialEllipse()` / `radialEllipses()` return `misclass` as a list `list(n, indices)`; `radialCircle()` / `radialCircles()` return `misclass` as a plain integer.
 
 ### Angular partition (`angular.R`)
 - **`angularPartition()`**: k wedge sectors from a common center. Brute-force over `n × C(n−1, k−1)` candidate angle k-tuples; tie-broken by **largest minimum 2D distance** from any cut ray to the nearest point. Center is **optimised** when either `cx` or `cy` is `NULL` (default) via multi-start Nelder-Mead; starts are the overall centroid plus each group's centroid. Ray length is computed from `par("usr")`. `angularPartition3()` (fixed k=3 reference) exists only in the companion script layer and is not part of this package.
+- All exported drawing functions accept `add = TRUE` (default, draw on the existing plot) or `add = FALSE` (call `plot()` first). `ellipseInConfig()` labels no points when `add = FALSE`; all other functions also draw group labels via `graphics::text()`.
 
 ## Coding Conventions
 

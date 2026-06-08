@@ -19,7 +19,7 @@ angularPartition(
 \arguments{
 \item{crd}{Numeric matrix or data frame with exactly 2 columns; no NAs.}
 
-\item{group}{Factor with \code{k >= 2} levels, same nrow as crd.}
+\item{group}{Factor with \verb{n >= k >= 2} levels, same length as nrow of crd.}
 
 \item{cx, cy}{Center; optimised when either is \code{NULL}.}
 
@@ -39,6 +39,7 @@ If \code{output = TRUE}, a list with:
 \item \code{cuts} — \code{numeric[k]}, cut angles of rays in radians.
 \item \code{margin} — minimum distance from any cut ray to nearest point.
 \item \code{misclass} — integer, number of misclassified points.
+\item \code{misclass_points} — data frame (\code{x}, \code{y}, \code{label}) of misclassified points
 \item \code{sector} — \code{integer[n]}, sector \verb{1..k} per point
 \item \code{majority} — \code{character[k]}, majority group per sector
 \item \code{center} — \code{c(cx, cy)}
@@ -69,7 +70,7 @@ directly (no optimisation).
 }
 \examples{
 \dontrun{
-set.seed(1)
+set.seed(123)
 theta <- rep(c(0, 2 * pi / 3, 4 * pi / 3), each = 12) + rnorm(36, 0, 0.25)
 r     <- runif(36, 0.5, 1.5)
 crd   <- cbind(r * cos(theta), r * sin(theta))

@@ -13,7 +13,8 @@ radialEllipses(
   col = "purple",
   cols = NULL,
   lwd = 2,
-  lty = 1
+  lty = 1,
+  add = TRUE
 )
 }
 \arguments{
@@ -37,11 +38,15 @@ are searched.}
 \item{lwd}{Line width (default \code{2}).}
 
 \item{lty}{Line type (default \code{1}).}
+
+\item{add}{If \code{TRUE} (default), add to existing plot; if \code{FALSE}, call
+\code{plot()} first.}
 }
 \value{
 If \code{output = TRUE}, a list with vectors \code{cx}, \code{cy}, \code{a}, \code{b},
 \code{angle} (radians), \code{misclass} (list with \code{n} and \code{indices}),
-\code{sector}, and \code{majority}.
+\code{misclass_points} (data frame with columns \code{x}, \code{y}, \code{label} for each
+misclassified point), \code{sector}, and \code{majority}.
 }
 \description{
 Generalises \code{\link[=radialEllipse]{radialEllipse()}} to \code{k >= 2} groups using \code{k-1} nested
@@ -75,13 +80,12 @@ th3 <- runif(15, 0, 2 * pi)
 g3 <- cbind(2.8 * cos(th3), 2.0 * sin(th3)) + matrix(rnorm(30, 0, 0.1), 15)
 crd <- rbind(g1, g2, g3)
 grp <- factor(c(rep("a", 15), rep("b", 15), rep("c", 15)))
-plot(crd, asp = 1)
 
 # Independent ellipses
-radialEllipses(crd, grp, fill = TRUE)
+radialEllipses(crd, grp, fill = TRUE, add = FALSE)
 
 # Fixed-shape mode: supply the innermost ellipse as a 5-vector
-radialEllipses(crd, grp, ellipse = c(0, 0, 0.3, 0.2, 0), fill = TRUE)
+radialEllipses(crd, grp, ellipse = c(0, 0, 0.3, 0.2, 0), fill = TRUE, add = FALSE)
 }
 
 }

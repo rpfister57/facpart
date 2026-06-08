@@ -148,10 +148,13 @@
 #' @param cols Length-2 fill colours (default `c("steelblue", "tomato")`).
 #' @param lwd Line width (default `2`).
 #' @param lty Line type (default `1`).
+#' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
+#'   `plot()` first.
 #'
 #' @return If `output = TRUE`, a list with `cx`, `cy`, `a`, `b`, `angle`
-#'   (radians), `misclass` (list with `n` and `indices`), `sector`, and
-#'   `majority`.
+#'   (radians), `misclass` (list with `n` and `indices`), `misclass_points`
+#'   (data frame with columns `x`, `y`, `label` for each misclassified point),
+#'   `sector`, and `majority`.
 #'
 #' @examples
 #' \dontrun{
@@ -161,8 +164,7 @@
 #' outer <- cbind(2.0 * cos(th), 1.2 * sin(th)) + matrix(rnorm(40, 0, 0.1), 20)
 #' crd <- rbind(inner, outer)
 #' grp <- factor(c(rep("in", 20), rep("out", 20)))
-#' plot(crd, asp = 1)
-#' radialEllipse(crd, grp, fill = TRUE)
+#' radialEllipse(crd, grp, fill = TRUE, add = FALSE)
 #' }
 #'
 #' @export
@@ -173,7 +175,8 @@ radialEllipse <- function(crd,
                            col = "purple",
                            cols = c("steelblue", "tomato"),
                            lwd = 2,
-                           lty = 1) {
+                           lty = 1,
+                           add = TRUE) {
 
     # ---- Input validation ----
     if (!is.numeric(crd))           stop("Coordinate data must be numeric!")
@@ -198,8 +201,18 @@ radialEllipse <- function(crd,
         pts_s       <- grp_int[sector == s]
         majority[s] <- levels(group)[which.max(tabulate(pts_s, nbins = 2L))]
     }
-    misclass_idx <- which(levels(group)[grp_int] != majority[sector])
-    misclass     <- list(n = length(misclass_idx), indices = misclass_idx)
+    misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
+    misclass        <- list(n = length(misclass_idx), indices = misclass_idx)
+    misclass_points <- data.frame(
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
+        label = group[misclass_idx]
+    )
+
+    if (!add) {
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
+    }
 
     # ---- Optional fill ----
     if (fill) {
@@ -228,14 +241,15 @@ radialEllipse <- function(crd,
     if (!output) return(invisible(NULL))
 
     list(
-        cx       = ell$cx,
-        cy       = ell$cy,
-        a        = ell$a,
-        b        = ell$b,
-        angle    = ell$angle,
-        misclass = misclass,
-        sector   = sector,
-        majority = majority
+        cx              = ell$cx,
+        cy              = ell$cy,
+        a               = ell$a,
+        b               = ell$b,
+        angle           = ell$angle,
+        misclass        = misclass,
+        misclass_points = misclass_points,
+        sector          = sector,
+        majority        = majority
     )
 }
 
@@ -274,10 +288,13 @@ radialEllipse <- function(crd,
 #' @param cols Length-`k` colours; auto-generated if `NULL`.
 #' @param lwd Line width (default `2`).
 #' @param lty Line type (default `1`).
+#' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
+#'   `plot()` first.
 #'
 #' @return If `output = TRUE`, a list with vectors `cx`, `cy`, `a`, `b`,
 #'   `angle` (radians), `misclass` (list with `n` and `indices`),
-#'   `sector`, and `majority`.
+#'   `misclass_points` (data frame with columns `x`, `y`, `label` for each
+#'   misclassified point), `sector`, and `majority`.
 #'
 #' @examples
 #' \dontrun{
@@ -289,13 +306,12 @@ radialEllipse <- function(crd,
 #' g3 <- cbind(2.8 * cos(th3), 2.0 * sin(th3)) + matrix(rnorm(30, 0, 0.1), 15)
 #' crd <- rbind(g1, g2, g3)
 #' grp <- factor(c(rep("a", 15), rep("b", 15), rep("c", 15)))
-#' plot(crd, asp = 1)
 #'
 #' # Independent ellipses
-#' radialEllipses(crd, grp, fill = TRUE)
+#' radialEllipses(crd, grp, fill = TRUE, add = FALSE)
 #'
 #' # Fixed-shape mode: supply the innermost ellipse as a 5-vector
-#' radialEllipses(crd, grp, ellipse = c(0, 0, 0.3, 0.2, 0), fill = TRUE)
+#' radialEllipses(crd, grp, ellipse = c(0, 0, 0.3, 0.2, 0), fill = TRUE, add = FALSE)
 #' }
 #'
 #' @export
@@ -307,7 +323,8 @@ radialEllipses <- function(crd,
                             col = "purple",
                             cols = NULL,
                             lwd = 2,
-                            lty = 1) {
+                            lty = 1,
+                            add = TRUE) {
 
     # ---- Input validation ----
     if (!is.numeric(crd))           stop("Coordinate data must be numeric!")
@@ -426,8 +443,18 @@ radialEllipses <- function(crd,
             majority[s] <- levels(group)[which.max(tabulate(pts_s, nbins = k))]
         }
     }
-    misclass_idx <- which(levels(group)[grp_int] != majority[sector])
-    misclass     <- list(n = length(misclass_idx), indices = misclass_idx)
+    misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
+    misclass        <- list(n = length(misclass_idx), indices = misclass_idx)
+    misclass_points <- data.frame(
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
+        label = group[misclass_idx]
+    )
+
+    if (!add) {
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
+    }
 
     # ---- Optional fill ----
     if (fill) {
@@ -476,13 +503,14 @@ radialEllipses <- function(crd,
     if (!output) return(invisible(NULL))
 
     list(
-        cx       = cx_vec,
-        cy       = cy_vec,
-        a        = a_vec,
-        b        = b_vec,
-        angle    = angle_vec,
-        misclass = misclass,
-        sector   = sector,
-        majority = majority
+        cx              = cx_vec,
+        cy              = cy_vec,
+        a               = a_vec,
+        b               = b_vec,
+        angle           = angle_vec,
+        misclass        = misclass,
+        misclass_points = misclass_points,
+        sector          = sector,
+        majority        = majority
     )
 }

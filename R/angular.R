@@ -10,7 +10,7 @@
 #' e.g.: two radians a < b, delta is the diff b - a
 #' returns the radiant of the line bisecting b - a
 .arc_mid <- function(a, b) {
-    # delta if cycled around 2pi
+    # delta (also if cycled around 2pi):
     delta <- (b - a) %% (2 * pi)
     return(atan2(sin(a + delta / 2), 
                  cos(a + delta / 2)) )
@@ -18,25 +18,24 @@
 
 
 #' @noRd
-#' given center cx, cy: find the best angular k-partition by brute force.
+#' Given center cx, cy: find the best angular k-partition by brute force.
 #'
 #' A candidate partition is a choice of `k` cut-gaps out of the `n` gaps
 #' between angle-sorted points; `combos` supplies these as `combn(n, k)`.
-#' (The earlier `(rotation x combn(n-1, k-1))` scheme enumerated each
-#' partition `k` times — once per choice of wrap-around cut — so it is
-#' replaced here by `combn(n, k)`, which enumerates each exactly once.)
 #'
 #' Per-arc majority counts are read from a cumulative group-count table in
 #' O(k) per arc, without re-tabulating. With `full = FALSE` only the minimum
 #' misclassification is returned (margin and cut angles skipped) for use as
 #' the optimiser objective; `full = TRUE` additionally returns the 2D margin
 #' and the cut angles of the best partition.
-.angular_search <- function(coords, grp_int,
+.angular_search <- function(coords, 
+                            grp_int,
                             cx, cy,
                             k, n_pts, combos,
                             full = TRUE) {
 
     # order points according to their angles
+    # Note: atan2(y, x) - y-coordinate comes first!
     pt_angles <- atan2(coords[, 2] - cy, coords[, 1] - cx)
     ord       <- order(pt_angles)
     s_ang     <- pt_angles[ord]
@@ -45,10 +44,11 @@
     # Cumulative per-group counts over the angle-sorted sequence:
     # cum[i + 1, g] = number of group-g points among sorted points 1..i.
     # The count of group g on an arc a..b is cum[b + 1, g] - cum[a, g].
-    cum <- matrix(0L, nrow = n_pts + 1L, ncol = k)
+    cum <- matrix(0L, nrow = n_pts + 1, ncol = k)
     for (g in seq_len(k)) cum[-1L, g] <- cumsum(s_grp == g)
     total <- cum[n_pts + 1L, ]
 
+    # ordered radius lengths
     if (full) {
         s_rad <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)[ord]
     }
@@ -57,16 +57,23 @@
     best_margin <- -Inf
     best_gaps   <- NULL
 
-    # loop over all combn(n, k) choices of cut-gaps
+    # loop over all ci = 1..combn(n, k) choices of cut-gaps
     for (ci in seq_len(ncol(combos))) {
-        g <- combos[, ci]                  # increasing gap indices g[1] < .. < g[k]
+        # g is one specific partitioning,
+        # increasing gap indices g[1] < .. < g[k]
+        g <- combos[, ci]   
 
-        # interior arcs (g[s]+1 .. g[s+1]); branch-and-bound on partial error.
-        # Strict (> best_err) when full, so co-minimal partitions survive for
-        # the margin tie-break; loose (>= best_err) otherwise, since only the
-        # minimum count is needed.
+        # interior arcs (g[s]+1 .. g[s+1]); 
+        #   branch-and-bound on partial error.
+        # Strict (> best_err) when full, 
+        #   so co-minimal partitions survive for
+        # the margin tie-break; 
+        #   loose (>= best_err) otherwise, since only the
+        #   minimum count is needed.
         err  <- 0L
         drop <- FALSE
+        
+        # loop over groups s = 1..k-1
         for (s in seq_len(k - 1L)) {
             cnt <- cum[g[s + 1L] + 1L, ] - cum[g[s] + 1L, ]
             err <- err + (g[s + 1L] - g[s]) - max(cnt)
@@ -141,7 +148,7 @@
 #' directly (no optimisation).
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns; no NAs.
-#' @param group Factor with `k >= 2` levels, same nrow as crd.
+#' @param group Factor with `n >= k >= 2` levels, same length as nrow of crd.
 #' @param cx,cy Center; optimised when either is `NULL`.
 #' @param output If `TRUE` (default), return list of results.
 #' @param col Ray colour (default `"darkorange"`).
@@ -153,13 +160,14 @@
 #'   - `cuts` — `numeric[k]`, cut angles of rays in radians.
 #'   - `margin` — minimum distance from any cut ray to nearest point.
 #'   - `misclass` — integer, number of misclassified points.
+#'   - `misclass_points` — data frame (`x`, `y`, `label`) of misclassified points
 #'   - `sector` — `integer[n]`, sector `1..k` per point
 #'   - `majority` — `character[k]`, majority group per sector
 #'   - `center` — `c(cx, cy)`
 #'
 #' @examples
 #' \dontrun{
-#' set.seed(1)
+#' set.seed(123)
 #' theta <- rep(c(0, 2 * pi / 3, 4 * pi / 3), each = 12) + rnorm(36, 0, 0.25)
 #' r     <- runif(36, 0.5, 1.5)
 #' crd   <- cbind(r * cos(theta), r * sin(theta))
@@ -180,18 +188,24 @@ angularPartition <- function(crd,
                              add = TRUE) {
 
     # ---- Input validation ----
-    if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
+    
+    if (!all(is.numeric(as.matrix(crd))))  stop("Input matrix crd must be numeric!")
+    if (!is.factor(group)) stop("group must be a factor!")
+    if (any(is.na(crd)))            stop("No NA allowed in input!")
+    if (length(dim(crd)) != 2)      stop("Input data must have two dimensions!")
     if (dim(crd)[2] != 2)           stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
-    if (!is.numeric(as.matrix(crd)))  stop("Coordinate data must be numeric!")
-
-    group <- as.factor(group)
+    
+    group <- factor(group, exclude = NA)
     coords  <- as.matrix(crd)
     
     k <- nlevels(group)
     if (k < 2)         stop("group must have at least 2 levels!")
     if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
 
+    
+    # ---- Basic parameters ----
+    
     n_pts   <- nrow(coords)
     grp_int <- as.integer(group)
 
@@ -199,8 +213,11 @@ angularPartition <- function(crd,
     # angle-sorted points. Each angular k-partition corresponds to exactly
     # one such choice (see .angular_search).
     combos <- combn(n_pts, k)
+    
 
-    # ---- Center: optimise if NULL, use as given otherwise ----
+    # ---- Center: optimise if cx or cy is NULL, use as given otherwise ----
+    
+    # Optimise center
     if (is.null(cx) || is.null(cy)) {
         x_range <- diff(range(coords[, 1]))
         y_range <- diff(range(coords[, 2]))
@@ -241,25 +258,15 @@ angularPartition <- function(crd,
     res         <- .angular_search(coords, grp_int,
                                    cx, cy,
                                    k, n_pts, combos, full = TRUE)
+    
     best_err    <- res$misclass
     best_cuts   <- res$cuts
     best_margin <- res$margin
     pt_angles   <- res$pt_angles
     
-    # ---- Plot the underlying configuration if add=TRUE ----
     if (!add) {
-        plot(
-            coords,
-            pch = 19,
-            col = "blue",
-            xlim = c(-1.5, 1.5),
-            ylim = c(-1, 1),
-            asp = 1
-        )
-        graphics::text(coords,
-                       labels = group,
-                       cex = 0.7,
-                       pos = 4)
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
     }
     
     # ---- Draw rays from center at the optimal cut angles ----
@@ -285,14 +292,22 @@ angularPartition <- function(crd,
         levels(group)[which.max(tabulate(pts, nbins = k))]
     })
 
-    if (!output) return(invisible(NULL)) 
+    misclass_idx    <- which(as.character(group) != majority[sector])
+    misclass_points <- data.frame(
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
+        label = group[misclass_idx]
+    )
+
+    if (!output) return(invisible(NULL))
     else return(list(
-        cuts     = best_cuts,
-        margin   = best_margin,
-        misclass = best_err,
-        sector   = sector,
-        majority = majority,
-        center   = c(cx, cy)
+        cuts            = best_cuts,
+        margin          = best_margin,
+        misclass        = best_err,
+        misclass_points = misclass_points,
+        sector          = sector,
+        majority        = majority,
+        center          = c(cx, cy)
     ))
 
 }

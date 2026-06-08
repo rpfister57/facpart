@@ -13,7 +13,8 @@ axialLines(
   cols = NULL,
   lwd = 2,
   lty = 1,
-  n_angles = 180L
+  n_angles = 180L,
+  add = TRUE
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ axialLines(
 \item{n_angles}{Number of angles in \verb{[0, pi)} to scan (default \code{180L},
 approximately 1-degree resolution); LDA's direction is added as an
 extra candidate.}
+
+\item{add}{If \code{TRUE} (default), add to existing plot; if \code{FALSE}, call
+\code{plot()} first.}
 }
 \value{
 If \code{output = TRUE}, a list with:
@@ -46,6 +50,7 @@ If \code{output = TRUE}, a list with:
 \item \code{margin} — minimum perpendicular distance from the cut line(s) to the
 nearest point
 \item \code{misclass} — total misclassified points
+\item \code{misclass_points} — data frame (\code{x}, \code{y}, \code{label}) of misclassified points
 \item \code{sector} — \code{integer[n]}, sector \verb{1..k} per point in input order
 \item \code{majority} — \code{character[k]}, majority group per sector
 }
@@ -86,8 +91,7 @@ crd <- rbind(cbind(rnorm(10, -1), rnorm(10)),
              cbind(rnorm(10,  0), rnorm(10)),
              cbind(rnorm(10,  1), rnorm(10)))
 grp <- factor(c(rep("a", 10), rep("b", 10), rep("c", 10)))
-plot(crd, asp = 1)
-axialLines(crd, grp, fill = TRUE)
+axialLines(crd, grp, fill = TRUE, add = FALSE)
 }
 
 }

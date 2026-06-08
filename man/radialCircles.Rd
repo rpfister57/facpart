@@ -15,7 +15,8 @@ radialCircles(
   cols = NULL,
   lwd = 2,
   lty = 1,
-  .method = "Nelder-Mead"
+  .method = "Nelder-Mead",
+  add = TRUE
 )
 }
 \arguments{
@@ -42,11 +43,15 @@ each center is optimised.}
 
 \item{.method}{\code{"Nelder-Mead"} (default) or \code{"SANN"}; ignored when
 \code{cx} and \code{cy} are both supplied.}
+
+\item{add}{If \code{TRUE} (default), add to existing plot; if \code{FALSE}, call
+\code{plot()} first.}
 }
 \value{
 If \code{output = TRUE}, a list with \code{cx}, \code{cy} (\code{numeric[k-1]}),
-\code{radii} (innermost to outermost), \code{misclass}, \code{sector} (\code{integer[n]}),
-and \code{majority} (\code{character[k]}).
+\code{radii} (innermost to outermost), \code{misclass}, \code{misclass_points} (data
+frame with columns \code{x}, \code{y}, \code{label} for each misclassified point),
+\code{sector} (\code{integer[n]}), and \code{majority} (\code{character[k]}).
 }
 \description{
 Generalises \code{\link[=radialCircle]{radialCircle()}} to \code{k >= 2} groups using \code{k-1} nested
@@ -72,8 +77,7 @@ th3 <- runif(15, 0, 2 * pi)
 g3 <- cbind(2.5 * cos(th3), 2.5 * sin(th3)) + matrix(rnorm(30, 0, 0.1), 15)
 crd <- rbind(g1, g2, g3)
 grp <- factor(c(rep("a", 15), rep("b", 15), rep("c", 15)))
-plot(crd, asp = 1)
-radialCircles(crd, grp, fill = TRUE)
+radialCircles(crd, grp, fill = TRUE, add = FALSE)
 }
 
 }

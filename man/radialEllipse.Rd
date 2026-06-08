@@ -12,7 +12,8 @@ radialEllipse(
   col = "purple",
   cols = c("steelblue", "tomato"),
   lwd = 2,
-  lty = 1
+  lty = 1,
+  add = TRUE
 )
 }
 \arguments{
@@ -31,11 +32,15 @@ radialEllipse(
 \item{lwd}{Line width (default \code{2}).}
 
 \item{lty}{Line type (default \code{1}).}
+
+\item{add}{If \code{TRUE} (default), add to existing plot; if \code{FALSE}, call
+\code{plot()} first.}
 }
 \value{
 If \code{output = TRUE}, a list with \code{cx}, \code{cy}, \code{a}, \code{b}, \code{angle}
-(radians), \code{misclass} (list with \code{n} and \code{indices}), \code{sector}, and
-\code{majority}.
+(radians), \code{misclass} (list with \code{n} and \code{indices}), \code{misclass_points}
+(data frame with columns \code{x}, \code{y}, \code{label} for each misclassified point),
+\code{sector}, and \code{majority}.
 }
 \description{
 Finds the ellipse minimising misclassification between two groups of 2D
@@ -51,8 +56,7 @@ th    <- runif(20, 0, 2 * pi)
 outer <- cbind(2.0 * cos(th), 1.2 * sin(th)) + matrix(rnorm(40, 0, 0.1), 20)
 crd <- rbind(inner, outer)
 grp <- factor(c(rep("in", 20), rep("out", 20)))
-plot(crd, asp = 1)
-radialEllipse(crd, grp, fill = TRUE)
+radialEllipse(crd, grp, fill = TRUE, add = FALSE)
 }
 
 }

@@ -12,7 +12,8 @@ axialLine(
   col = "purple",
   cols = c("steelblue", "tomato"),
   lwd = 2,
-  lty = 1
+  lty = 1,
+  add = TRUE
 )
 }
 \arguments{
@@ -32,10 +33,14 @@ axialLine(
 \item{lwd}{Line width (default \code{2}).}
 
 \item{lty}{Line type (default \code{1}).}
+
+\item{add}{If \code{TRUE} (default), add to existing plot; if \code{FALSE}, call
+\code{plot()} first.}
 }
 \value{
 If \code{output = TRUE}, a list with \code{slope}, \code{intercept}, \code{misclass}
-(integer), and \code{predicted} (LDA-predicted class factor).
+(integer), \code{misclass_points} (data frame with columns \code{x}, \code{y}, \code{label}
+for each misclassified point), and \code{predicted} (LDA-predicted class factor).
 }
 \description{
 Fits a linear discriminant analysis to two-group 2D data and draws the
@@ -68,8 +73,7 @@ set.seed(1)
 crd <- rbind(cbind(rnorm(15, -1), rnorm(15)),
              cbind(rnorm(15,  1), rnorm(15)))
 grp <- factor(c(rep("a", 15), rep("b", 15)))
-plot(crd, asp = 1)
-axialLine(crd, grp, fill = TRUE)
+axialLine(crd, grp, fill = TRUE, add = FALSE)
 }
 
 }

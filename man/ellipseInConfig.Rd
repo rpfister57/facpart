@@ -13,7 +13,8 @@ ellipseInConfig(
   col = "black",
   fill = NA,
   lwd = 2,
-  lty = 2
+  lty = 2,
+  add = TRUE
 )
 }
 \arguments{
@@ -37,6 +38,9 @@ Only affects \code{"maxdist"}.}
 \item{lwd}{Line width (default \code{2}).}
 
 \item{lty}{Line type (default \code{2}).}
+
+\item{add}{If \code{TRUE} (default), add to existing plot; if \code{FALSE}, call
+\code{plot()} first.}
 }
 \value{
 If \code{output = TRUE}, a list with elements \code{cx}, \code{cy}, \code{a}, \code{b},
@@ -62,8 +66,7 @@ The ellipse is drawn on the currently active plot window.
 \dontrun{
 set.seed(1)
 crd <- cbind(rnorm(30), 0.5 * rnorm(30))
-plot(crd, asp = 1)
-ellipseInConfig(crd, typ = "maxdist")
+ellipseInConfig(crd, typ = "maxdist", add = FALSE)
 ellipseInConfig(crd, typ = "bestfit", col = "blue")
 ellipseInConfig(crd, typ = "minbound", col = "red")
 }

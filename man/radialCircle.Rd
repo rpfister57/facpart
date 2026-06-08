@@ -15,7 +15,8 @@ radialCircle(
   cols = c("steelblue", "tomato"),
   lwd = 2,
   lty = 1,
-  .method = "Nelder-Mead"
+  .method = "Nelder-Mead",
+  add = TRUE
 )
 }
 \arguments{
@@ -38,11 +39,15 @@ radialCircle(
 \item{lty}{Line type (default \code{1}).}
 
 \item{.method}{\code{"Nelder-Mead"} (default) or \code{"SANN"}.}
+
+\item{add}{If \code{TRUE} (default), add to existing plot; if \code{FALSE}, call
+\code{plot()} first.}
 }
 \value{
 If \code{output = TRUE}, a list with \code{center}, \code{radius}, \code{misclass}
-(integer), \code{sector} (\code{1} inside / \code{2} outside per point), and
-\code{majority} (\code{character[2]}).
+(integer), \code{misclass_points} (data frame with columns \code{x}, \code{y}, \code{label}
+for each misclassified point), \code{sector} (\code{1} inside / \code{2} outside per
+point), and \code{majority} (\code{character[2]}).
 }
 \description{
 Finds the circle minimising misclassification between two groups of 2D
@@ -59,8 +64,7 @@ th <- runif(20, 0, 2 * pi)
 outer <- cbind(2 * cos(th), 2 * sin(th)) + matrix(rnorm(40, 0, 0.1), 20)
 crd <- rbind(inner, outer)
 grp <- factor(c(rep("in", 20), rep("out", 20)))
-plot(crd, asp = 1)
-radialCircle(crd, grp, fill = TRUE)
+radialCircle(crd, grp, fill = TRUE, add = FALSE)
 }
 
 }

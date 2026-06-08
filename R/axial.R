@@ -37,9 +37,12 @@
 #'   (default `c("steelblue", "tomato")`).
 #' @param lwd Line width (default `2`).
 #' @param lty Line type (default `1`).
+#' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
+#'   `plot()` first.
 #'
 #' @return If `output = TRUE`, a list with `slope`, `intercept`, `misclass`
-#'   (integer), and `predicted` (LDA-predicted class factor).
+#'   (integer), `misclass_points` (data frame with columns `x`, `y`, `label`
+#'   for each misclassified point), and `predicted` (LDA-predicted class factor).
 #'
 #' @seealso [axialLines()] for the empirically-optimal parallel-line
 #'   partition over both angle and cut position (any `k >= 2`).
@@ -50,8 +53,7 @@
 #' crd <- rbind(cbind(rnorm(15, -1), rnorm(15)),
 #'              cbind(rnorm(15,  1), rnorm(15)))
 #' grp <- factor(c(rep("a", 15), rep("b", 15)))
-#' plot(crd, asp = 1)
-#' axialLine(crd, grp, fill = TRUE)
+#' axialLine(crd, grp, fill = TRUE, add = FALSE)
 #' }
 #'
 #' @export
@@ -62,7 +64,8 @@ axialLine <- function(crd,
                     col = "purple",
                     cols = c("steelblue", "tomato"),
                     lwd = 2,
-                    lty = 1) {
+                    lty = 1,
+                    add = TRUE) {
 
     # ---- Input validation ----
     if (length(dim(crd)) != 2)       stop("Coordinates must have two dimensions!")
@@ -95,6 +98,11 @@ axialLine <- function(crd,
     } else {
         slope     <- -w[1] / w[2]
         intercept <- midpoint[2] - slope * midpoint[1]
+    }
+
+    if (!add) {
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
     }
 
     # ---- Optional half-plane shading ----
@@ -140,14 +148,21 @@ axialLine <- function(crd,
     if (!output) return(invisible(NULL))
 
     # ---- Misclassification ----
-    predicted <- predict(lda_fit)$class
-    misclass  <- sum(predicted != group)
+    predicted       <- predict(lda_fit)$class
+    misclass_idx    <- which(predicted != group)
+    misclass        <- length(misclass_idx)
+    misclass_points <- data.frame(
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
+        label = group[misclass_idx]
+    )
 
     list(
-        slope     = slope,
-        intercept = intercept,
-        misclass  = misclass,
-        predicted = predicted
+        slope           = slope,
+        intercept       = intercept,
+        misclass        = misclass,
+        misclass_points = misclass_points,
+        predicted       = predicted
     )
 }
 
@@ -190,6 +205,8 @@ axialLine <- function(crd,
 #' @param n_angles Number of angles in `[0, pi)` to scan (default `180L`,
 #'   approximately 1-degree resolution); LDA's direction is added as an
 #'   extra candidate.
+#' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
+#'   `plot()` first.
 #'
 #' @seealso [axialLine()] for the classical LDA Bayes-rule boundary
 #'   (closed-form, binary only). Use [axialLine()] when you want the
@@ -203,6 +220,7 @@ axialLine <- function(crd,
 #'   - `margin` — minimum perpendicular distance from the cut line(s) to the
 #'     nearest point
 #'   - `misclass` — total misclassified points
+#'   - `misclass_points` — data frame (`x`, `y`, `label`) of misclassified points
 #'   - `sector` — `integer[n]`, sector `1..k` per point in input order
 #'   - `majority` — `character[k]`, majority group per sector
 #'
@@ -213,8 +231,7 @@ axialLine <- function(crd,
 #'              cbind(rnorm(10,  0), rnorm(10)),
 #'              cbind(rnorm(10,  1), rnorm(10)))
 #' grp <- factor(c(rep("a", 10), rep("b", 10), rep("c", 10)))
-#' plot(crd, asp = 1)
-#' axialLines(crd, grp, fill = TRUE)
+#' axialLines(crd, grp, fill = TRUE, add = FALSE)
 #' }
 #'
 #' @export
@@ -226,7 +243,8 @@ axialLines <- function(crd,
                      cols = NULL,
                      lwd = 2,
                      lty = 1,
-                     n_angles = 180L) {
+                     n_angles = 180L,
+                     add = TRUE) {
 
     # ---- Input validation ----
     if (length(dim(crd)) != 2) stop("Coordinates must have two dimensions!")
@@ -334,6 +352,11 @@ axialLines <- function(crd,
         }
     }
 
+    if (!add) {
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
+    }
+
     # ---- Optional strip shading ----
     if (fill) {
         if (is.null(cols)) {
@@ -392,15 +415,23 @@ axialLines <- function(crd,
         }
     }
 
+    misclass_idx    <- which(as.character(group) != majority[sector])
+    misclass_points <- data.frame(
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
+        label = group[misclass_idx]
+    )
+
     if (!output) return(invisible(NULL))
 
     list(
-        slope      = slope,
-        intercepts = intercepts,
-        angle      = best_theta,
-        margin     = best_margin,
-        misclass   = best_err,
-        sector     = sector,
-        majority   = majority
+        slope           = slope,
+        intercepts      = intercepts,
+        angle           = best_theta,
+        margin          = best_margin,
+        misclass        = best_err,
+        misclass_points = misclass_points,
+        sector          = sector,
+        majority        = majority
     )
 }

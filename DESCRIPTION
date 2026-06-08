@@ -1,7 +1,7 @@
 Package: facpart
 Title: Facet Theory Partitioning of 2D Configurations
 Version: 0.1.0
-Date: 2026-05-20
+Date: 2026-06-05
 Authors@R:
     c(person("Hans-Ruediger", "Pfister", email = "rpfister57@gmail.com",
            role = c("aut", "cre"), comment = c(ORCID = "0000-0002-3802-4222")),
