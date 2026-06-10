@@ -179,7 +179,7 @@ radialEllipse <- function(crd,
                            add = TRUE) {
 
     # ---- Input validation ----
-    if (!is.numeric(crd))           stop("Coordinate data must be numeric!")
+    if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)           stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
@@ -330,7 +330,7 @@ radialEllipses <- function(crd,
                             add = TRUE) {
 
     # ---- Input validation ----
-    if (!is.numeric(crd))           stop("Coordinate data must be numeric!")
+    if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)           stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")

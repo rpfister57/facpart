@@ -251,7 +251,7 @@ axialLines <- function(crd,
     if (dim(crd)[2] != 2)      stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
     if (n_angles < 1L)         stop("n_angles must be >= 1!")
-    if (!is.numeric(crd))      stop("Coordinate data must be numeric!")
+    if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
     
     group <- as.factor(group)
     k     <- nlevels(group)
