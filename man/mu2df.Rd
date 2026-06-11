@@ -10,7 +10,8 @@ mu2df(df, as_dist = FALSE)
 \item{df}{A data frame (or coercible object) with numeric columns.}
 
 \item{as_dist}{If \code{TRUE}, return a lower-triangular \code{\link{dist}} object of
-\code{1 - mu2} values. If \code{FALSE} (default), return a full symmetric matrix.}
+\code{1 - mu2} values. If \code{FALSE} (default), return a full
+symmetric correlation matrix.}
 }
 \value{
 A square numeric matrix with \code{dimnames} set to the column names of

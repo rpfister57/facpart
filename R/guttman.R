@@ -17,6 +17,7 @@
 #'   are tied (zero absolute differences).
 #'
 #' @export
+#' 
 #' @examples
 #' mu2(c(1, 2, 3, 4), c(2, 3, 1, 4))
 mu2 <- function(x, y) {
@@ -30,7 +31,7 @@ mu2 <- function(x, y) {
     y_mat <- matrix(rep(y, n), ncol = n)
     dx <- x_mat - t(x_mat)
     dy <- y_mat - t(y_mat)
-    sum(dx * dy) / sum(abs(dx) * abs(dy))
+    return(sum(dx * dy) / sum(abs(dx) * abs(dy)))
 }
 
 
@@ -42,13 +43,15 @@ mu2 <- function(x, y) {
 #'
 #' @param df A data frame (or coercible object) with numeric columns.
 #' @param as_dist If `TRUE`, return a lower-triangular [`dist`] object of
-#'   `1 - mu2` values. If `FALSE` (default), return a full symmetric matrix.
+#'   `1 - mu2` values. If `FALSE` (default), return a full 
+#'   symmetric correlation matrix.
 #'
 #' @return A square numeric matrix with `dimnames` set to the column names of
 #'   `df` (when `as_dist = FALSE`), or a [`dist`] object with `Labels` set
 #'   to the column names (when `as_dist = TRUE`).
 #'
 #' @export
+#' 
 #' @examples
 #' df <- data.frame(a = 1:5, b = c(2, 3, 1, 5, 4), c = 5:1)
 #' mu2df(df)
@@ -68,9 +71,9 @@ mu2df <- function(df, as_dist = FALSE) {
         cor_mat[r, s] <- cor_mat[s, r] <- mu2(df[[r]], df[[s]])
     }
     if (as_dist) {
-        d <- as.dist(1 - cor_mat, diag = FALSE)
+        d <- as.dist(sqrt(1 - cor_mat), diag = FALSE)
         attr(d, "Labels") <- names(df)
         return(d)
     }
-    cor_mat
+    return(cor_mat)
 }

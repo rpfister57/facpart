@@ -4,4 +4,5 @@
 ^README\.Rmd$
 ^\.DS_Store$
 Claude.md
+Claude_resume.txt
 ^\.claude$

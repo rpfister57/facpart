@@ -15,7 +15,9 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Depends: R (>= 4.0), plotrix
-Suggests: smacof
+Suggests: 
+    smacof,
+    testthat (>= 3.0.0)
 Imports:
     cluster,
     grDevices,
@@ -24,3 +26,5 @@ Imports:
     stats,
     utils
 Config/roxygen2/version: 8.0.0
+LazyData: true
+Config/testthat/edition: 3
