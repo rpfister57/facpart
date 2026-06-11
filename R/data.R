@@ -14,10 +14,12 @@
 #' @source smacof package, data(Guttman1965)
 #' 
 #' @examples
+#' \dontrun{
 #' plot(guttman65mds[ , 2:3], type = "n", asp = 1)
 #' text(guttman65mds[ , 2:3], labels = guttman65mds$gfacets, cex = 0.6)
 #' 
 #' # check for radial partitions
 #' ellipses_out <- radialEllipses(crd = guttman65mds[ , 2:3], 
 #'    group = guttman65mds$gfacets, fill = TRUE, add = TRUE)
+#'    }
 "guttman65mds"

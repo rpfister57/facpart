@@ -17,7 +17,7 @@ angularPartition(
 )
 }
 \arguments{
-\item{crd}{Numeric matrix or data frame with exactly 2 columns; no NAs.}
+\item{crd}{Numeric matrix or numeric data frame with exactly 2 columns; no NAs.}
 
 \item{group}{Factor with \verb{n >= k >= 2} levels, same length as nrow of crd.}
 
@@ -36,20 +36,23 @@ angularPartition(
 \value{
 If \code{output = TRUE}, a list with:
 \itemize{
-\item \code{cuts} — \code{numeric[k]}, cut angles of rays in radians.
+\item \code{cuts} — \code{numeric[k]}, cut angles of rays (in radians).
 \item \code{margin} — minimum distance from any cut ray to nearest point.
 \item \code{misclass} — integer, number of misclassified points.
 \item \code{misclass_points} — data frame (\code{x}, \code{y}, \code{label}) of misclassified points
-\item \code{sector} — \code{integer[n]}, sector \verb{1..k} per point
+\item \code{sector} — \code{integer[n]}, assigned sector \verb{1..k} per point
 \item \code{majority} — \code{character[k]}, majority group per sector
-\item \code{center} — \code{c(cx, cy)}
+\item \code{center} — \code{c(cx, cy)} center coordinates of rays
+\item \code{pt_angles} — angles (in radians) of points from center
 }
 }
 \description{
-Finds \code{k} rays emanating from a center point that partition a 2D
-configuration of \code{n} points into \code{k} angular sectors, minimising total
+Finds \code{k} rays (straight lines) emanating from a center point that partition
+a 2D configuration of \code{n} points into \code{k} angular sectors, minimising total
 misclassification (points whose group differs from the majority group
-in their sector).
+in their sector), and draws the lines. (see: Shye, S. (2014). Faceted Smallest Space Analysis (FSSA).
+In A. Michalos (Ed.), Encyclopedia of quality of life research (pp. 2129-2133).
+New York: Springer.)
 }
 \details{
 \strong{Search at fixed center.} Points are sorted by their angle from the

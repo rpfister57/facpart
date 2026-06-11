@@ -3,14 +3,29 @@
 Facet Theory partitioning of 2-dimensional point configurations.
 
 Tools for partitioning 2D configurations (such as multidimensional-scaling
-output) into facets, with three types of partion schemes:
+output) into faceted partitions, with three types of partion schemes:
 
 - **Axial** — parallel separating lines: `axialLine()`, `axialLines()`
 - **Radial** — nested circles or ellipses: `radialCircle()`, `radialCircles()`,
   `radialEllipse()`, `radialEllipses()`
 - **Angular** — wedge-shaped sectors: `angularPartition()`
 
-Plus ellipse-fitting utilities: `ellipseInConfig()`, `inoutEllipse()`.
+Plus some utilities: `ellipseInConfig()`, `inoutEllipse()`, `mu2`
+
+
+## References
+
+Guttman, R., & Greenbaum, C. W. (1998). Facet theory: Its development 
+   and current status. European Psychologist, 3(1), 13-36.
+
+Shye, S. (2014). Faceted Smallest Space Analysis (FSSA). In A. Michalos (Ed.), 
+   Encyclopedia of quality of life research (pp. 2129-2133). 
+   New York: Springer.
+
+Shye, S. (2015). New directions in facet theory. In S. Shye, 
+   E. Solomon, & I. Borg (Eds.), 15th International Facet Theory 
+   Conference (pp. 147-158). New York City: Fordham University.
+
 
 ## Installation
 
@@ -19,18 +34,6 @@ Plus ellipse-fitting utilities: `ellipseInConfig()`, `inoutEllipse()`.
 devtools::install_local("path/to/facpart")
 ```
 
-or, from inside the package directory:
-
-```r
-devtools::install()
-```
-
-To regenerate `man/` documentation and `NAMESPACE` from the inline roxygen
-comments:
-
-```r
-devtools::document()
-```
 
 ## Quick example
 
@@ -56,7 +59,7 @@ res$center     # optimised wedge apex
 - `MASS` — `lda()` for axial partitions
 - `plotrix` — `draw.circle()`, `draw.ellipse()`
 
-All other functionality uses base R.
+All other functionality uses base R. The package works well with results from the smacof package.
 
 ## License
 

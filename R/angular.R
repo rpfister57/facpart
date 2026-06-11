@@ -23,8 +23,8 @@
 #' A candidate partition is a choice of `k` cut-gaps out of the `n` gaps
 #' between angle-sorted points; `combos` supplies these as `combn(n, k)`.
 #'
-#' Per-arc majority counts are read from a cumulative group-count table in
-#' O(k) per arc, without re-tabulating. With `full = FALSE` only the minimum
+#' Per-arc majority counts are read from a cumulative group-count table 
+#' per arc, without re-tabulating. With `full = FALSE` only the minimum
 #' misclassification is returned (margin and cut angles skipped) for use as
 #' the optimiser objective; `full = TRUE` additionally returns the 2D margin
 #' and the cut angles of the best partition.
@@ -34,8 +34,8 @@
                             k, n_pts, combos,
                             full = TRUE) {
 
-    # order points according to their angles
-    # Note: atan2(y, x) - y-coordinate comes first!
+    # order points according to their angles (in radians)
+    # Note: atan2(y, x) has y-coordinate first!
     pt_angles <- atan2(coords[, 2] - cy, coords[, 1] - cx)
     ord       <- order(pt_angles)
     s_ang     <- pt_angles[ord]
@@ -45,6 +45,7 @@
     # cum[i + 1, g] = number of group-g points among sorted points 1..i.
     # The count of group g on an arc a..b is cum[b + 1, g] - cum[a, g].
     cum <- matrix(0L, nrow = n_pts + 1, ncol = k)
+    # loop over all k columns: cumulate group number
     for (g in seq_len(k)) cum[-1L, g] <- cumsum(s_grp == g)
     total <- cum[n_pts + 1L, ]
 
@@ -53,11 +54,11 @@
         s_rad <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)[ord]
     }
 
-    best_err    <- .Machine$integer.max
+    best_err    <- n_pts + 1L
     best_margin <- -Inf
     best_gaps   <- NULL
 
-    # loop over all ci = 1..combn(n, k) choices of cut-gaps
+    # loop over all ci = 1..combn(n, k) cut-gaps from combos:
     for (ci in seq_len(ncol(combos))) {
         # g is one specific partitioning,
         # increasing gap indices g[1] < .. < g[k]
@@ -66,26 +67,29 @@
         # interior arcs (g[s]+1 .. g[s+1]); 
         #   branch-and-bound on partial error.
         # Strict (> best_err) when full, 
-        #   so co-minimal partitions survive for
-        # the margin tie-break; 
-        #   loose (>= best_err) otherwise, since only the
+        #   so co-minimal partitions survive for the margin tie-break; 
+        # loose (>= best_err) otherwise, since only the
         #   minimum count is needed.
         err  <- 0L
         drop <- FALSE
         
-        # loop over groups s = 1..k-1
+        # loop over groups s = 1..k-1 in a given g cut (from combos):
         for (s in seq_len(k - 1L)) {
+            # cnt: group frequencies in a given arc g[s]..g[s+1]
             cnt <- cum[g[s + 1L] + 1L, ] - cum[g[s] + 1L, ]
+            # err: misclassification = n points in cut - maximum group
+            #      cumulates over all arcs
             err <- err + (g[s + 1L] - g[s]) - max(cnt)
             if (if (full) err > best_err else err >= best_err) {
                 drop <- TRUE
                 break
             }
         }
-        if (drop) next
+        if (drop) next  # something went wrong ...
 
-        # wrap-around arc (g[k]+1 .. n, 1 .. g[1])
+        # wrap-around arc (g[k]+1 .. n, 1 .. g[1]): from last to first cut
         cnt_wrap <- (total - cum[g[k] + 1L, ]) + cum[g[1L] + 1L, ]
+        # add wrap-around to err
         err      <- err + (n_pts - g[k] + g[1L]) - max(cnt_wrap)
 
         if (!full) {
@@ -100,7 +104,11 @@
         # full path: keep min error, break ties by largest 2D margin.
         # 2D margin at a gap: min(r at its two points) * sin(angular gap / 2).
         if (err > best_err) next
-        nx      <- g + 1L; nx[g == n_pts] <- 1L
+        
+        # next cut after current g:
+        nx      <- g + 1L
+        nx[g == n_pts] <- 1L
+        
         ang_gap <- (s_ang[nx] - s_ang[g]) %% (2 * pi)
         margin  <- min(pmin(s_rad[g], s_rad[nx]) * sin(ang_gap / 2))
         if (err < best_err || margin > best_margin) {
@@ -108,8 +116,9 @@
             best_margin <- margin
             best_gaps   <- g
         }
-    }
+    }  # end of loop over all cuts in combos
 
+    
     if (!full) {
         return(list(misclass = best_err, pt_angles = pt_angles))
     }
@@ -126,10 +135,12 @@
 
 #' Angular k-way (wedge) partition of a 2D configuration
 #'
-#' Finds `k` rays emanating from a center point that partition a 2D
-#' configuration of `n` points into `k` angular sectors, minimising total
+#' Finds `k` rays (straight lines) emanating from a center point that partition 
+#' a 2D configuration of `n` points into `k` angular sectors, minimising total
 #' misclassification (points whose group differs from the majority group
-#' in their sector).
+#' in their sector), and draws the lines. (see: Shye, S. (2014). Faceted Smallest Space Analysis (FSSA). 
+#' In A. Michalos (Ed.), Encyclopedia of quality of life research (pp. 2129-2133). 
+#' New York: Springer.)
 #'
 #' **Search at fixed center.** Points are sorted by their angle from the
 #' center. A partition is a choice of `k` cut-gaps among the `n` gaps
@@ -147,7 +158,7 @@
 #' to the data range. When `cx` and `cy` are supplied, they are used
 #' directly (no optimisation).
 #'
-#' @param crd Numeric matrix or data frame with exactly 2 columns; no NAs.
+#' @param crd Numeric matrix or numeric data frame with exactly 2 columns; no NAs.
 #' @param group Factor with `n >= k >= 2` levels, same length as nrow of crd.
 #' @param cx,cy Center; optimised when either is `NULL`.
 #' @param output If `TRUE` (default), return list of results.
@@ -157,13 +168,14 @@
 #' @param add If `TRUE` (default), add to existing plot, else plot configuration.
 #'
 #' @return If `output = TRUE`, a list with:
-#'   - `cuts` — `numeric[k]`, cut angles of rays in radians.
+#'   - `cuts` — `numeric[k]`, cut angles of rays (in radians).
 #'   - `margin` — minimum distance from any cut ray to nearest point.
 #'   - `misclass` — integer, number of misclassified points.
 #'   - `misclass_points` — data frame (`x`, `y`, `label`) of misclassified points
-#'   - `sector` — `integer[n]`, sector `1..k` per point
+#'   - `sector` — `integer[n]`, assigned sector `1..k` per point
 #'   - `majority` — `character[k]`, majority group per sector
-#'   - `center` — `c(cx, cy)`
+#'   - `center` — `c(cx, cy)` center coordinates of rays
+#'   - `pt_angles` — angles (in radians) of points from center
 #'
 #' @examples
 #' \dontrun{
@@ -209,8 +221,9 @@ angularPartition <- function(crd,
     n_pts   <- nrow(coords)
     grp_int <- as.integer(group)
 
-    # Generate cut-gap combinations: choose k of the n gaps between
-    # angle-sorted points. Each angular k-partition corresponds to exactly
+    # Generate all possible partitions = cut-gap combinations: 
+    # choose k of the n gaps between all points. 
+    # Each angular k-partition corresponds to exactly
     # one such choice (see .angular_search).
     combos <- combn(n_pts, k)
     
@@ -225,6 +238,7 @@ angularPartition <- function(crd,
         if (y_range == 0) y_range <- 1
         parscale <- c(x_range, y_range)
 
+        # start values for center: overall mean, group means
         starts <- list(c(mean(coords[, 1]), mean(coords[, 2])))
         for (g in seq_len(k)) {
             in_g <- which(grp_int == g)
@@ -235,18 +249,25 @@ angularPartition <- function(crd,
             }
         }
 
+        # function to optimize: n of misclassification from .angular_search()
+        # parameter to optimize: p = center coordinates
         fnToOpt <- function(p) {
             .angular_search(coords, grp_int, p[1], p[2],
                             k, n_pts, combos, full = FALSE)$misclass
         }
 
         best <- NULL
+        
+        # minimization loops over all starting values from starts:
         for (s0 in starts) {
+            
             opt <- optim(par     = s0,
                          fn      = fnToOpt,
                          method  = "Nelder-Mead",
-                         control = list(reltol = 1e-8, maxit = 2000,
+                         control = list(reltol = 1e-8, 
+                                        maxit = 2000,
                                         parscale = parscale))
+            
             if (is.null(best) || opt$value < best$value) best <- opt
             if (best$value == 0) break          # zero misclass is optimal
         }
@@ -264,6 +285,8 @@ angularPartition <- function(crd,
     best_margin <- res$margin
     pt_angles   <- res$pt_angles
     
+    
+    # ---- Plot points if add = FALSE ----
     if (!add) {
         plot(coords, asp = 1)
         graphics::text(coords, labels = group, cex = 0.7, pos = 4)
@@ -271,7 +294,7 @@ angularPartition <- function(crd,
     
     # ---- Draw rays from center at the optimal cut angles ----
     usr     <- par("usr")
-    ray_len <- 2 * sqrt((usr[2] - usr[1])^2 + (usr[4] - usr[3])^2)
+    ray_len <- 2 * sqrt( (usr[2] - usr[1])^2 + (usr[4] - usr[3])^2 )
 
     for (ang in best_cuts) {
         segments(cx, cy,
@@ -311,8 +334,8 @@ angularPartition <- function(crd,
         misclass_points = misclass_points,
         sector          = sector,
         majority        = majority,
-        center          = c(cx, cy)
-    ))
+        center          = c(cx, cy),
+        pt_angles       = pt_angles))
 
 }
 
