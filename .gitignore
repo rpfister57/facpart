@@ -5,3 +5,7 @@
 .DS_Store
 .quarto
 Claude.md
+Claude_resume.txt
+inst/doc
+/doc/
+/Meta/

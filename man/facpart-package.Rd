@@ -31,11 +31,11 @@ minimum-area ellipses.
 }
 
 \author{
-\strong{Maintainer}: Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID})
+\strong{Maintainer}: Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID})
+  \item Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID}) [copyright holder]
 }
 
 Other contributors:

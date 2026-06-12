@@ -3,6 +3,9 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^\.DS_Store$
-Claude.md
-Claude_resume.txt
+^CLAUDE\.md$
+^Claude_resume\.txt$
+^\.DS_Store$
 ^\.claude$
+^doc$
+^Meta$
