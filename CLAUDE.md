@@ -102,7 +102,7 @@ Private helpers use a `.` prefix (e.g., `.circle_pts`, `.in_ellipse`, `.arc_mid`
 
 ### Guttman monotonicity coefficient (`guttman.R`)
 - **`mu2()`**: Guttman's mu2 for two vectors. Computed as `sum(dx * dy) / sum(|dx| * |dy|)` over all pairs (i, j), where `dx = x_i - x_j`. Returns values in [−1, 1]; `NaN` when all differences are zero. Uses pairwise NA deletion.
-- **`mu2df()`**: Applies `mu2()` to all column pairs of a data frame. Returns a full symmetric matrix (`as_dist = FALSE`, default) or a `dist` object of `1 − mu2` values (`as_dist = TRUE`). Unlike the partition functions, these have no plot side-effect.
+- **`mu2df()`**: Applies `mu2()` to all column pairs of a data frame. Returns a full symmetric matrix (`as_dist = FALSE`, default) or a `dist` object of `sqrt(1 − mu2)` values (`as_dist = TRUE`). Unlike the partition functions, these have no plot side-effect.
 
 ### Angular partition (`angular.R`)
 - **`angularPartition()`**: k wedge sectors from a common center. Brute-force over `n × C(n−1, k−1)` candidate angle k-tuples; tie-broken by **largest minimum 2D distance** from any cut ray to the nearest point. Center is **optimised** when either `cx` or `cy` is `NULL` (default) via multi-start Nelder-Mead; starts are the overall centroid plus each group's centroid. Ray length is computed from `par("usr")`. `angularPartition3()` (fixed k=3 reference) exists only in the companion script layer and is not part of this package.
