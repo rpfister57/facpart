@@ -10,9 +10,15 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 5,      # Width in inches
+  fig.height = 5,     # Height in inches
+  dpi = 300,          # Resolution (DPI)
+  dev = "svg"         # Use PNG for sharp rendering
 )
 ```
+
+## Facet Theory and Partitions
 
 Facet Theory (FT) is a meta-approach to empirical research proposed by Louis Guttman ( ) and since then developed by many others ( ). We strongly advise to acquire a basic understanding of FT before using this package, for example Shye (1998). An essential step in FT applications is Multidimensional Scaling (MDS) of similarities/distances; for introductions see Borg and Groenen (2005), and also refer to the vignettes of the *smacof* package, to which this package is closely related and which should be installed when using *facpart*.
 
@@ -80,4 +86,3 @@ text(gutt91_mds$conf, labels = Facets$Material,
 angularPartition(crd = gutt91_mds$conf,
                  group = Facets$Material, add = TRUE)
 ```
-
