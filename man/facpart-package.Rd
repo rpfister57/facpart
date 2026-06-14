@@ -30,6 +30,13 @@ minimum-area ellipses.
 }
 }
 
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://rpfister57.github.io/facpart/}
+}
+
+}
 \author{
 \strong{Maintainer}: Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID}) [copyright holder]
 

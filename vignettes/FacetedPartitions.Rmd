@@ -11,10 +11,10 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 5,      # Width in inches
-  fig.height = 5,     # Height in inches
-  dpi = 300,          # Resolution (DPI)
-  dev = "svg"         # Use PNG for sharp rendering
+  fig.width = 4,      # Width in inches
+  fig.height = 4,     # Height in inches
+  dpi = 150,          # Resolution (DPI)
+  dev = "png"         # Use PNG for sharp rendering
 )
 ```
 
@@ -86,3 +86,19 @@ text(gutt91_mds$conf, labels = Facets$Material,
 angularPartition(crd = gutt91_mds$conf,
                  group = Facets$Material, add = TRUE)
 ```
+
+To summarize, the basic workflow is:
+
+- Construct a correlation matrix K or distance matrix D of a set of n items. If necessare, convert K to D with \`smacof::sim2diss()\`.
+
+- Construct facet labels: Assign to each of n items exactly one of k (k \< n) labels corresponding to their facet elements. Store the assignment as a factor F with length = n (same item order as in D).
+
+- Apply multidimensional scaling to D, such as \`smacof::mds(D, ndim = 2, type = "ordinal")\`. Check for fit and store the result object as *out_mds*.
+
+- Plot the point configuration, for example \`plot(out_mds)\`.
+
+- Apply one of the partition functions; for example, \`angularPartition(crd = out_mds\$conf, group = F)\`. Necessary arguments are crd (the point coordinates) and group (the facet assignments).
+
+- Check the resulting plot.
+
+More details will be provided in the following discussion of the partition functions.
