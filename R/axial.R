@@ -3,7 +3,7 @@
 # ===================================================================
 
 
-#' Binary LDA separating line for a 2D configuration
+#' Binary LDA separating line for a 2D point configuration
 #'
 #' Fits a linear discriminant analysis to two-group 2D data and draws the
 #' classical LDA boundary — perpendicular to LD1 through the midpoint of the
@@ -48,13 +48,11 @@
 #'   partition over both angle and cut position (any `k >= 2`).
 #'
 #' @examples
-#' \dontrun{
 #' set.seed(1)
 #' crd <- rbind(cbind(rnorm(15, -1), rnorm(15)),
 #'              cbind(rnorm(15,  1), rnorm(15)))
 #' grp <- factor(c(rep("a", 15), rep("b", 15)))
 #' axialLine(crd, grp, fill = TRUE, add = FALSE)
-#' }
 #'
 #' @export
 axialLine <- function(crd,

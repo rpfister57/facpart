@@ -2,7 +2,7 @@
 % Please edit documentation in R/axial.R
 \name{axialLine}
 \alias{axialLine}
-\title{Binary LDA separating line for a 2D configuration}
+\title{Binary LDA separating line for a 2D point configuration}
 \usage{
 axialLine(
   crd,
@@ -68,13 +68,11 @@ linear separator; use \code{axialLine()} when you want the classical LDA
 classifier.
 }
 \examples{
-\dontrun{
 set.seed(1)
 crd <- rbind(cbind(rnorm(15, -1), rnorm(15)),
              cbind(rnorm(15,  1), rnorm(15)))
 grp <- factor(c(rep("a", 15), rep("b", 15)))
 axialLine(crd, grp, fill = TRUE, add = FALSE)
-}
 
 }
 \seealso{
