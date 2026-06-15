@@ -6,10 +6,10 @@
 # ---- Internal helpers ----
 
 #' @noRd
-#' given two angles a < b, find the middle one
-#' e.g.: two radians a < b, delta is the diff b - a
-#' returns the radiant of the line bisecting b - a
 .arc_mid <- function(a, b) {
+    # given two angles a < b, find the middle one
+    # e.g.: two radians a < b, delta is the diff b - a
+    # returns the radiant of the line bisecting b - a
     # delta (also if cycled around 2pi):
     delta <- (b - a) %% (2 * pi)
     return(atan2(sin(a + delta / 2), 
@@ -18,21 +18,19 @@
 
 
 #' @noRd
-#' Given center cx, cy: find the best angular k-partition by brute force.
-#'
-#' A candidate partition is a choice of `k` cut-gaps out of the `n` gaps
-#' between angle-sorted points; `combos` supplies these as `combn(n, k)`.
-#'
-#' Per-arc majority counts are read from a cumulative group-count table 
-#' per arc, without re-tabulating. With `full = FALSE` only the minimum
-#' misclassification is returned (margin and cut angles skipped) for use as
-#' the optimiser objective; `full = TRUE` additionally returns the 2D margin
-#' and the cut angles of the best partition.
 .angular_search <- function(coords, 
                             grp_int,
                             cx, cy,
                             k, n_pts, combos,
                             full = TRUE) {
+    # Given center cx, cy: find the best angular k-partition by brute force.
+    # A candidate partition is a choice of `k` cut-gaps out of the `n` gaps
+    # between angle-sorted points; `combos` supplies these as `combn(n, k)`.
+    # Per-arc majority counts are read from a cumulative group-count table 
+    # per arc, without re-tabulating. With `full = FALSE` only the minimum
+    # misclassification is returned (margin and cut angles skipped) for use as
+    # the optimiser objective; `full = TRUE` additionally returns the 2D margin
+    # and the cut angles of the best partition.
 
     # order points according to their angles (in radians)
     # Note: atan2(y, x) has y-coordinate first!

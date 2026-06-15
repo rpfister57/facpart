@@ -6,6 +6,18 @@
 # ---- Internal helpers ----
 
 #' @noRd
+# convert degrees to radians, and vice versa
+.d2r <- function(degree) {
+    return(rad <- degree * (pi/180))
+}
+
+#' @noRd
+.r2d <- function(rad) {
+    return(degree <- rad * (180/pi))
+}
+
+
+#' @noRd
 # Generate all n! permutations of 1..n as rows of an integer matrix.
 .permutations <- function(n) {
     if (n == 1L) return(matrix(1L, nrow = 1L, ncol = 1L))

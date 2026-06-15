@@ -57,7 +57,7 @@ nearest point
 }
 \description{
 Partitions a 2D configuration into \code{k >= 2} groups using \code{k-1} parallel
-separating lines. Both the direction of the lines and their positions
+separating lines. Both the slopes of the lines and their positions
 are searched to minimise empirical misclassification:
 }
 \details{
@@ -75,7 +75,7 @@ with the largest minimum margin (perpendicular distance from a cut line
 to the nearest point) is preferred — keeps cut lines visually away from
 the data points.
 
-For \code{k = 2}, \code{axialLines()} can differ substantially from \code{\link[=axialLine]{axialLine()}}:
+For \code{k = 2}, \code{axialLines()} can differ from \code{\link[=axialLine]{axialLine()}}:
 the latter places the cut at the midpoint of class means on the LD1
 projection (classical Bayes rule under normality), while \code{axialLines()}
 searches the full \verb{(angle, cut)} space for the empirical optimum.
@@ -85,19 +85,17 @@ separators are vertical. \code{slope} is returned as \code{Inf} and \code{interc
 carry the x-positions of the lines.
 }
 \examples{
-\dontrun{
 set.seed(1)
 crd <- rbind(cbind(rnorm(10, -1), rnorm(10)),
              cbind(rnorm(10,  0), rnorm(10)),
              cbind(rnorm(10,  1), rnorm(10)))
 grp <- factor(c(rep("a", 10), rep("b", 10), rep("c", 10)))
 axialLines(crd, grp, fill = TRUE, add = FALSE)
-}
 
 }
 \seealso{
 \code{\link[=axialLine]{axialLine()}} for the classical LDA Bayes-rule boundary
-(closed-form, binary only). Use \code{\link[=axialLine]{axialLine()}} when you want the
+(closed-form, binary only) if k=2. Use \code{\link[=axialLine]{axialLine()}} when you want the
 statistical LDA classifier; use \code{axialLines()} when you want the
 empirically optimal parallel-line partition.
 }

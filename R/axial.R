@@ -171,7 +171,7 @@ axialLine <- function(crd,
 #' Multi-group parallel-line partition (angle + cuts searched)
 #'
 #' Partitions a 2D configuration into `k >= 2` groups using `k-1` parallel
-#' separating lines. Both the direction of the lines and their positions
+#' separating lines. Both the slopes of the lines and their positions
 #' are searched to minimise empirical misclassification:
 #'
 #' - **Angle**: grid of `n_angles` equally-spaced angles in `[0, pi)`,
@@ -186,7 +186,7 @@ axialLine <- function(crd,
 #' to the nearest point) is preferred — keeps cut lines visually away from
 #' the data points.
 #'
-#' For `k = 2`, `axialLines()` can differ substantially from [axialLine()]:
+#' For `k = 2`, `axialLines()` can differ from [axialLine()]:
 #' the latter places the cut at the midpoint of class means on the LD1
 #' projection (classical Bayes rule under normality), while `axialLines()`
 #' searches the full `(angle, cut)` space for the empirical optimum.
@@ -210,7 +210,7 @@ axialLine <- function(crd,
 #'   `plot()` first.
 #'
 #' @seealso [axialLine()] for the classical LDA Bayes-rule boundary
-#'   (closed-form, binary only). Use [axialLine()] when you want the
+#'   (closed-form, binary only) if k=2. Use [axialLine()] when you want the
 #'   statistical LDA classifier; use `axialLines()` when you want the
 #'   empirically optimal parallel-line partition.
 #'
@@ -226,14 +226,12 @@ axialLine <- function(crd,
 #'   - `majority` — `character[k]`, majority group per sector
 #'
 #' @examples
-#' \dontrun{
 #' set.seed(1)
 #' crd <- rbind(cbind(rnorm(10, -1), rnorm(10)),
 #'              cbind(rnorm(10,  0), rnorm(10)),
 #'              cbind(rnorm(10,  1), rnorm(10)))
 #' grp <- factor(c(rep("a", 10), rep("b", 10), rep("c", 10)))
 #' axialLines(crd, grp, fill = TRUE, add = FALSE)
-#' }
 #'
 #' @export
 axialLines <- function(crd,
@@ -248,6 +246,8 @@ axialLines <- function(crd,
                      add = TRUE) {
 
     # ---- Input validation ----
+    if (any(is.na(crd)))       stop("No NAs allowed in crd!")
+    if (any(is.na(crd)))       stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2) stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)      stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
@@ -258,12 +258,17 @@ axialLines <- function(crd,
     k     <- nlevels(group)
     if (k < 2) stop("group must have at least 2 levels!")
 
+    # ---- define constants ----
     coords  <- as.matrix(crd)
     levels_ <- levels(group)
     grp_int <- as.integer(group)
     n_pts   <- nrow(coords)
-
-    # ---- Candidate angles ----
+    
+    # combos: compute cut-position combinations (independent of angle)
+    # each (n over k) selection of k points defines k cut-positions
+    if (k >= 3L) combos <- combn(n_pts - 1L, k - 1L)
+    
+    # ---- Candidate angles to check (0, pi) ----
     # Grid in [0, pi) plus LDA's LD1 direction as a high-quality seed.
     lda_fit   <- lda(coords, grouping = group)
     w_lda     <- lda_fit$scaling[, 1]
@@ -271,62 +276,100 @@ axialLines <- function(crd,
     thetas    <- c(seq(0, pi, length.out = n_angles + 1L)[-(n_angles + 1L)],
                    theta_lda)
 
-    # Pre-compute split-position combinations once (independent of angle).
-    if (k >= 3L) combos <- combn(n_pts - 1L, k - 1L)
-
     # ---- Joint search over (angle, cuts) ----
+    # For each angle the points are projected and sorted, then cumulative
+    # per-group counts (cum[i + 1, g] = number of group-g points among the
+    # first i sorted points) let every candidate partition be scored by
+    # vector arithmetic with no per-cut re-tabulation. A segment spanning
+    # sorted positions a..b has group counts cum[b + 1, ] - cum[a, ], and
+    # contributes (b - a + 1) - max_g(count) misclassified points; all
+    # C(n - 1, k - 1) partitions are scored together via vectorised pmax.
+    #
     # Tie-breaker: among configurations with the same misclassification
-    # count, prefer the one with the largest minimum margin. The cut at
-    # the midpoint of s_proj[sp] and s_proj[sp+1] has margin
-    # (s_proj[sp+1] - s_proj[sp]) / 2; for k cuts, take the min.
-    best_err    <- .Machine$integer.max
+    # count, prefer the one with the largest minimum margin. The cut at the
+    # midpoint of s_proj[sp] and s_proj[sp + 1] has margin
+    # (s_proj[sp + 1] - s_proj[sp]) / 2; for k - 1 cuts, take the min.
+    best_err    <- n_pts
     best_margin <- -Inf
     best_theta  <- theta_lda
     best_cuts   <- numeric(k - 1L)
 
+    # loop over all thetas (angles):
     for (theta in thetas) {
+        # projection on line: d = x cos theta + y sin theta
         w_t    <- c(cos(theta), sin(theta))
-        proj   <- as.numeric(coords %*% w_t)
-        ord    <- order(proj)
-        s_proj <- proj[ord]
+        proj_   <- as.numeric(coords %*% w_t)
+        ord    <- order(proj_)
+        s_proj <- proj_[ord]
+        
+        # group sequence along the current theta line:
         s_grp  <- grp_int[ord]
 
+        # cum: table of cumulative per-group counts over the sorted sequence:
+        cum <- matrix(0L, nrow = n_pts + 1L, ncol = k)
+        for (g in seq_len(k)) cum[-1L, g] <- cumsum(s_grp == g)
+        total <- cum[n_pts + 1L, ]
+
         if (k == 2L) {
-            for (sp in 1L:(n_pts - 1L)) {
-                seg1 <- s_grp[1L:sp]
-                seg2 <- s_grp[(sp + 1L):n_pts]
-                err  <- (length(seg1) - max(tabulate(seg1, nbins = k))) +
-                        (length(seg2) - max(tabulate(seg2, nbins = k)))
-                margin <- (s_proj[sp + 1L] - s_proj[sp]) / 2
-                if (err < best_err ||
-                    (err == best_err && margin > best_margin)) {
-                    best_err    <- err
-                    best_margin <- margin
-                    best_theta  <- theta
-                    best_cuts   <- (s_proj[sp] + s_proj[sp + 1L]) / 2
-                }
+            # Single cut after sorted position sp (1 .. n - 1). Inner counts
+            # are cum[sp + 1, ], outer counts total - cum[sp + 1, ].
+            sp     <- 1L:(n_pts - 1L)
+            c_in   <- cum[sp + 1L, , drop = FALSE]
+            max_in <- pmax(c_in[, 1L], c_in[, 2L])
+            max_ou <- pmax(total[1L] - c_in[, 1L], total[2L] - c_in[, 2L])
+            err    <- (sp - max_in) + ((n_pts - sp) - max_ou)
+            margin <- (s_proj[sp + 1L] - s_proj[sp]) / 2
+            cuts   <- matrix((s_proj[sp] + s_proj[sp + 1L]) / 2, ncol = 1L)
+            } 
+        else {
+            # combos is (k - 1) x M (M is number of possible cuts); 
+            # column ci gives the k - 1 cut positions.
+            # Accumulate, per segment, the max group count across all M
+            # columns; segment s spans positions combos[s - 1] + 1 .. combos[s]
+            # (with implicit bounds 0 and n_pts at the ends).
+            M       <- ncol(combos)
+            sum_max <- integer(M)
+            gap     <- matrix(0, nrow = M, ncol = k - 1L)
+            
+            # loop over the k groups:
+            for (s in seq_len(k)) {
+                lo    <- if (s == 1L) rep(0L, M)     else combos[s - 1L, ]
+                hi    <- if (s == k)  rep(n_pts, M)  else combos[s, ]
+                cnt   <- cum[hi + 1L, , drop = FALSE] - 
+                          cum[lo + 1L, , drop = FALSE]
+                r_max <- cnt[, 1L]
+                for (g in 2L:k) r_max <- pmax(r_max, cnt[, g])
+                sum_max <- sum_max + r_max
             }
-        } else {
-            for (ci in seq_len(ncol(combos))) {
-                sp     <- combos[, ci]
-                bounds <- c(0L, sp, n_pts)
-                err    <- 0L
-                for (s in seq_len(k)) {
-                    seg <- s_grp[(bounds[s] + 1L):bounds[s + 1L]]
-                    err <- err + length(seg) - max(tabulate(seg, nbins = k))
-                }
-                margin <- min(s_proj[sp + 1L] - s_proj[sp]) / 2
-                if (err < best_err ||
-                    (err == best_err && margin > best_margin)) {
-                    best_err    <- err
-                    best_margin <- margin
-                    best_theta  <- theta
-                    best_cuts   <- (s_proj[sp] + s_proj[sp + 1L]) / 2
-                }
-            }
+            
+            err <- n_pts - sum_max
+
+            # Per-column gaps, margins, and cut midpoints.
+            for (s in seq_len(k - 1L))
+                gap[, s] <- s_proj[combos[s, ] + 1L] - s_proj[combos[s, ]]
+            
+            margin <- (if (k - 1L == 1L) gap[, 1L]
+                       else do.call(pmin, as.data.frame(gap))) / 2
+            
+            cuts   <- t((matrix(s_proj[combos],      nrow = k - 1L) +
+                         matrix(s_proj[combos + 1L], nrow = k - 1L)) / 2)
+        }
+
+        # Best at this angle: lowest err, ties broken by largest margin.
+        # which.max returns the first maximum, so the lowest-index (earliest
+        # in scan order) column wins ties, matching the original loops.
+        m  <- min(err)
+        at <- which(err == m)
+        j  <- at[which.max(margin[at])]
+        if (m < best_err || (m == best_err && margin[j] > best_margin)) {
+            best_err    <- m
+            best_margin <- margin[j]
+            best_theta  <- theta
+            best_cuts   <- cuts[j, ]
         }
     }
 
+    
     # ---- Convert cuts to line geometry ----
     w        <- c(cos(best_theta), sin(best_theta))
     vertical <- abs(w[2]) < 1e-10
@@ -369,40 +412,26 @@ axialLines <- function(crd,
         cuts_sorted <- sort(best_cuts)
         cuts_ext    <- c(-Inf, cuts_sorted, Inf)
 
-        if (vertical) {
-            for (s in seq_len(k)) {
-                lo <- cuts_ext[s]
-                hi <- cuts_ext[s + 1L]
-
-                x_lo <- if (is.finite(lo)) lo / w[1] else (if (w[1] > 0) xl else xr)
-                x_hi <- if (is.finite(hi)) hi / w[1] else (if (w[1] > 0) xr else xl)
-                if (x_lo > x_hi) { tmp <- x_lo; x_lo <- x_hi; x_hi <- tmp }
-                x_lo <- max(xl, min(xr, x_lo))
-                x_hi <- max(xl, min(xr, x_hi))
-
-                polygon(c(x_lo, x_hi, x_hi, x_lo),
-                        c(yb,   yb,   yt,   yt),
+        # Each strip s is the band lo <= w . p <= hi (in projection units),
+        # where the same projection w drives the sector assignment above.
+        # Build it by clipping the plot rectangle against the two boundary
+        # half-planes. This is exact for any slope -- including steep /
+        # vertical lines that exit through the top and bottom edges, where
+        # corner-clamping a left-edge-to-right-edge polygon would collapse
+        # the band and merge strips into a single colour.
+        rect_x <- c(xl, xr, xr, xl)
+        rect_y <- c(yb, yb, yt, yt)
+        for (s in seq_len(k)) {
+            lo   <- cuts_ext[s]
+            hi   <- cuts_ext[s + 1L]
+            poly <- list(x = rect_x, y = rect_y)
+            if (is.finite(hi))
+                poly <- .clip_halfplane(poly$x, poly$y, w, hi, keep_le = TRUE)
+            if (is.finite(lo))
+                poly <- .clip_halfplane(poly$x, poly$y, w, lo, keep_le = FALSE)
+            if (length(poly$x) >= 3L)
+                polygon(poly$x, poly$y,
                         col = adjustcolor(cols[s], alpha.f = 0.15), border = NA)
-            }
-        } else {
-            for (s in seq_len(k)) {
-                lo <- cuts_ext[s]
-                hi <- cuts_ext[s + 1L]
-
-                y_lo_xl <- if (is.finite(lo)) (lo - w[1] * xl) / w[2] else (if (w[2] > 0) yb else yt)
-                y_lo_xr <- if (is.finite(lo)) (lo - w[1] * xr) / w[2] else (if (w[2] > 0) yb else yt)
-                y_hi_xl <- if (is.finite(hi)) (hi - w[1] * xl) / w[2] else (if (w[2] > 0) yt else yb)
-                y_hi_xr <- if (is.finite(hi)) (hi - w[1] * xr) / w[2] else (if (w[2] > 0) yt else yb)
-
-                y_lo_xl <- max(yb, min(yt, y_lo_xl))
-                y_lo_xr <- max(yb, min(yt, y_lo_xr))
-                y_hi_xl <- max(yb, min(yt, y_hi_xl))
-                y_hi_xr <- max(yb, min(yt, y_hi_xr))
-
-                polygon(c(xl,    xr,    xr,    xl),
-                        c(y_lo_xl, y_lo_xr, y_hi_xr, y_hi_xl),
-                        col = adjustcolor(cols[s], alpha.f = 0.15), border = NA)
-            }
         }
     }
 
@@ -434,4 +463,42 @@ axialLines <- function(crd,
         sector          = sector,
         majority        = majority
     )
+}
+
+
+#' Clip a polygon against a projection half-plane (Sutherland-Hodgman)
+#'
+#' Keeps the part of polygon `(px, py)` on one side of the line
+#' `w[1] * x + w[2] * y = bound`. With `keep_le = TRUE` the retained side is
+#' `w . p <= bound`; with `keep_le = FALSE` it is `w . p >= bound`. Used by
+#' [axialLines()] to shade the strip between two parallel cut lines for any
+#' slope, including steep / vertical separators.
+#'
+#' @noRd
+.clip_halfplane <- function(px, py, w, bound, keep_le) {
+    n <- length(px)
+    if (n == 0L) return(list(x = px, y = py))
+
+    # f <= 0 marks the kept side, regardless of orientation.
+    sgn <- if (keep_le) 1 else -1
+    f   <- sgn * (w[1L] * px + w[2L] * py - bound)
+
+    ox <- numeric(0)
+    oy <- numeric(0)
+    for (i in seq_len(n)) {
+        j  <- if (i == n) 1L else i + 1L
+        fi <- f[i]
+        fj <- f[j]
+        if (fi <= 0) {
+            ox <- c(ox, px[i])
+            oy <- c(oy, py[i])
+        }
+        # Edge crosses the boundary: add the intersection point.
+        if ((fi < 0 && fj > 0) || (fi > 0 && fj < 0)) {
+            t  <- fi / (fi - fj)
+            ox <- c(ox, px[i] + t * (px[j] - px[i]))
+            oy <- c(oy, py[i] + t * (py[j] - py[i]))
+        }
+    }
+    list(x = ox, y = oy)
 }
