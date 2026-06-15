@@ -66,6 +66,8 @@ axialLine <- function(crd,
                     add = TRUE) {
 
     # ---- Input validation ----
+    if (any(is.na(crd)))             stop("No NA allowed in crd!")
+    if (any(is.na(group)))           stop("No NA allowed in group!")
     if (length(dim(crd)) != 2)       stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)            stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group))  stop("nrow(crd) must equal length(group)!")
@@ -78,18 +80,19 @@ axialLine <- function(crd,
     levels_ <- levels(group)
 
     # ---- Fit LDA ----
-    lda_fit <- lda(coords, grouping = group)
+    lda_fit <- MASS::lda(coords, grouping = group)
 
-    # ---- Separating line ----
+    # ---- Compute separating line ----
     # Vertical-line guard: when LD1 is along the x-axis (w[2] ~= 0) the
     # separator is vertical. In that case slope = Inf and the intercept
     # field carries the x-position of the line.
     w        <- lda_fit$scaling[, 1]
-    mu1      <- colMeans(coords[group == levels_[1], , drop = FALSE])
-    mu2      <- colMeans(coords[group == levels_[2], , drop = FALSE])
+    mu1      <- lda_fit$means[1, ]
+    mu2      <- lda_fit$means[2, ]
     midpoint <- (mu1 + mu2) / 2
 
     vertical <- abs(w[2]) < 1e-10
+    
     if (vertical) {
         slope     <- Inf
         intercept <- midpoint[1]

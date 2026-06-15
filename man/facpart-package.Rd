@@ -30,6 +30,13 @@ minimum-area ellipses.
 }
 }
 
+\section{Plot utilities}{
+
+\itemize{
+\item \code{\link[=highlightMisclass]{highlightMisclass()}} — overlay markers on misclassified points
+}
+}
+
 \author{
 \strong{Maintainer}: Hans-Ruediger Pfister \email{rpfister57@gmail.com} (\href{https://orcid.org/0000-0002-3802-4222}{ORCID}) [copyright holder]
 
