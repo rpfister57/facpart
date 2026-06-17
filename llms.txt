@@ -1,10 +1,13 @@
 # facpart
 
-Facet Theory partitioning of 2-dimensional point configurations.
+## Overview
 
-Tools for partitioning 2D configurations (such as
-multidimensional-scaling output) into faceted partitions, with three
-types of partion schemes:
+facpart is a package with functions build on Facet Theory. It helps to
+partition 2-dimensional point configurations (such as
+multidimensional-scaling output) according to typical facet theoretical
+partition patterns.
+
+The three types of partion schemes:
 
 - **Axial** — parallel separating lines:
   [`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md),
@@ -37,10 +40,13 @@ Shye, S. (2015). New directions in facet theory. In S. Shye, E. Solomon,
 
 ## Installation
 
+The current version can be installed from github. Note: `facpart` is in
+a very early stage!
+
 ``` r
 
-# install.packages("devtools")
-devtools::install_local("path/to/facpart")
+# install.packages("remotes")
+remotes::install_github(repo = "https://github.com/rpfister57/facpart.git")
 ```
 
 ## Quick example
@@ -70,8 +76,8 @@ res$center     # optimised wedge apex
   [`draw.circle()`](https://plotrix.github.io/plotrix/reference/draw.circle.html),
   [`draw.ellipse()`](https://plotrix.github.io/plotrix/reference/draw.ellipse.html)
 
-All other functionality uses base R. The package works well with results
-from the smacof package.
+All other functionality uses base R. The package works well with the
+`smacof` package.
 
 ## License
 
