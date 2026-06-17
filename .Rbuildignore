@@ -6,3 +6,7 @@
 ^CLAUDE\.md$
 ^Claude_resume\.txt$
 ^\.claude$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
