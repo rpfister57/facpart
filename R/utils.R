@@ -58,6 +58,25 @@
 }
 
 
+#' @noRd
+# Draw a line from x,y with a given angle (in radians).
+# Default is from center (0,0)
+.draw_angle_line <- function(x = 0, y = 0, angle, 
+                            length = 1, ppoint = FALSE, ...) {
+    # x, y: start coordinates
+    # angle: in radians
+    # Compute endpoint
+    x_end <- x + length * cos(angle)
+    y_end <- y + length * sin(angle)
+    
+    # Draw the line
+    segments(x, y, x_end, y_end, ...)
+    
+    if (ppoint) points(x_end, y_end, pch = 19)
+}
+
+
+
 #' Highlight misclassified points on the active plot
 #'
 #' Overlays a marker on each misclassified point, using the `misclass_points`
