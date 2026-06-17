@@ -1,0 +1,112 @@
+# facpart
+
+Facet Theory partitioning of 2-dimensional point configurations.
+
+Tools for partitioning 2D configurations (such as
+multidimensional-scaling output) into faceted partitions, with three
+types of partion schemes:
+
+- **Axial** — parallel separating lines:
+  [`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md),
+  [`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md)
+- **Radial** — nested circles or ellipses:
+  [`radialCircle()`](https://rpfister57.github.io/facpart/reference/radialCircle.md),
+  [`radialCircles()`](https://rpfister57.github.io/facpart/reference/radialCircles.md),
+  [`radialEllipse()`](https://rpfister57.github.io/facpart/reference/radialEllipse.md),
+  [`radialEllipses()`](https://rpfister57.github.io/facpart/reference/radialEllipses.md)
+- **Angular** — wedge-shaped sectors:
+  [`angularPartition()`](https://rpfister57.github.io/facpart/reference/angularPartition.md)
+
+Plus some utilities:
+[`ellipseInConfig()`](https://rpfister57.github.io/facpart/reference/ellipseInConfig.md),
+[`inoutEllipse()`](https://rpfister57.github.io/facpart/reference/inoutEllipse.md),
+`mu2`
+
+## References
+
+Guttman, R., & Greenbaum, C. W. (1998). Facet theory: Its development
+and current status. European Psychologist, 3(1), 13-36.
+
+Shye, S. (2014). Faceted Smallest Space Analysis (FSSA). In A. Michalos
+(Ed.), Encyclopedia of quality of life research (pp. 2129-2133). New
+York: Springer.
+
+Shye, S. (2015). New directions in facet theory. In S. Shye, E. Solomon,
+& I. Borg (Eds.), 15th International Facet Theory Conference
+(pp. 147-158). New York City: Fordham University.
+
+## Installation
+
+``` r
+
+# install.packages("devtools")
+devtools::install_local("path/to/facpart")
+```
+
+## Quick example
+
+``` r
+
+library(facpart)
+
+set.seed(1)
+# Three clusters arranged around a common center
+theta <- rep(c(0, 2 * pi / 3, 4 * pi / 3), each = 12) + rnorm(36, 0, 0.25)
+r     <- runif(36, 0.5, 1.5)
+crd   <- cbind(r * cos(theta), r * sin(theta))
+grp   <- factor(rep(c("a", "b", "c"), each = 12))
+
+plot(crd, asp = 1)
+res <- angularPartition(crd, grp)
+res$misclass   # number of misclassified points
+res$center     # optimised wedge apex
+```
+
+## Dependencies
+
+- `cluster` — minimum-area enclosing ellipse via `ellipsoidhull()`
+- `MASS` — `lda()` for axial partitions
+- `plotrix` —
+  [`draw.circle()`](https://plotrix.github.io/plotrix/reference/draw.circle.html),
+  [`draw.ellipse()`](https://plotrix.github.io/plotrix/reference/draw.ellipse.html)
+
+All other functionality uses base R. The package works well with results
+from the smacof package.
+
+## License
+
+MIT
+
+# Package index
+
+## All functions
+
+- [`angularPartition()`](https://rpfister57.github.io/facpart/reference/angularPartition.md)
+  : Angular k-way (wedge) partition of a 2D configuration
+- [`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md)
+  : Binary LDA separating line for a 2D point configuration
+- [`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md)
+  : Multi-group parallel-line partition (angle + cuts searched)
+- [`ellipseInConfig()`](https://rpfister57.github.io/facpart/reference/ellipseInConfig.md)
+  : Fit and draw an ellipse around a 2D configuration
+- [`gutt91`](https://rpfister57.github.io/facpart/reference/gutt91.md) :
+  Guttman 1991 Intellligence Data
+- [`guttman65mds`](https://rpfister57.github.io/facpart/reference/guttman65mds.md)
+  : Guttman 1965 Intelligence Data
+- [`highlightMisclass()`](https://rpfister57.github.io/facpart/reference/highlightMisclass.md)
+  : Highlight misclassified points on the active plot
+- [`inoutEllipse()`](https://rpfister57.github.io/facpart/reference/inoutEllipse.md)
+  : Classify points as inside or outside a given ellipse
+- [`mu2()`](https://rpfister57.github.io/facpart/reference/mu2.md) :
+  Guttman's weak monotonicity coefficient mu2
+- [`mu2df()`](https://rpfister57.github.io/facpart/reference/mu2df.md) :
+  Matrix of mu2 coefficients for a data frame
+- [`radialCircle()`](https://rpfister57.github.io/facpart/reference/radialCircle.md)
+  : Binary radial partition (one separating circle)
+- [`radialCircles()`](https://rpfister57.github.io/facpart/reference/radialCircles.md)
+  : K-group radial partition (nested circles)
+- [`radialEllipse()`](https://rpfister57.github.io/facpart/reference/radialEllipse.md)
+  : Binary radial-elliptic partition (one separating ellipse)
+- [`radialEllipses()`](https://rpfister57.github.io/facpart/reference/radialEllipses.md)
+  : K-group radial-elliptic partition (nested ellipses)
+
