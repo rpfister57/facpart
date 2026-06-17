@@ -49,6 +49,14 @@ three files under `inst/doc/`. Never add `inst/doc` to `.gitignore` — its
 contents must be committed so the vignette ships with the package
 regardless of how it is installed.
 
+`DESCRIPTION` contains `BuildVignettes: false`, which tells the build
+system to use `inst/doc/` as pre-built and never rebuild from source.
+Without this, RStudio's build step triggers `devtools::build_vignettes()`,
+which deletes `inst/doc/` before rebuilding; if that rebuild fails the
+vignette is absent from the installed package and help pages break.
+Because rebuilding is suppressed, **you must run the workflow above
+manually whenever the vignette source changes**.
+
 Run the test suite with:
 
 ```r
