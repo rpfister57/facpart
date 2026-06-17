@@ -39,8 +39,8 @@ Shye, S. (2015). New directions in facet theory. In S. Shye, E. Solomon,
 
 ``` r
 
-# install.packages("devtools")
-devtools::install_local("path/to/facpart")
+# install with remotes
+remotes::install_github(repo = "https://github.com/rpfister57/facpart.git")
 ```
 
 ## Quick example
