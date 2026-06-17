@@ -1,4 +1,4 @@
-## ----include = FALSE----------------------------------------------------------
+## ----include = FALSE-------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -9,7 +9,7 @@ knitr::opts_chunk$set(
 )
 
 
-## ----gutt91-------------------------------------------------------------------
+## ----gutt91----------------------------------------------------
 library(facpart)
 
 Kor <- gutt91$gutt91_cor
@@ -19,14 +19,14 @@ Facets
 
 
 
-## ----MDS----------------------------------------------------------------------
+## ----MDS-------------------------------------------------------
 Kor_D <- smacof::sim2diss(Kor, method = "corr", to.dist = TRUE)
 
 gutt91_mds <- smacof::mds(Kor_D, type = "ordinal")
 gutt91_mds
 
 
-## ----MDSplot------------------------------------------------------------------
+## ----MDSplot---------------------------------------------------
 plot(gutt91_mds)
 
 plot(gutt91_mds$conf, 
@@ -36,7 +36,7 @@ text(gutt91_mds$conf, labels = Facets$Material,
 abline(v=0); abline(h=0)
 
 
-## ----angularPartition1--------------------------------------------------------
+## ----angularPartition1-----------------------------------------
 plot(gutt91_mds$conf, 
      asp = 1, las = 1)
 text(gutt91_mds$conf, labels = Facets$Material, 
