@@ -28,7 +28,4 @@ Imports:
 Config/roxygen2/version: 8.0.0
 LazyData: true
 Config/testthat/edition: 3
-<<<<<<< HEAD
 URL: https://rpfister57.github.io/facpart/
-=======
->>>>>>> origin/main

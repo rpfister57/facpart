@@ -1,13 +1,14 @@
 # facpart
 
-Facet Theory partitioning of 2-dimensional point configurations.
+## Overview
 
-Tools for partitioning 2D configurations (such as multidimensional-scaling
-output) into faceted partitions, with three types of partion schemes:
+facpart is a package with functions build on Facet Theory. It helps to partition 2-dimensional point configurations (such as multidimensional-scaling
+output) according to typical facet theoretical partition patterns.
+
+The three types of partion schemes:
 
 - **Axial** — parallel separating lines: `axialLine()`, `axialLines()`
-- **Radial** — nested circles or ellipses: `radialCircle()`, `radialCircles()`,
-  `radialEllipse()`, `radialEllipses()`
+- **Radial** — nested circles or ellipses: `radialCircle()`, `radialCircles()`, `radialEllipse()`, `radialEllipses()`
 - **Angular** — wedge-shaped sectors: `angularPartition()`
 
 Plus some utilities: `ellipseInConfig()`, `inoutEllipse()`, `mu2`
@@ -28,10 +29,10 @@ Shye, S. (2015). New directions in facet theory. In S. Shye,
 
 
 ## Installation
-
+The current version can be installed from github. Note: `facpart` is in a very early stage!
 ```r
-# install.packages("devtools")
-devtools::install_local("path/to/facpart")
+# install.packages("remotes")
+remotes::install_github(repo = "https://github.com/rpfister57/facpart.git")
 ```
 
 
@@ -59,7 +60,7 @@ res$center     # optimised wedge apex
 - `MASS` — `lda()` for axial partitions
 - `plotrix` — `draw.circle()`, `draw.ellipse()`
 
-All other functionality uses base R. The package works well with results from the smacof package.
+All other functionality uses base R. The package works well with the `smacof` package.
 
 ## License
 
