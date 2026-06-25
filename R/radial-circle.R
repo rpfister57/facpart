@@ -51,19 +51,19 @@
 
 
 #' @noRd
-.optimize_circle <- function(coords,
+.optimize_circle <- function(pcoords,
                              inner_flag,
                              prev_cx, prev_cy, prev_r,
                              starts,
                              meth = "Nelder-Mead") {
     has_prev <- !is.null(prev_r)
 
-    parscale <- c(diff(range(coords[, 1])), diff(range(coords[, 2])))
+    parscale <- c(diff(range(pcoords[, 1])), diff(range(pcoords[, 2])))
     parscale[parscale == 0] <- 1
 
     eval_ctr <- function(ctr) {
         cx_  <- ctr[1]; cy_  <- ctr[2]
-        d    <- sqrt((coords[, 1] - cx_)^2 + (coords[, 2] - cy_)^2)
+        d    <- sqrt((pcoords[, 1] - cx_)^2 + (pcoords[, 2] - cy_)^2)
         rmin <- if (has_prev) sqrt((cx_ - prev_cx)^2 + (cy_ - prev_cy)^2) + prev_r else 0
         ord  <- order(d)
         return(
@@ -82,7 +82,7 @@
     }
 
     cx_opt <- best$par[1]; cy_opt <- best$par[2]
-    d_opt  <- sqrt((coords[, 1] - cx_opt)^2 + (coords[, 2] - cy_opt)^2)
+    d_opt  <- sqrt((pcoords[, 1] - cx_opt)^2 + (pcoords[, 2] - cy_opt)^2)
     r_min  <- if (has_prev) sqrt((cx_opt - prev_cx)^2 + (cy_opt - prev_cy)^2) + prev_r else 0
     ord    <- order(d_opt)
     res    <- .best_radius(d_opt[ord], inner_flag[ord], r_min)
@@ -96,8 +96,10 @@
 
 
 #' @noRd
-.radial_cuts_2 <- function(coords, grp_int, cx, cy) {
-    dists  <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)
+.radial_cuts_2 <- function(pcoords, grp_int, cx, cy) {
+    
+    # sort points according to distance from center
+    dists  <- sqrt((pcoords[, 1] - cx)^2 + (pcoords[, 2] - cy)^2)
     ord    <- order(dists)
     s_dist <- dists[ord]
     s_grp  <- grp_int[ord]
@@ -106,6 +108,9 @@
     best_err <- n_pts + 1
     best_r   <- NA
 
+    # loop over sorted points (from center):
+    # calculate error sum over the two segments: error is count of
+    #  misclassified (n - max) points for each segment
     for (sp in 1L:(n_pts - 1L)) {
         seg1 <- s_grp[1L:sp]
         seg2 <- s_grp[(sp + 1L):n_pts]
@@ -117,9 +122,14 @@
         }
     }
 
+    # assign sector (1: inner, 2: outer) to each point
     sector <- ifelse(dists <= best_r, 1L, 2L)
+    
+    # for given center (cx,cy):
     return(
-        list(radius = best_r, misclass = best_err, sector = sector))
+        list(radius = best_r,        # optimal radius
+             misclass = best_err,    # count of misclasssified points
+             sector = sector))       # sector assignment of each point
 }
 
 
@@ -132,9 +142,9 @@
 #' all `n-1` candidate midpoints without assuming which group is inner.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
-#' @param group Factor, character, or integer vector with exactly 2 levels.
-#' @param cx,cy Center of the separating circle; optimised when `NULL`.
-#' @param fill If `TRUE`, shade the inner disc and outer region.
+#' @param group Factor with exactly 2 levels.
+#' @param cx,cy Center of the separating circle; optimised when `NULL` (default).
+#' @param fill If `TRUE`, shade the inner disc and outer region (default `FALSE`).
 #' @param output If `TRUE` (default), return results list.
 #' @param col Circle border colour (default `"purple"`).
 #' @param cols Length-2 fill colours (default `c("steelblue", "tomato")`).
@@ -150,7 +160,6 @@
 #'   point), and `majority` (`character[2]`).
 #'
 #' @examples
-#' \dontrun{
 #' set.seed(1)
 #' inner <- cbind(rnorm(20, 0, 0.3), rnorm(20, 0, 0.3))
 #' th <- runif(20, 0, 2 * pi)
@@ -158,7 +167,6 @@
 #' crd <- rbind(inner, outer)
 #' grp <- factor(c(rep("in", 20), rep("out", 20)))
 #' radialCircle(crd, grp, fill = TRUE, add = FALSE)
-#' }
 #'
 #' @export
 radialCircle <- function(crd,
@@ -176,6 +184,8 @@ radialCircle <- function(crd,
 
     # ---- Input validation ----
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
+    if (any(is.na(crd)))            stop("No NAs allowed in crd!")
+    if (any(is.na(group)))          stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)           stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
@@ -184,27 +194,31 @@ radialCircle <- function(crd,
     group <- as.factor(group)
     if (nlevels(group) != 2) stop("group must have exactly 2 levels!")
 
-    coords  <- as.matrix(crd)
+    pcoords  <- as.matrix(crd)
     grp_int <- as.integer(group)
 
     # ---- Optimise center if not given ----
     # Multi-start: try overall centroid + each group's centroid. The
     # objective (integer misclassification) is a step function, so
     # Nelder-Mead is prone to stalling on plateaus from a single start.
-    # parscale sizes the simplex to the data range.
+    
     if (is.null(cx) || is.null(cy)) {
-        parscale <- c(diff(range(coords[, 1])), diff(range(coords[, 2])))
+        # parscale sizes the simplex to the data range:
+        parscale <- c(diff(range(pcoords[, 1])), diff(range(pcoords[, 2])))
         parscale[parscale == 0] <- 1
 
+        # start centers (overall, group means of the 2 groups):
         starts <- list(
-            c(mean(coords[, 1]),              mean(coords[, 2])),
-            c(mean(coords[grp_int == 1L, 1]), mean(coords[grp_int == 1L, 2])),
-            c(mean(coords[grp_int == 2L, 1]), mean(coords[grp_int == 2L, 2]))
+            c(mean(pcoords[, 1]),              mean(pcoords[, 2])),
+            c(mean(pcoords[grp_int == 1L, 1]), mean(pcoords[grp_int == 1L, 2])),
+            c(mean(pcoords[grp_int == 2L, 1]), mean(pcoords[grp_int == 2L, 2]))
         )
 
+        # define function to optimize: fewest misclassified points
         fnToOpt <- function(p) {
-            .radial_cuts_2(coords, grp_int, p[1], p[2])$misclass}
+            .radial_cuts_2(pcoords, grp_int, p[1], p[2])$misclass}
 
+        # loop over start values, find best center coordinates cx,cy:
         best <- NULL
         for (s0 in starts) {
             opt <- optim(
@@ -221,13 +235,13 @@ radialCircle <- function(crd,
     }
 
     # ---- Radius and sectors at chosen center ----
-    res    <- .radial_cuts_2(coords, grp_int, cx, cy)
+    res    <- .radial_cuts_2(pcoords, grp_int, cx, cy)
     radius <- res$radius
     sector <- res$sector
 
     # ---- Unique group assignment ----
     count_mat <- matrix(0L, nrow = 2L, ncol = 2L)
-    for (r in 1L:2L) {
+    for (r in 1:2) {
         pts_r <- grp_int[sector == r]
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = 2L)
@@ -236,8 +250,8 @@ radialCircle <- function(crd,
     majority   <- levels(group)[assignment]
 
     if (!add) {
-        plot(coords, asp = 1)
-        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
+        plot(pcoords, asp = 1)
+        graphics::text(pcoords, labels = group, cex = 0.7, pos = 4)
     }
 
     # ---- Optional fill ----
@@ -264,8 +278,8 @@ radialCircle <- function(crd,
 
     misclass_idx    <- which(as.character(group) != majority[sector])
     misclass_points <- data.frame(
-        x     = coords[misclass_idx, 1],
-        y     = coords[misclass_idx, 2],
+        x     = pcoords[misclass_idx, 1],
+        y     = pcoords[misclass_idx, 2],
         label = group[misclass_idx]
     )
 
@@ -356,9 +370,9 @@ radialCircles <- function(crd,
     k     <- nlevels(group)
     if (k < 2L) stop("group must have at least 2 levels!")
 
-    coords  <- as.matrix(crd)
+    pcoords  <- as.matrix(crd)
     grp_int <- as.integer(group)
-    n_pts   <- nrow(coords)
+    n_pts   <- nrow(pcoords)
 
     if (is.null(cols)) cols <- hcl.colors(k, palette = "Pastel 1")
 
@@ -373,7 +387,7 @@ radialCircles <- function(crd,
 
     if (fixed_center) {
         # Concentric branch: shared (cx, cy) for all k-1 circles.
-        d        <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)
+        d        <- sqrt((pcoords[, 1] - cx)^2 + (pcoords[, 2] - cy)^2)
         ord      <- order(d)
         d_sorted <- d[ord]
 
@@ -387,15 +401,15 @@ radialCircles <- function(crd,
         }
     } else {
         # Independent-centers branch (original behaviour).
-        overall_ctr <- c(mean(coords[, 1]), mean(coords[, 2]))
+        overall_ctr <- c(mean(pcoords[, 1]), mean(pcoords[, 2]))
         for (s in seq_len(k - 1L)) {
             inner_flag <- grp_int <= s
-            inner_ctr  <- c(mean(coords[inner_flag, 1]), mean(coords[inner_flag, 2]))
+            inner_ctr  <- c(mean(pcoords[inner_flag, 1]), mean(pcoords[inner_flag, 2]))
 
             starts <- list(inner_ctr, overall_ctr)
             if (!is.null(prev_cx)) starts <- c(starts, list(c(prev_cx, prev_cy)))
 
-            circ <- .optimize_circle(coords, inner_flag,
+            circ <- .optimize_circle(pcoords, inner_flag,
                                      prev_cx, prev_cy, prev_r,
                                      starts,
                                      meth = .method)
@@ -411,7 +425,7 @@ radialCircles <- function(crd,
     # ---- Sector assignment ----
     sector <- rep(k, n_pts)
     for (s in (k - 1L):1L) {
-        d <- sqrt((coords[, 1] - cx_vec[s])^2 + (coords[, 2] - cy_vec[s])^2)
+        d <- sqrt((pcoords[, 1] - cx_vec[s])^2 + (pcoords[, 2] - cy_vec[s])^2)
         sector[d <= radii_vec[s]] <- s
     }
 
@@ -426,8 +440,8 @@ radialCircles <- function(crd,
     majority   <- levels(group)[assignment]
 
     if (!add) {
-        plot(coords, asp = 1)
-        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
+        plot(pcoords, asp = 1)
+        graphics::text(pcoords, labels = group, cex = 0.7, pos = 4)
     }
 
     # ---- Optional fill ----
@@ -469,8 +483,8 @@ radialCircles <- function(crd,
 
     misclass_idx    <- which(as.character(group) != majority[sector])
     misclass_points <- data.frame(
-        x     = coords[misclass_idx, 1],
-        y     = coords[misclass_idx, 2],
+        x     = pcoords[misclass_idx, 1],
+        y     = pcoords[misclass_idx, 2],
         label = group[misclass_idx]
     )
 

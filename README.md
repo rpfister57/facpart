@@ -2,16 +2,15 @@
 
 ## Overview
 
-facpart is a package with functions build on Facet Theory. It helps to partition 2-dimensional point configurations (such as multidimensional-scaling
-output) according to typical facet theoretical partition patterns.
+facpart is a package with functions build on Facet Theory. It helps to partition 2-dimensional point configurations (such as multidimensional-scaling output) according to typical facet theoretical partition patterns.
 
-The three types of partion schemes:
+Three types of common partion schemes are supported:
 
 - **Axial** — parallel separating lines: `axialLine()`, `axialLines()`
 - **Radial** — nested circles or ellipses: `radialCircle()`, `radialCircles()`, `radialEllipse()`, `radialEllipses()`
 - **Angular** — wedge-shaped sectors: `angularPartition()`
 
-Plus some utilities: `ellipseInConfig()`, `inoutEllipse()`, `mu2`
+Plus some utilities: `ellipseInConfig()`, `inoutEllipse()`, `mu2()`
 
 
 ## References
@@ -47,11 +46,12 @@ theta <- rep(c(0, 2 * pi / 3, 4 * pi / 3), each = 12) + rnorm(36, 0, 0.25)
 r     <- runif(36, 0.5, 1.5)
 crd   <- cbind(r * cos(theta), r * sin(theta))
 grp   <- factor(rep(c("a", "b", "c"), each = 12))
-
 plot(crd, asp = 1)
+
 res <- angularPartition(crd, grp)
 res$misclass   # number of misclassified points
-res$center     # optimised wedge apex
+res2 <- axialLines(crd, grp, fill = TRUE)
+res2$misclass
 ```
 
 ## Dependencies
@@ -60,8 +60,10 @@ res$center     # optimised wedge apex
 - `MASS` — `lda()` for axial partitions
 - `plotrix` — `draw.circle()`, `draw.ellipse()`
 
-All other functionality uses base R. The package works well with the `smacof` package.
+All other functionality uses base R. The package works well with the `smacof` package for multidimensional scaling.
 
 ## License
 
 MIT
+
+see also: rpfister57.github.io/facpart

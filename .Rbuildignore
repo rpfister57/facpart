@@ -6,10 +6,7 @@
 ^CLAUDE\.md$
 ^Claude_resume\.txt$
 ^\.claude$
-<<<<<<< HEAD
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
 ^\.github$
-=======
->>>>>>> origin/main

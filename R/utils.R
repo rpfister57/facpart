@@ -35,14 +35,15 @@
 
 
 #' @noRd
-# Bijective assignment of k groups to k regions that maximises correctly
-# classified points. count_mat[g, r] = number of group-g points in region r.
+# Bijective assignment of k groups to r regions (k = r) that maximises 
+# correctly classified points. 
+# count_mat[g, r] = number of group-g points in region r.
 # Returns integer vector assignment where assignment[r] = group index for
 # region r. Brute-force over all k! permutations -- fast for small k.
 .assign_groups <- function(count_mat) {
     k <- nrow(count_mat)
     if (k == 1L) return(1L)
-    perms     <- .permutations(k)
+    perms     <- gtools::permutations(k, k)
     best_val  <- -1L
     best_perm <- seq_len(k)
     idx_r     <- seq_len(k)
