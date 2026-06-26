@@ -33,15 +33,15 @@ radialCircle(
 
 - group:
 
-  Factor, character, or integer vector with exactly 2 levels.
+  Factor with exactly 2 levels.
 
 - cx, cy:
 
-  Center of the separating circle; optimised when `NULL`.
+  Center of the separating circle; optimised when `NULL` (default).
 
 - fill:
 
-  If `TRUE`, shade the inner disc and outer region.
+  If `TRUE`, shade the inner disc and outer region (default `FALSE`).
 
 - output:
 
@@ -82,7 +82,6 @@ point), and `majority` (`character[2]`).
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 set.seed(1)
 inner <- cbind(rnorm(20, 0, 0.3), rnorm(20, 0, 0.3))
 th <- runif(20, 0, 2 * pi)
@@ -90,5 +89,25 @@ outer <- cbind(2 * cos(th), 2 * sin(th)) + matrix(rnorm(40, 0, 0.1), 20)
 crd <- rbind(inner, outer)
 grp <- factor(c(rep("in", 20), rep("out", 20)))
 radialCircle(crd, grp, fill = TRUE, add = FALSE)
-} # }
+
+#> $center
+#> [1] -0.03723659 -0.02506890
+#> 
+#> $radius
+#> [1] 1.270447
+#> 
+#> $misclass
+#> [1] 0
+#> 
+#> $misclass_points
+#> [1] x     y     label
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $sector
+#>  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+#> [39] 2 2
+#> 
+#> $majority
+#> [1] "in"  "out"
+#> 
 ```

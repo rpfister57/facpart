@@ -74,8 +74,8 @@ From `DESCRIPTION`:
   `draw.ellipse()`
 - **Imports**: `cluster` (`ellipsoidhull()`), `MASS` (`lda()`),
   `grDevices`, `graphics`, `stats`, `utils`
-- **Suggests**: `smacof` (datasets used in examples), `knitr`,
-  `rmarkdown` (vignette), `testthat >= 3.0.0` (tests)
+- **Suggests**: `smacof` (datasets used in examples),
+  `testthat >= 3.0.0` (tests)
 
 ## Exported API
 
@@ -262,6 +262,30 @@ center at origin). The `angle` in all ellipse output is in **radians**.
 - [`ellipseInConfig()`](https://rpfister57.github.io/facpart/reference/ellipseInConfig.md)
   has a `labs` parameter that is currently unused but kept for backward
   compatibility — do not remove it.
+
+## pkgdown / GitHub Pages
+
+The package site is deployed to `https://rpfister57.github.io/facpart/`
+via the workflow at `.github/workflows/pkgdown.yaml`. It triggers on
+push to `main`, on published releases, and manually via
+`workflow_dispatch`.
+
+The workflow runs
+[`pkgdown::build_site_github_pages()`](https://pkgdown.r-lib.org/reference/build_site_github_pages.html)
+(output goes to `docs/`) and then deploys `docs/` to the `gh-pages`
+branch using `JamesIves/github-pages-deploy-action`. Configuration is in
+`_pkgdown.yml` (Bootstrap 5 template; URL matches `DESCRIPTION`’s `URL:`
+field).
+
+To rebuild the site locally:
+
+``` r
+
+pkgdown::build_site()
+```
+
+The `docs/` directory is excluded from the package tarball via
+`.Rbuildignore`.
 
 ## Known R CMD check Issues (as of v0.1.1)
 

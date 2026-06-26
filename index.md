@@ -7,7 +7,7 @@ partition 2-dimensional point configurations (such as
 multidimensional-scaling output) according to typical facet theoretical
 partition patterns.
 
-The three types of partion schemes:
+Three types of common partion schemes are supported:
 
 - **Axial** — parallel separating lines:
   [`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md),
@@ -23,7 +23,7 @@ The three types of partion schemes:
 Plus some utilities:
 [`ellipseInConfig()`](https://rpfister57.github.io/facpart/reference/ellipseInConfig.md),
 [`inoutEllipse()`](https://rpfister57.github.io/facpart/reference/inoutEllipse.md),
-`mu2`
+[`mu2()`](https://rpfister57.github.io/facpart/reference/mu2.md)
 
 ## References
 
@@ -61,11 +61,12 @@ theta <- rep(c(0, 2 * pi / 3, 4 * pi / 3), each = 12) + rnorm(36, 0, 0.25)
 r     <- runif(36, 0.5, 1.5)
 crd   <- cbind(r * cos(theta), r * sin(theta))
 grp   <- factor(rep(c("a", "b", "c"), each = 12))
-
 plot(crd, asp = 1)
+
 res <- angularPartition(crd, grp)
 res$misclass   # number of misclassified points
-res$center     # optimised wedge apex
+res2 <- axialLines(crd, grp, fill = TRUE)
+res2$misclass
 ```
 
 ## Dependencies
@@ -77,8 +78,10 @@ res$center     # optimised wedge apex
   [`draw.ellipse()`](https://plotrix.github.io/plotrix/reference/draw.ellipse.html)
 
 All other functionality uses base R. The package works well with the
-`smacof` package.
+`smacof` package for multidimensional scaling.
 
 ## License
 
 MIT
+
+see also: rpfister57.github.io/facpart

@@ -85,7 +85,7 @@
 <strong>Imports</strong>: <code>cluster</code> (<code>ellipsoidhull()</code>), <code>MASS</code> (<code>lda()</code>), <code>grDevices</code>, <code>graphics</code>, <code>stats</code>, <code>utils</code>
 </li>
 <li>
-<strong>Suggests</strong>: <code>smacof</code> (datasets used in examples), <code>knitr</code>, <code>rmarkdown</code> (vignette), <code>testthat &gt;= 3.0.0</code> (tests)</li>
+<strong>Suggests</strong>: <code>smacof</code> (datasets used in examples), <code>testthat &gt;= 3.0.0</code> (tests)</li>
 </ul></div>
 <div class="section level2">
 <h2 id="exported-api">Exported API<a class="anchor" aria-label="anchor" href="#exported-api"></a></h2>
@@ -195,6 +195,15 @@
 <li>
 <code><a href="reference/ellipseInConfig.html">ellipseInConfig()</a></code> has a <code>labs</code> parameter that is currently unused but kept for backward compatibility — do not remove it.</li>
 </ul></div>
+<div class="section level2">
+<h2 id="pkgdown--github-pages">pkgdown / GitHub Pages<a class="anchor" aria-label="anchor" href="#pkgdown--github-pages"></a></h2>
+<p>The package site is deployed to <code>https://rpfister57.github.io/facpart/</code> via the workflow at <code>.github/workflows/pkgdown.yaml</code>. It triggers on push to <code>main</code>, on published releases, and manually via <code>workflow_dispatch</code>.</p>
+<p>The workflow runs <code><a href="https://pkgdown.r-lib.org/reference/build_site_github_pages.html" class="external-link">pkgdown::build_site_github_pages()</a></code> (output goes to <code>docs/</code>) and then deploys <code>docs/</code> to the <code>gh-pages</code> branch using <code>JamesIves/github-pages-deploy-action</code>. Configuration is in <code>_pkgdown.yml</code> (Bootstrap 5 template; URL matches <code>DESCRIPTION</code>’s <code>URL:</code> field).</p>
+<p>To rebuild the site locally:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>The <code>docs/</code> directory is excluded from the package tarball via <code>.Rbuildignore</code>.</p>
+</div>
 <div class="section level2">
 <h2 id="known-r-cmd-check-issues-as-of-v011">Known R CMD check Issues (as of v0.1.1)<a class="anchor" aria-label="anchor" href="#known-r-cmd-check-issues-as-of-v011"></a></h2>
 <ul><li>

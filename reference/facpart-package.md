@@ -36,6 +36,12 @@ minimum-area ellipses.
 - [`highlightMisclass()`](https://rpfister57.github.io/facpart/reference/highlightMisclass.md)
   — overlay markers on misclassified points
 
+## See also
+
+Useful links:
+
+- <https://rpfister57.github.io/facpart/>
+
 ## Author
 
 **Maintainer**: Hans-Ruediger Pfister <rpfister57@gmail.com>
