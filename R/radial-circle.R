@@ -15,17 +15,21 @@
 #' @noRd
 .best_radius <- function(s_dist, s_flag, r_min = 0) {
     n        <- length(s_dist)
-    best_err <- 2*n
+    cs_not   <- cumsum(!s_flag)
+    total_in <- sum(s_flag)
+    cs_in    <- cumsum(s_flag)
+    r_cands  <- (s_dist[-n] + s_dist[-1L]) / 2
+    errs     <- cs_not[-n] + (total_in - cs_in[-n])
+
+    sp_start <- findInterval(r_min, r_cands, left.open = TRUE) + 1L
+    best_err <- 2L * n
     best_r   <- NA
 
-    for (sp in 1L:(n - 1L)) {
-        r_cand <- (s_dist[sp] + s_dist[sp + 1L]) / 2
-        if (r_cand < r_min) next
-        err <- sum(!s_flag[1L:sp]) + sum(s_flag[(sp + 1L):n])
-        if (err < best_err) {
-            best_err <- err
-            best_r   <- r_cand
-        }
+    if (sp_start <= n - 1L) {
+        idx      <- sp_start:(n - 1L)
+        best_i   <- idx[which.min(errs[idx])]
+        best_err <- errs[best_i]
+        best_r   <- r_cands[best_i]
     }
 
     r_all_in   <- max(s_dist) * 1.05 + 1e-6
@@ -105,31 +109,22 @@
     s_grp  <- grp_int[ord]
     n_pts  <- length(dists)
 
-    best_err <- n_pts + 1
-    best_r   <- NA
+    cnt1     <- cumsum(s_grp == 1L)
+    total1   <- cnt1[n_pts]
+    sp_vec   <- seq_len(n_pts - 1L)
+    cnt1_pre <- cnt1[sp_vec]
+    cnt1_suf <- total1 - cnt1_pre
+    suf_size <- n_pts - sp_vec
+    errs     <- pmin(cnt1_pre, sp_vec - cnt1_pre) +
+                pmin(cnt1_suf, suf_size - cnt1_suf)
+    best_sp  <- which.min(errs)
+    best_r   <- (s_dist[best_sp] + s_dist[best_sp + 1L]) / 2
 
-    # loop over sorted points (from center):
-    # calculate error sum over the two segments: error is count of
-    #  misclassified (n - max) points for each segment
-    for (sp in 1L:(n_pts - 1L)) {
-        seg1 <- s_grp[1L:sp]
-        seg2 <- s_grp[(sp + 1L):n_pts]
-        err  <- (sp         - max(tabulate(seg1, nbins = 2L))) +
-                (n_pts - sp - max(tabulate(seg2, nbins = 2L)))
-        if (err < best_err) {
-            best_err <- err
-            best_r   <- (s_dist[sp] + s_dist[sp + 1L]) / 2
-        }
-    }
-
-    # assign sector (1: inner, 2: outer) to each point
     sector <- ifelse(dists <= best_r, 1L, 2L)
-    
-    # for given center (cx,cy):
     return(
-        list(radius = best_r,        # optimal radius
-             misclass = best_err,    # count of misclasssified points
-             sector = sector))       # sector assignment of each point
+        list(radius   = best_r,
+             misclass = errs[best_sp],
+             sector   = sector))
 }
 
 
@@ -424,9 +419,13 @@ radialCircles <- function(crd,
 
     # ---- Sector assignment ----
     sector <- rep(k, n_pts)
-    for (s in (k - 1L):1L) {
-        d <- sqrt((pcoords[, 1] - cx_vec[s])^2 + (pcoords[, 2] - cy_vec[s])^2)
-        sector[d <= radii_vec[s]] <- s
+    if (fixed_center) {
+        for (s in (k - 1L):1L) sector[d <= radii_vec[s]] <- s
+    } else {
+        for (s in (k - 1L):1L) {
+            d_s <- sqrt((pcoords[, 1] - cx_vec[s])^2 + (pcoords[, 2] - cy_vec[s])^2)
+            sector[d_s <= radii_vec[s]] <- s
+        }
     }
 
     # ---- Unique group assignment ----

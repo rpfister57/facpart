@@ -22,11 +22,11 @@ radialCircle(
 \arguments{
 \item{crd}{Numeric matrix or data frame with exactly 2 columns.}
 
-\item{group}{Factor, character, or integer vector with exactly 2 levels.}
+\item{group}{Factor with exactly 2 levels.}
 
-\item{cx, cy}{Center of the separating circle; optimised when \code{NULL}.}
+\item{cx, cy}{Center of the separating circle; optimised when \code{NULL} (default).}
 
-\item{fill}{If \code{TRUE}, shade the inner disc and outer region.}
+\item{fill}{If \code{TRUE}, shade the inner disc and outer region (default \code{FALSE}).}
 
 \item{output}{If \code{TRUE} (default), return results list.}
 
@@ -57,7 +57,6 @@ For a given center, the optimal radius is found by a linear scan over
 all \code{n-1} candidate midpoints without assuming which group is inner.
 }
 \examples{
-\dontrun{
 set.seed(1)
 inner <- cbind(rnorm(20, 0, 0.3), rnorm(20, 0, 0.3))
 th <- runif(20, 0, 2 * pi)
@@ -65,6 +64,5 @@ outer <- cbind(2 * cos(th), 2 * sin(th)) + matrix(rnorm(40, 0, 0.1), 20)
 crd <- rbind(inner, outer)
 grp <- factor(c(rep("in", 20), rep("out", 20)))
 radialCircle(crd, grp, fill = TRUE, add = FALSE)
-}
 
 }

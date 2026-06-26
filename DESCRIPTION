@@ -14,7 +14,7 @@ Description: Tools for partitioning 2-dimensional configurations (such as
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-Depends: R (>= 4.0), plotrix, gtools
+Depends: R (>= 4.0), plotrix
 Suggests:
     smacof,
     testthat (>= 3.0.0)
@@ -24,7 +24,8 @@ Imports:
     graphics,
     MASS,
     stats,
-    utils
+    utils,
+    gtools
 Config/roxygen2/version: 8.0.0
 LazyData: true
 Config/testthat/edition: 3

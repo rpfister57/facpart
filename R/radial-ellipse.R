@@ -30,7 +30,7 @@
 
 
 #' @noRd
-.eval_ellipse <- function(params, coords, inner_flag, prev = NULL,
+.eval_ellipse <- function(params, coords, inner_flag, prev_bnd = NULL,
                           penalty = 1e6) {
     cx    <- params[1]
     cy    <- params[2]
@@ -40,13 +40,20 @@
 
     if (a < 1e-6 || b < 1e-6) return(penalty)
 
-    if (!is.null(prev)) {
-        bnd <- .ellipse_pts(prev$cx, prev$cy, prev$a, prev$b, prev$angle,
-                            n = 200L)
-        if (!all(.in_ellipse(bnd, cx, cy, a, b, angle))) return(penalty)
+    cos_a <- cos(angle)
+    sin_a <- sin(angle)
+
+    if (!is.null(prev_bnd)) {
+        dx <- prev_bnd[, 1] - cx;  dy <- prev_bnd[, 2] - cy
+        u  <-  cos_a * dx + sin_a * dy
+        v  <- -sin_a * dx + cos_a * dy
+        if (any((u / a)^2 + (v / b)^2 > 1)) return(penalty)
     }
 
-    inside <- .in_ellipse(coords, cx, cy, a, b, angle)
+    dx     <- coords[, 1] - cx;  dy <- coords[, 2] - cy
+    u      <-  cos_a * dx + sin_a * dy
+    v      <- -sin_a * dx + cos_a * dy
+    inside <- (u / a)^2 + (v / b)^2 <= 1
     sum(inner_flag & !inside) + sum(!inner_flag & inside)
 }
 
@@ -87,6 +94,11 @@
     max_range <- max(x_range, y_range)
     parscale  <- c(x_range, y_range, max_range, max_range, pi)
 
+    prev_bnd <- if (!is.null(prev))
+        .ellipse_pts(prev$cx, prev$cy, prev$a, prev$b, prev$angle, n = 200L)
+    else
+        NULL
+
     best <- NULL
     for (init in starts) {
         opt <- optim(
@@ -94,7 +106,7 @@
             fn         = .eval_ellipse,
             coords     = coords,
             inner_flag = inner_flag,
-            prev       = prev,
+            prev_bnd   = prev_bnd,
             method     = "Nelder-Mead",
             control    = list(reltol = 1e-8, maxit = 5000,
                               parscale = parscale)
@@ -430,10 +442,15 @@ radialEllipses <- function(crd,
 
     # ---- Sector assignment ----
     sector <- rep(k, n_pts)
-    for (s in (k - 1L):1L) {
-        inside         <- .in_ellipse(coords, cx_vec[s], cy_vec[s],
-                                      a_vec[s], b_vec[s], angle_vec[s])
-        sector[inside] <- s
+    if (fixed_shape) {
+        t_vec <- a_vec / a_fix
+        for (s in (k - 1L):1L) sector[crit_t <= t_vec[s]] <- s
+    } else {
+        for (s in (k - 1L):1L) {
+            inside         <- .in_ellipse(coords, cx_vec[s], cy_vec[s],
+                                          a_vec[s], b_vec[s], angle_vec[s])
+            sector[inside] <- s
+        }
     }
 
     # ---- Majority labels and misclassification ----
