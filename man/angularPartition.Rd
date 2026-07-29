@@ -9,8 +9,10 @@ angularPartition(
   group,
   cx = NULL,
   cy = NULL,
+  fill = FALSE,
   output = TRUE,
   col = "darkorange",
+  cols = NULL,
   lwd = 2,
   lty = 1,
   add = TRUE
@@ -23,9 +25,13 @@ angularPartition(
 
 \item{cx, cy}{Center; optimised when either is \code{NULL}.}
 
+\item{fill}{If \code{TRUE}, shade the \code{k} wedge sectors (default \code{FALSE}).}
+
 \item{output}{If \code{TRUE} (default), return list of results.}
 
 \item{col}{Ray colour (default \code{"darkorange"}).}
+
+\item{cols}{Length-\code{k} fill colours; auto-generated if \code{NULL}.}
 
 \item{lwd}{Line width (default \code{2}).}
 
@@ -57,12 +63,27 @@ New York: Springer.)
 \details{
 \strong{Search at fixed center.} Points are sorted by their angle from the
 center. A partition is a choice of \code{k} cut-gaps among the \code{n} gaps
-between consecutive points (\code{combn(n, k)} candidates); per-arc majority
-counts are read from a cumulative count table and total misclassification
-is minimised. Cut angles are placed at the arc midpoint between adjacent
-points. Tie-breaker: among k-tuples with the same misclass count, the one
-with the largest minimum 2D perpendicular distance from a cut ray to the
-nearest point wins.
+between consecutive points (\code{combn(n, k)} candidates, \code{M} in total). The
+score of a candidate is its exact bijection-constrained misclassification
+(best achievable total correct over all \verb{k!} arc-to-group assignments,
+each group used exactly once) -- the same region-to-group matching
+criterion used to derive \code{sector}/\code{majority} below, so the search targets
+exactly the quantity reported as \code{misclass}.
+
+All per-candidate quantities are computed as length-\code{M} vectors indexed
+out of a cumulative group-count table, so the loops run over \code{k} / \verb{k!}
+rather than over candidates -- analogous to the vectorised cut search in
+\code{\link[=axialLines]{axialLines()}}. Scoring proceeds in two stages: a cheap upper bound (each
+arc independently taking its own local-majority group, which no bijection
+can beat) is evaluated for all \code{M} candidates, and only those whose bound
+is high enough to still win are then scored exactly over all \verb{k!}
+assignments. The bound is tight in practice, so typically only a handful
+of candidates need the exact scan.
+
+Cut angles are placed at the arc midpoint between adjacent points.
+Tie-breaker: among k-tuples with the same misclass count, the one with the
+largest minimum 2D perpendicular distance from a cut ray to the nearest
+point wins (computed only for the co-minimal candidates).
 
 \strong{Search optimal center.} When \code{cx} and \code{cy} are \code{NULL} (default), the center
 is optimised by multi-start Nelder-Mead — the brute-force above runs
@@ -79,7 +100,7 @@ r     <- runif(36, 0.5, 1.5)
 crd   <- cbind(r * cos(theta), r * sin(theta))
 grp   <- factor(rep(c("a", "b", "c"), each = 12))
 plot(crd, asp = 1)
-angularPartition(crd, grp)
+angularPartition(crd, grp, fill = TRUE)
 }
 
 }
