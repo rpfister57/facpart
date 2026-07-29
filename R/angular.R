@@ -18,19 +18,47 @@
 
 
 #' @noRd
-.angular_search <- function(coords, 
+.angular_search <- function(coords,
                             grp_int,
                             cx, cy,
                             k, n_pts, combos,
                             full = TRUE) {
     # Given center cx, cy: find the best angular k-partition by brute force.
     # A candidate partition is a choice of `k` cut-gaps out of the `n` gaps
-    # between angle-sorted points; `combos` supplies these as `combn(n, k)`.
-    # Per-arc majority counts are read from a cumulative group-count table 
-    # per arc, without re-tabulating. With `full = FALSE` only the minimum
-    # misclassification is returned (margin and cut angles skipped) for use as
-    # the optimiser objective; `full = TRUE` additionally returns the 2D margin
-    # and the cut angles of the best partition.
+    # between angle-sorted points; `combos` supplies these as `combn(n, k)`,
+    # M = ncol(combos) candidates in total. The misclassification of a
+    # candidate is the bijection-constrained error (best achievable total
+    # correct over all k! arc-to-group assignments, each group used exactly
+    # once) -- the same criterion `.assign_groups()` applies to the final
+    # sector/majority mapping in angularPartition(), so the search targets
+    # exactly the quantity the function ultimately reports.
+    #
+    # All M candidates are scored with vector arithmetic over the candidate
+    # axis, analogous to the vectorised cut search in axialLines(): every
+    # quantity below is a length-M vector built by indexing the cumulative
+    # count table, so the loops run over k / k! (small, fixed, independent
+    # of M) and never over candidates.
+    #
+    # Scoring is a two-stage bound-and-prune, because the exact k!
+    # assignment scan is the expensive part:
+    #
+    #   Stage 1 (all M, cheap) -- `ub`, the *unconstrained* best-correct:
+    #     each arc independently keeps its own local-majority group. Since
+    #     any bijection is one particular choice of group per arc,
+    #     exact(c) <= ub(c) for every candidate, so `ub` is a valid upper
+    #     bound. It costs k * (2k - 1) vector ops versus k! * (k + 1) for
+    #     the exact scan (~7x cheaper at k = 4) and needs no M x k matrix.
+    #
+    #   Stage 2 (tiny subset, exact) -- only candidates whose bound is high
+    #     enough to still win are scanned over all k! assignments. Any
+    #     candidate with ub < the best exact score found cannot beat it and
+    #     is skipped. The bound is tight in practice (typically only a
+    #     handful of the M candidates survive), which is what makes this
+    #     much faster than scoring every candidate exactly.
+    #
+    # `full = TRUE` additionally needs the 2D margin, but only to break
+    # ties among the co-minimal candidates -- so the margin is computed for
+    # those alone, not for all M.
 
     # order points according to their angles (in radians)
     # Note: atan2(y, x) has y-coordinate first!
@@ -42,90 +70,117 @@
     # Cumulative per-group counts over the angle-sorted sequence:
     # cum[i + 1, g] = number of group-g points among sorted points 1..i.
     # The count of group g on an arc a..b is cum[b + 1, g] - cum[a, g].
-    cum <- matrix(0L, nrow = n_pts + 1, ncol = k)
+    cum <- matrix(0L, nrow = n_pts + 1L, ncol = k)
     # loop over all k columns: cumulate group number
     for (g in seq_len(k)) cum[-1L, g] <- cumsum(s_grp == g)
     total <- cum[n_pts + 1L, ]
 
-    # ordered radius lengths
-    if (full) {
-        s_rad <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)[ord]
+    M <- ncol(combos)
+
+    # Row indices into `cum` for each cut: end_idx[[s]] = combos[s, ] + 1L.
+    # Interior arc s (s < k) spans sorted positions combos[s, ] + 1 ..
+    # combos[s + 1, ]; arc k wraps combos[k, ] + 1 .. n, 1 .. combos[1, ].
+    end_idx <- vector("list", k)
+    for (s in seq_len(k)) end_idx[[s]] <- combos[s, ] + 1L
+
+    # Counts of group `g` on arc `s`, as a vector over the candidates in
+    # `sel` (an index vector into 1..M, or NULL for all M).
+    arc_cnt <- function(s, g, sel) {
+        if (s < k) {
+            ia <- end_idx[[s]]; ib <- end_idx[[s + 1L]]
+            if (!is.null(sel)) { ia <- ia[sel]; ib <- ib[sel] }
+            cum[ib, g] - cum[ia, g]
+        } else {
+            ia <- end_idx[[k]]; ib <- end_idx[[1L]]
+            if (!is.null(sel)) { ia <- ia[sel]; ib <- ib[sel] }
+            total[g] - cum[ia, g] + cum[ib, g]
+        }
     }
 
-    best_err    <- n_pts + 1L
-    best_margin <- -Inf
-    best_gaps   <- NULL
+    # ---- Stage 1: cheap unconstrained upper bound for all M candidates ----
+    ub <- 0L
+    for (s in seq_len(k)) {
+        arc_max <- arc_cnt(s, 1L, NULL)
+        for (g in 2L:k) arc_max <- pmax(arc_max, arc_cnt(s, g, NULL))
+        ub <- ub + arc_max
+    }
 
-    # loop over all ci = 1..combn(n, k) cut-gaps from combos:
-    for (ci in seq_len(ncol(combos))) {
-        # g is one specific partitioning,
-        # increasing gap indices g[1] < .. < g[k]
-        g <- combos[, ci]   
+    # ---- Stage 2: exact bijection-constrained score, on survivors only ----
+    perms <- gtools::permutations(k, k)
 
-        # interior arcs (g[s]+1 .. g[s+1]); 
-        #   branch-and-bound on partial error.
-        # Strict (> best_err) when full, 
-        #   so co-minimal partitions survive for the margin tie-break; 
-        # loose (>= best_err) otherwise, since only the
-        #   minimum count is needed.
-        err  <- 0L
-        drop <- FALSE
-        
-        # loop over groups s = 1..k-1 in a given g cut (from combos):
-        for (s in seq_len(k - 1L)) {
-            # cnt: group frequencies in a given arc g[s]..g[s+1]
-            cnt <- cum[g[s + 1L] + 1L, ] - cum[g[s] + 1L, ]
-            # err: misclassification = n points in cut - maximum group
-            #      cumulates over all arcs
-            err <- err + (g[s + 1L] - g[s]) - max(cnt)
-            if (if (full) err > best_err else err >= best_err) {
-                drop <- TRUE
-                break
-            }
+    # Exact best-correct over all k! arc-to-group assignments (each group
+    # used exactly once) for the candidates in `sel` -- the same criterion
+    # .assign_groups() applies to the winning combo downstream.
+    exact_correct <- function(sel) {
+        cn <- vector("list", k)
+        for (s in seq_len(k)) {
+            cs <- vector("list", k)
+            for (g in seq_len(k)) cs[[g]] <- arc_cnt(s, g, sel)
+            cn[[s]] <- cs
         }
-        if (drop) next  # something went wrong ...
-
-        # wrap-around arc (g[k]+1 .. n, 1 .. g[1]): from last to first cut
-        cnt_wrap <- (total - cum[g[k] + 1L, ]) + cum[g[1L] + 1L, ]
-        # add wrap-around to err
-        err      <- err + (n_pts - g[k] + g[1L]) - max(cnt_wrap)
-
-        if (!full) {
-            if (err < best_err) {
-                best_err  <- err
-                best_gaps <- g
-                if (best_err == 0L) break        # cannot improve on zero
-            }
-            next
+        best <- rep(0L, length(sel))
+        for (p_idx in seq_len(nrow(perms))) {
+            perm    <- perms[p_idx, ]
+            correct <- cn[[1L]][[perm[1L]]]
+            for (s in 2L:k) correct <- correct + cn[[s]][[perm[s]]]
+            best <- pmax(best, correct)
         }
+        best
+    }
 
-        # full path: keep min error, break ties by largest 2D margin.
-        # 2D margin at a gap: min(r at its two points) * sin(angular gap / 2).
-        if (err > best_err) next
-        
-        # next cut after current g:
-        nx      <- g + 1L
-        nx[g == n_pts] <- 1L
-        
-        ang_gap <- (s_ang[nx] - s_ang[g]) %% (2 * pi)
-        margin  <- min(pmin(s_rad[g], s_rad[nx]) * sin(ang_gap / 2))
-        if (err < best_err || margin > best_margin) {
-            best_err    <- err
-            best_margin <- margin
-            best_gaps   <- g
+    # Walk the bound down until a candidate's exact score reaches it: at
+    # that point every unscanned candidate has ub < best and cannot win.
+    thresh       <- max(ub)
+    max_correct  <- -1L
+    scanned      <- logical(M)
+    repeat {
+        sel <- which(ub >= thresh & !scanned)
+        if (length(sel) > 0L) {
+            max_correct   <- max(max_correct, max(exact_correct(sel)))
+            scanned[sel]  <- TRUE
         }
-    }  # end of loop over all cuts in combos
+        if (max_correct >= thresh) break
+        thresh <- thresh - 1L
+    }
+    m <- n_pts - max_correct
 
-    
     if (!full) {
-        return(list(misclass = best_err, pt_angles = pt_angles))
+        return(list(misclass = m, pt_angles = pt_angles))
     }
+
+    # ---- Co-minimal candidates, then the margin tie-break among them ----
+    # Any candidate attaining max_correct must have ub >= max_correct, so
+    # this pool is a complete superset of the co-minimal set.
+    pool <- which(ub >= max_correct)
+    at   <- pool[exact_correct(pool) == max_correct]
+
+    # ordered radius lengths, needed only for the 2D margin tie-break
+    s_rad <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)[ord]
+
+    # Margin of a candidate: min over its k gaps of
+    # min(r at the gap's two adjacent points) * sin(angular gap / 2).
+    A      <- length(at)
+    g_mat  <- t(combos[, at, drop = FALSE])
+    nx_mat <- g_mat + 1L
+    nx_mat[g_mat == n_pts] <- 1L
+
+    ang_gap_mat <- (matrix(s_ang[nx_mat], nrow = A) -
+                    matrix(s_ang[g_mat],  nrow = A)) %% (2 * pi)
+    margin_mat  <- pmin(matrix(s_rad[g_mat],  nrow = A),
+                        matrix(s_rad[nx_mat], nrow = A)) * sin(ang_gap_mat / 2)
+    margin_at   <- do.call(pmin, as.data.frame(margin_mat))
+
+    # Ties broken by largest margin. which.max returns the first maximum and
+    # `at` is increasing, so the earliest candidate in scan order wins ties,
+    # matching axialLines()'s convention.
+    w <- which.max(margin_at)
+    j <- at[w]
 
     # cut angles placed at the arc midpoint of each chosen gap
-    g  <- best_gaps
+    g  <- combos[, j]
     nx <- g + 1L; nx[g == n_pts] <- 1L
-    list(misclass  = best_err,
-         margin    = best_margin,
+    list(misclass  = m,
+         margin    = margin_at[w],
          cuts      = .arc_mid(s_ang[g], s_ang[nx]),
          pt_angles = pt_angles)
 }
@@ -142,12 +197,27 @@
 #'
 #' **Search at fixed center.** Points are sorted by their angle from the
 #' center. A partition is a choice of `k` cut-gaps among the `n` gaps
-#' between consecutive points (`combn(n, k)` candidates); per-arc majority
-#' counts are read from a cumulative count table and total misclassification
-#' is minimised. Cut angles are placed at the arc midpoint between adjacent
-#' points. Tie-breaker: among k-tuples with the same misclass count, the one
-#' with the largest minimum 2D perpendicular distance from a cut ray to the
-#' nearest point wins.
+#' between consecutive points (`combn(n, k)` candidates, `M` in total). The
+#' score of a candidate is its exact bijection-constrained misclassification
+#' (best achievable total correct over all `k!` arc-to-group assignments,
+#' each group used exactly once) -- the same region-to-group matching
+#' criterion used to derive `sector`/`majority` below, so the search targets
+#' exactly the quantity reported as `misclass`.
+#'
+#' All per-candidate quantities are computed as length-`M` vectors indexed
+#' out of a cumulative group-count table, so the loops run over `k` / `k!`
+#' rather than over candidates -- analogous to the vectorised cut search in
+#' [axialLines()]. Scoring proceeds in two stages: a cheap upper bound (each
+#' arc independently taking its own local-majority group, which no bijection
+#' can beat) is evaluated for all `M` candidates, and only those whose bound
+#' is high enough to still win are then scored exactly over all `k!`
+#' assignments. The bound is tight in practice, so typically only a handful
+#' of candidates need the exact scan.
+#'
+#' Cut angles are placed at the arc midpoint between adjacent points.
+#' Tie-breaker: among k-tuples with the same misclass count, the one with the
+#' largest minimum 2D perpendicular distance from a cut ray to the nearest
+#' point wins (computed only for the co-minimal candidates).
 #'
 #' **Search optimal center.** When `cx` and `cy` are `NULL` (default), the center
 #' is optimised by multi-start Nelder-Mead — the brute-force above runs
@@ -159,8 +229,10 @@
 #' @param crd Numeric matrix or numeric data frame with exactly 2 columns; no NAs.
 #' @param group Factor with `n >= k >= 2` levels, same length as nrow of crd.
 #' @param cx,cy Center; optimised when either is `NULL`.
+#' @param fill If `TRUE`, shade the `k` wedge sectors (default `FALSE`).
 #' @param output If `TRUE` (default), return list of results.
 #' @param col Ray colour (default `"darkorange"`).
+#' @param cols Length-`k` fill colours; auto-generated if `NULL`.
 #' @param lwd Line width (default `2`).
 #' @param lty Line type (default `1`).
 #' @param add If `TRUE` (default), add to existing plot, else plot configuration.
@@ -183,7 +255,7 @@
 #' crd   <- cbind(r * cos(theta), r * sin(theta))
 #' grp   <- factor(rep(c("a", "b", "c"), each = 12))
 #' plot(crd, asp = 1)
-#' angularPartition(crd, grp)
+#' angularPartition(crd, grp, fill = TRUE)
 #' }
 #'
 #' @export
@@ -191,8 +263,10 @@ angularPartition <- function(crd,
                              group,
                              cx = NULL,
                              cy = NULL,
+                             fill = FALSE,
                              output = TRUE,
                              col = "darkorange",
+                             cols = NULL,
                              lwd = 2,
                              lty = 1,
                              add = TRUE) {
@@ -202,6 +276,7 @@ angularPartition <- function(crd,
     if (!all(is.numeric(as.matrix(crd))))  stop("Input matrix crd must be numeric!")
     if (!is.factor(group)) stop("group must be a factor!")
     if (any(is.na(crd)))            stop("No NA allowed in input!")
+    if (any(is.na(group)))          stop("No NA allowed in group!")
     if (length(dim(crd)) != 2)      stop("Input data must have two dimensions!")
     if (dim(crd)[2] != 2)           stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
@@ -235,9 +310,13 @@ angularPartition <- function(crd,
         if (x_range == 0) x_range <- 1
         if (y_range == 0) y_range <- 1
         parscale <- c(x_range, y_range)
+        # parscale <- c(1, 1)
 
         # start values for center: overall mean, group means
         starts <- list(c(mean(coords[, 1]), mean(coords[, 2])))
+        starts <- c(starts, list(c(min(coords[ , 1]), min(coords[ , 2]))))
+        starts <- c(starts, list(c(max(coords[ , 1]), max(coords[ , 2]))))
+        
         for (g in seq_len(k)) {
             in_g <- which(grp_int == g)
             if (length(in_g) > 0L) {
@@ -290,10 +369,33 @@ angularPartition <- function(crd,
         graphics::text(coords, labels = group, cex = 0.7, pos = 4)
     }
     
-    # ---- Draw rays from center at the optimal cut angles ----
+    # ---- Sorted cut angles: shared by the fill and the sector assignment ----
+    sc <- sort(best_cuts %% (2 * pi))
+
     usr     <- par("usr")
     ray_len <- 2 * sqrt( (usr[2] - usr[1])^2 + (usr[4] - usr[3])^2 )
 
+    # ---- Optional wedge shading ----
+    # Each sector r spans (sc[r], sc[r + 1]), with sector k wrapping from
+    # sc[k] back to sc[1]. Filled as a pie slice out to ray_len; R clips
+    # polygon() to the plot region (par("xpd") is FALSE by default), so the
+    # slice need not be trimmed to the visible rectangle by hand.
+    if (fill) {
+        if (is.null(cols)) cols <- hcl.colors(k, palette = "Pastel 1")
+
+        wedge_starts <- sc
+        wedge_ends   <- c(sc[-1L], sc[1L] + 2 * pi)
+        n_arc        <- 100L
+
+        for (r in seq_len(k)) {
+            arc_ang <- seq(wedge_starts[r], wedge_ends[r], length.out = n_arc)
+            polygon(c(cx, cx + ray_len * cos(arc_ang)),
+                    c(cy, cy + ray_len * sin(arc_ang)),
+                    col = adjustcolor(cols[r], alpha.f = 0.15), border = NA)
+        }
+    }
+
+    # ---- Draw rays from center at the optimal cut angles ----
     for (ang in best_cuts) {
         segments(cx, cy,
                  cx + ray_len * cos(ang),
@@ -302,7 +404,6 @@ angularPartition <- function(crd,
     }
 
     # ---- Sector assignment for each point (in original input order) ----
-    sc       <- sort(best_cuts %% (2 * pi))
     norm_pts <- pt_angles %% (2 * pi)
     fi       <- findInterval(norm_pts, sc)
     sector   <- ifelse(fi == 0L | fi == k, k, fi)
