@@ -31,7 +31,9 @@ devtools::test()                                          # all tests
 testthat::test_file("tests/testthat/test-guttman.R")     # single file
 ```
 
-Currently only `guttman.R` functions have formal tests (`tests/testthat/test-guttman.R`). Ad-hoc testing for other functions is done interactively via `devtools::load_all()` followed by manual calls.
+Currently only `guttman.R` functions have formal tests (`tests/testthat/test-guttman.R` — two assertions in total). Ad-hoc testing for other functions is done interactively via `devtools::load_all()` followed by manual calls.
+
+Testing a **partition** function is different from testing `mu2()`: they all draw, and several read `par("usr")`, so a headless `Rscript` invocation silently opens the default device and leaves a stray `Rplots.pdf` in the working directory. Wrap such calls in `pdf(NULL)` / `dev.off()` (or `withr::with_pdf`) and assert on the returned `misclass` / `sector` / geometry fields rather than on the plot.
 
 ## File Structure
 
@@ -66,7 +68,7 @@ From `DESCRIPTION`:
 - **Imports**: `cluster` (`ellipsoidhull()`), `MASS` (`lda()`), `gtools` (`permutations()`, used in `.assign_groups()`), `grDevices`, `graphics`, `stats`, `utils`
 - **Suggests**: `smacof` (datasets used in examples), `testthat >= 3.0.0` (tests)
 
-`gtools` is reached via `gtools::permutations()` and therefore has **no `@importFrom` directive** in `facpart-package.R`/`NAMESPACE` — that is intentional, do not "fix" it by adding one.
+`gtools` is reached via `gtools::permutations()` and therefore has **no `@importFrom` directive** in `facpart-package.R`/`NAMESPACE` — that is intentional, do not "fix" it by adding one. `graphics::text()` (the group-label call in every drawing function) is likewise always `::`-qualified and deliberately absent from the `@importFrom graphics` line; the other `graphics`/`stats`/`utils` functions are imported and called bare.
 
 ## Exported API
 
@@ -88,6 +90,13 @@ From `DESCRIPTION`:
 All partition and ellipse-drawing functions draw on the **currently active plot window**. Call `plot()` before any of these functions.
 
 `inoutEllipse()`, `mu2()`, and `mu2df()` have no `output` parameter — they always return their value directly. `highlightMisclass()` has no `output` parameter either — it is pure side-effect and always returns `invisible(NULL)`. All other exported functions follow the `output = TRUE/FALSE` convention.
+
+### Signature quirks worth knowing before editing
+
+- `radialCircle()` / `radialCircles()` expose a **user-facing dot-prefixed argument** `.method = "Nelder-Mead"` (the only alternative accepted is `"SANN"`; anything else `stop()`s). It is passed to `optim()` for the center search and is ignored by `radialCircles()` when `cx`/`cy` are both supplied. The `.` prefix normally marks internals in this package — this is the one exception, don't rename it.
+- **Only the circle functions and `angularPartition()` take `cx`/`cy`.** `radialEllipse()` has no way to fix the center; `radialEllipses()` can only fix it indirectly, by passing a complete `ellipse = c(cx, cy, a, b, angle)` 5-vector (which also fixes orientation and axis ratio).
+- `axialLines()` takes `n_angles = 180L` — the size of the angle grid, and the main runtime knob for that function.
+- `LazyData: true`, so `gutt91` and `guttman65mds` are usable by name after `library(facpart)`/`load_all()`; no `data()` call needed.
 
 ## Shared Partition Contract
 
@@ -114,13 +123,15 @@ All of them also return `misclass_points`. `axialLine()` is the odd one out: it 
 
 ### Region shading (`fill = TRUE`)
 
-All partition functions — `axialLine()`, `axialLines()`, `radialCircle()`, `radialCircles()`, `radialEllipse()`, `radialEllipses()`, `angularPartition()` — plus `ellipseInConfig()` take a `fill` argument; all except `axialLine()`/`ellipseInConfig()` (fixed 2-colour `cols`) additionally take `cols` (auto-generated from `grDevices::hcl.colors()` when `NULL`, alpha-blended via `adjustcolor()`).
+In all seven partition functions — `axialLine()`, `axialLines()`, `radialCircle()`, `radialCircles()`, `radialEllipse()`, `radialEllipses()`, `angularPartition()` — `fill` is a **logical** (`FALSE` by default) and the colours come from `cols`. The binary functions (`axialLine()`, `radialCircle()`, `radialEllipse()`) hard-default `cols = c("steelblue", "tomato")`; the k-way ones default `cols = NULL` and auto-generate from `grDevices::hcl.colors()`, alpha-blended via `adjustcolor()`.
+
+**`ellipseInConfig()` is the exception**: its `fill` is a **colour** passed straight to `draw.ellipse(col = fill)`, defaulting to `NA` (no fill), and it has no `cols` argument at all. Don't assume `fill = TRUE` works there.
 
 Fill geometry differs per family: radial functions use `polypath()` with an even-odd rule to shade rings between nested boundaries, `axialLines()` clips the plot rectangle (`par("usr")`) strip by strip with `.clip_halfplane()` — a Sutherland-Hodgman half-plane clipper in `axial.R` that keeps the shading correct for steep and vertical separators (do not replace it with slope/intercept polygon arithmetic) — and `angularPartition()` draws each wedge as a `polygon()` pie slice from the center out to `2 * plot diagonal`, relying on R's default plot-region clipping (`par("xpd") = FALSE`) rather than manual rectangle clipping.
 
-### Input-validation inconsistency
+### Group coercion
 
-`angularPartition()` **requires** `group` to already be a factor (`if (!is.factor(group)) stop(...)`); the axial and radial functions coerce with `as.factor()`/`factor()`. Preserve this per-function behaviour unless deliberately unifying it — examples and the article rely on the current signatures.
+All partition functions coerce `group` themselves — `as.factor(group)` in the axial and radial files, `factor(group, exclude = NA)` in `angular.R` — so callers may pass a character vector. (Earlier versions of `angularPartition()` hard-stopped on a non-factor `group`; that check is gone, but every function still stops on `NA` in `crd` or `group`, on non-2-column `crd`, on `nrow(crd) != length(group)`, and on `< 2` group levels.)
 
 ## Internal Dependencies
 
@@ -128,7 +139,7 @@ Fill geometry differs per family: radial functions use `polypath()` with an even
 
 Private helpers use a `.` prefix (e.g., `.circle_pts`, `.in_ellipse`, `.arc_mid`) and are tagged `#' @noRd`. They are internal to their file, except `.best_radius()` (above) and the `utils.R` helpers.
 
-Three `utils.R` helpers currently have **no callers**: `.permutations()` (superseded by `gtools::permutations()` inside `.assign_groups()`), `.d2r()` and `.r2d()`. Don't spend time hunting for their call sites; they are kept as available utilities.
+Four `utils.R` helpers currently have **no callers**: `.permutations()` (superseded by `gtools::permutations()` inside `.assign_groups()`), `.d2r()`, `.r2d()` and `.draw_angle_line()`. Don't spend time hunting for their call sites; they are kept as available utilities.
 
 ## Key Algorithms
 
@@ -225,7 +236,7 @@ The `docs/` directory is excluded from the package tarball via `.Rbuildignore`.
 
 **Caveat — the FacetedPartitions article has no source in the repo.** `docs/articles/FacetedPartitions.html`/`.md` and its figures are committed, but there is no `vignettes/` directory and no `.Rmd`/`.qmd` anywhere in the tree. `build_site_github_pages()` cleans `docs/` before building, so a rebuild drops the article from `docs/`; only the `clean: false` deploy keeps the already-published copy alive on `gh-pages`. If the article needs editing, restore/author its `.Rmd` under `vignettes/` first — do not hand-edit the generated HTML.
 
-## Known R CMD check Issues (as of v0.1.1)
+## Known R CMD check Issues (as of v0.1.2)
 
 - **NOTE**: `.DS_Store` file found in check directory (macOS artefact; harmless). Stray `.DS_Store` files are tracked in `docs/` and show up in `git status` on macOS — ignore them rather than committing churn.
 - The previously documented roxygen2 `@noRd must not be followed by any text` WARNING for `angular.R` no longer reproduces: with roxygen2 8.0.0 / R 4.6.1, `devtools::document()` runs clean and leaves `man/` and `NAMESPACE` unchanged (i.e. generated docs are currently in sync with the sources).
