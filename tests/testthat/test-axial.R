@@ -182,7 +182,7 @@ test_that("both axial functions reject NAs and malformed input", {
     for (f in list(axialLine, axialLines)) {
         expect_error(with_null_dev(f(crd_na, grp)),      "NAs? allowed in crd")
         expect_error(with_null_dev(f(coords, grp_na)),   "NAs? allowed in group")
-        expect_error(with_null_dev(f(cbind(coords, 1), grp)), "2-dimensional")
+        expect_error(with_null_dev(f(cbind(coords, 1), grp)), "2 columns")
         expect_error(with_null_dev(f(coords, grp[-1])),  "must equal")
     }
     expect_error(with_null_dev(axialLines(coords, grp, n_angles = 0L)),

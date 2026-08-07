@@ -316,16 +316,16 @@ test_that("angularPartition rejects invalid input", {
                  "must be numeric", fixed = TRUE)
     expect_error(angularPartition(rbind(crd, c(NA, 0)),
                                   factor(c(as.character(grp), "a"))),
-                 "No NA allowed in input!", fixed = TRUE)
+                 "No NAs allowed in crd!", fixed = TRUE)
     expect_error(angularPartition(crd,
                                   factor(c("a", "b", "a", "b", "a", NA))),
-                 "No NA allowed in group!", fixed = TRUE)
+                 "No NAs allowed in group!", fixed = TRUE)
     expect_error(angularPartition(1:6, grp),
                  "must have two dimensions", fixed = TRUE)
     expect_error(angularPartition(matrix(1:6, ncol = 1L), grp),
-                 "Coordinates must be 2-dimensional!", fixed = TRUE)
+                 "Coordinates must have 2 columns!", fixed = TRUE)
     expect_error(angularPartition(cbind(1:6, 1:6, 1:6), grp),
-                 "Coordinates must be 2-dimensional!", fixed = TRUE)
+                 "Coordinates must have 2 columns!", fixed = TRUE)
     expect_error(angularPartition(crd, factor(c("a", "b", "a"))),
                  "nrow(crd) must equal length(group)!", fixed = TRUE)
     expect_error(angularPartition(crd, factor(rep("a", 6L))),

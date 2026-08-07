@@ -68,7 +68,9 @@ score of a candidate is its exact bijection-constrained misclassification
 (best achievable total correct over all \verb{k!} arc-to-group assignments,
 each group used exactly once) -- the same region-to-group matching
 criterion used to derive \code{sector}/\code{majority} below, so the search targets
-exactly the quantity reported as \code{misclass}.
+exactly the quantity reported as \code{misclass}. Every wedge is non-empty, so a
+partition leaving a group's sector empty is not considered (as in
+\code{\link[=axialLines]{axialLines()}}; the radial functions do allow it).
 
 All per-candidate quantities are computed as length-\code{M} vectors indexed
 out of a cumulative group-count table, so the loops run over \code{k} / \verb{k!}

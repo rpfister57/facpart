@@ -55,8 +55,9 @@ misclassified point), \code{sector}, and \code{majority}.
 \description{
 Generalises \code{\link[=radialEllipse]{radialEllipse()}} to \code{k >= 2} groups using \code{k-1} nested
 ellipses. The nesting constraint (ellipse \code{s-1} lies inside ellipse
-\code{s}) is enforced during optimisation. Groups are ordered by factor
-level (level 1 = innermost).
+\code{s}) is enforced during optimisation. The inside-to-outside ordering of
+the groups is searched, not read off the factor levels, so the result
+does not depend on how the groups are named.
 }
 \details{
 When \code{ellipse} is supplied as a length-5 vector \verb{(cx, cy, a, b, angle)},

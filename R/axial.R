@@ -66,10 +66,10 @@ axialLine <- function(crd,
                     add = TRUE) {
 
     # ---- Input validation ----
-    if (any(is.na(crd)))             stop("No NA allowed in crd!")
-    if (any(is.na(group)))           stop("No NA allowed in group!")
+    if (any(is.na(crd)))             stop("No NAs allowed in crd!")
+    if (any(is.na(group)))           stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2)       stop("Coordinates must have two dimensions!")
-    if (dim(crd)[2] != 2)            stop("Coordinates must be 2-dimensional!")
+    if (dim(crd)[2] != 2)            stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group))  stop("nrow(crd) must equal length(group)!")
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
     
@@ -256,7 +256,7 @@ axialLines <- function(crd,
     if (any(is.na(crd)))       stop("No NAs allowed in crd!")
     if (any(is.na(group)))     stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2) stop("Coordinates must have two dimensions!")
-    if (dim(crd)[2] != 2)      stop("Coordinates must be 2-dimensional!")
+    if (dim(crd)[2] != 2)      stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
     if (n_angles < 1L)         stop("n_angles must be >= 1!")
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")

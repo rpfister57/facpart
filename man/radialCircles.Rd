@@ -59,9 +59,11 @@ frame with columns \code{x}, \code{y}, \code{label} for each misclassified point
 \description{
 Generalises \code{\link[=radialCircle]{radialCircle()}} to \code{k >= 2} groups using \code{k-1} nested
 (inclusive) circles. The circles must be nested (circle \code{s} contains
-circle \code{s-1}). Groups are ordered by factor level (level 1 = innermost).
-Circles are fitted sequentially, each minimising misclassification of
-groups \verb{1..s} (inside) vs groups \verb{s+1..k} (outside).
+circle \code{s-1}). Circles are fitted sequentially, each minimising
+misclassification of the innermost \code{s} groups (inside) vs the rest
+(outside) — but \strong{which} groups those are is searched, not read off the
+factor levels, so the inside-to-outside ordering is found from the data
+and the result does not depend on how the groups are named.
 }
 \details{
 When \code{cx} and \code{cy} are both supplied, all \code{k-1} circles share that

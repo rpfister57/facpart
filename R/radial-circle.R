@@ -477,9 +477,11 @@ radialCircle <- function(crd,
 #'
 #' Generalises [radialCircle()] to `k >= 2` groups using `k-1` nested
 #' (inclusive) circles. The circles must be nested (circle `s` contains
-#' circle `s-1`). Groups are ordered by factor level (level 1 = innermost).
-#' Circles are fitted sequentially, each minimising misclassification of
-#' groups `1..s` (inside) vs groups `s+1..k` (outside).
+#' circle `s-1`). Circles are fitted sequentially, each minimising
+#' misclassification of the innermost `s` groups (inside) vs the rest
+#' (outside) — but **which** groups those are is searched, not read off the
+#' factor levels, so the inside-to-outside ordering is found from the data
+#' and the result does not depend on how the groups are named.
 #'
 #' When `cx` and `cy` are both supplied, all `k-1` circles share that
 #' center (concentric); only the radii are searched, subject to
@@ -563,7 +565,7 @@ radialCircles <- function(crd,
     if (any(is.na(crd)))            stop("No NAs allowed in crd!")
     if (any(is.na(group)))          stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
-    if (dim(crd)[2] != 2)           stop("Coordinates must have 2 columns")
+    if (dim(crd)[2] != 2)           stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
     if (!(.method %in% c("Nelder-Mead", "SANN"))) stop("Method not available!")
 

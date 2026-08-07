@@ -220,3 +220,24 @@ test_that(".assign_groups() breaks ties by level name, not by group index", {
     expect_equal(.assign_groups(cm), c(1L, 2L, 3L))
     expect_equal(.assign_groups(cm, c("p", "q", "r")), c(1L, 2L, 3L))
 })
+
+
+# ---- Binary functions: no ordering to search, but `majority` must still be
+# ---- invariant, since it goes through .assign_groups() like the rest
+
+test_that("binary radial functions are invariant under both level orders", {
+    r <- rings(2L, per = 9L, seed = 80L)
+    expect_true(same_under_all_level_orders(radialCircle,  r$crd, r$lab, 2L))
+    expect_true(same_under_all_level_orders(radialEllipse, r$crd, r$lab, 2L))
+    expect_true(same_under_all_level_orders(axialLine,     r$crd, r$lab, 2L))
+})
+
+test_that("invariance survives the tie-heavy degenerate case", {
+    # Every group at the same radius: the region-to-group assignment is fully
+    # tied, so only an intrinsic tie-break keeps `majority` stable.
+    th  <- seq(0, 2 * pi, length.out = 10)[-10]
+    crd <- cbind(cos(th), sin(th))
+    lab <- rep(c("a", "b", "c"), each = 3)
+    expect_true(same_under_all_level_orders(radialCircles,  crd, lab, 3L))
+    expect_true(same_under_all_level_orders(radialEllipses, crd, lab, 3L))
+})

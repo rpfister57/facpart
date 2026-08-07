@@ -352,3 +352,30 @@ test_that("output = FALSE returns invisible(NULL)", {
     expect_null(with_null_dev(radialCircle(crd, grp, cx = 0, cy = 0, output = FALSE)))
     expect_null(with_null_dev(radialCircles(crd, grp, cx = 0, cy = 0, output = FALSE)))
 })
+
+
+# ---- Validation parity across the whole partition family ----
+
+test_that("every partition function rejects NAs with a clear message", {
+    crd <- cbind(c(1, 2, 3, 9, 4, 7), c(0, 1, 0, 1, 2, 2))
+    g2  <- factor(c("a", "a", "b", "b", "a", "b"))
+    g3  <- factor(c("a", "a", "b", "b", "c", "c"))
+
+    crd_na <- crd; crd_na[2, 1] <- NA
+
+    binary <- list(radialCircle, radialEllipse, axialLine)
+    k_way  <- list(radialCircles, radialEllipses, axialLines, angularPartition)
+
+    for (f in binary) {
+        g_na <- g2; g_na[2] <- NA
+        expect_error(with_null_dev(f(crd_na, g2)), "NAs? allowed in crd")
+        expect_error(with_null_dev(f(crd, g_na)),  "NAs? allowed in group")
+    }
+    for (f in k_way) {
+        g_na <- g3; g_na[2] <- NA
+        expect_error(with_null_dev(f(crd_na, g3)), "NAs? allowed in crd")
+        expect_error(with_null_dev(f(crd, g_na)),  "NAs? allowed in group")
+    }
+    # ellipseInConfig takes no `group`
+    expect_error(with_null_dev(ellipseInConfig(crd_na)), "NAs? allowed in crd")
+})

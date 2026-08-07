@@ -192,8 +192,10 @@ radialEllipse <- function(crd,
 
     # ---- Input validation ----
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
+    if (any(is.na(crd)))            stop("No NAs allowed in crd!")
+    if (any(is.na(group)))          stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
-    if (dim(crd)[2] != 2)           stop("Coordinates must be 2-dimensional!")
+    if (dim(crd)[2] != 2)           stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
 
     group <- as.factor(group)
@@ -273,8 +275,9 @@ radialEllipse <- function(crd,
 #'
 #' Generalises [radialEllipse()] to `k >= 2` groups using `k-1` nested
 #' ellipses. The nesting constraint (ellipse `s-1` lies inside ellipse
-#' `s`) is enforced during optimisation. Groups are ordered by factor
-#' level (level 1 = innermost).
+#' `s`) is enforced during optimisation. The inside-to-outside ordering of
+#' the groups is searched, not read off the factor levels, so the result
+#' does not depend on how the groups are named.
 #'
 #' When `ellipse` is supplied as a length-5 vector `(cx, cy, a, b, angle)`,
 #' it defines the innermost ellipse exactly. All `k-1` ellipses then share
@@ -347,8 +350,10 @@ radialEllipses <- function(crd,
 
     # ---- Input validation ----
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
+    if (any(is.na(crd)))            stop("No NAs allowed in crd!")
+    if (any(is.na(group)))          stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
-    if (dim(crd)[2] != 2)           stop("Coordinates must be 2-dimensional!")
+    if (dim(crd)[2] != 2)           stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
     if (!is.null(ellipse)) {
         if (!is.numeric(ellipse) || length(ellipse) != 5L) {

@@ -59,8 +59,9 @@ ellipseInConfig <- function(crd,
     available_typ <- c("maxdist", "bestfit", "minbound")
 
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
-    if (length(dim(crd)) != 2) stop("Coordinates must have 2 dimensions!")
-    if (dim(crd)[2] != 2) stop("Coordinates must be 2-dimensional!")
+    if (any(is.na(crd)))       stop("No NAs allowed in crd!")
+    if (length(dim(crd)) != 2) stop("Coordinates must have two dimensions!")
+    if (dim(crd)[2] != 2) stop("Coordinates must have 2 columns!")
     if (!(mid %in% available_mid)) mid <- "centroid"
     if (!(typ %in% available_typ)) typ <- "maxdist"
 
