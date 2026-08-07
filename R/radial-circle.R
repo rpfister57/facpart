@@ -7,6 +7,7 @@
 
 #' @noRd
 .circle_pts <- function(cx, cy, r, n = 200L) {
+    # draw points of a circle
     theta <- seq(0, 2 * pi, length.out = n + 1L)[-1L]
     cbind(cx + r * cos(theta), cy + r * sin(theta))
 }
@@ -21,15 +22,23 @@
     r_cands  <- (s_dist[-n] + s_dist[-1L]) / 2
     errs     <- cs_not[-n] + (total_in - cs_in[-n])
 
-    sp_start <- findInterval(r_min, r_cands, left.open = TRUE) + 1L
+    # A split at index i (points 1..i inside) is realised by any radius in
+    # [max(s_dist[i], r_min), s_dist[i+1]) -- note the inside test is
+    # `dist <= r`. Prefer the midpoint, clamped up to r_min when the nesting
+    # constraint binds: testing r_cands[i] >= r_min instead would drop splits
+    # that are still reachable at r = r_min. A split with
+    # s_dist[i] == s_dist[i+1] is not realisable at all (no radius separates
+    # coincident distances), so it must not be scored.
+    sp_ok    <- s_dist[-n] < s_dist[-1L] & s_dist[-1L] > r_min
+    r_try    <- pmax(r_cands, r_min)
     best_err <- 2L * n
-    best_r   <- NA
+    best_r   <- NA_real_
 
-    if (sp_start <= n - 1L) {
-        idx      <- sp_start:(n - 1L)
+    if (any(sp_ok)) {
+        idx      <- which(sp_ok)
         best_i   <- idx[which.min(errs[idx])]
         best_err <- errs[best_i]
-        best_r   <- r_cands[best_i]
+        best_r   <- r_try[best_i]
     }
 
     r_all_in   <- max(s_dist) * 1.05 + 1e-6
@@ -100,31 +109,189 @@
 
 
 #' @noRd
-.radial_cuts_2 <- function(pcoords, grp_int, cx, cy) {
-    
-    # sort points according to distance from center
-    dists  <- sqrt((pcoords[, 1] - cx)^2 + (pcoords[, 2] - cy)^2)
-    ord    <- order(dists)
-    s_dist <- dists[ord]
-    s_grp  <- grp_int[ord]
-    n_pts  <- length(dists)
+.cut_radii <- function(s_dist) {
+    # Realisable cut positions along the distance-sorted sequence, with the
+    # radius and margin realising each. Position p means "the p nearest
+    # points are inside", realised by any radius in [s_dist[p], s_dist[p+1])
+    # -- the inside test is `dist <= r`. So:
+    #   p = 0 (nothing inside) needs r < s_dist[1], possible only when
+    #     s_dist[1] > 0;
+    #   0 < p < n needs s_dist[p] < s_dist[p+1] -- no radius separates
+    #     coincident distances, so such a p is NOT realisable;
+    #   p = n (everything inside) always is.
+    # The margin is the half-gap the boundary sits in, and is 0 for p = 0
+    # and p = n: those boundaries separate no points, so on a tie the
+    # margin tie-break prefers a partition whose every circle really does
+    # split the configuration.
+    n   <- length(s_dist)
+    pos <- integer(0); rad <- numeric(0); mrg <- numeric(0)
+    if (s_dist[1L] > 0) {
+        pos <- 0L
+        rad <- s_dist[1L] / 2
+        mrg <- 0
+    }
+    if (n >= 2L) {
+        ok <- which(s_dist[-n] < s_dist[-1L])
+        if (length(ok) > 0L) {
+            pos <- c(pos, ok)
+            rad <- c(rad, (s_dist[ok] + s_dist[ok + 1L]) / 2)
+            mrg <- c(mrg, (s_dist[ok + 1L] - s_dist[ok]) / 2)
+        }
+    }
+    pos <- c(pos, n)
+    rad <- c(rad, s_dist[n] * 1.05 + 1e-6)
+    mrg <- c(mrg, 0)
 
-    cnt1     <- cumsum(s_grp == 1L)
-    total1   <- cnt1[n_pts]
-    sp_vec   <- seq_len(n_pts - 1L)
-    cnt1_pre <- cnt1[sp_vec]
-    cnt1_suf <- total1 - cnt1_pre
-    suf_size <- n_pts - sp_vec
-    errs     <- pmin(cnt1_pre, sp_vec - cnt1_pre) +
-                pmin(cnt1_suf, suf_size - cnt1_suf)
-    best_sp  <- which.min(errs)
-    best_r   <- (s_dist[best_sp] + s_dist[best_sp + 1L]) / 2
+    return(list(pos = pos, radius = rad, margin = mrg))
+}
 
-    sector <- ifelse(dists <= best_r, 1L, 2L)
-    return(
-        list(radius   = best_r,
-             misclass = errs[best_sp],
-             sector   = sector))
+
+#' @noRd
+.radial_search <- function(s_dist, s_grp, k, full = TRUE) {
+    # Given points already sorted by distance from the center, find the best
+    # nested k-partition of the distance axis by brute force. A candidate is
+    # a choice of k-1 cut positions p_1 <= ... <= p_{k-1} out of the
+    # realisable positions from .cut_radii(); region s spans sorted
+    # positions p_{s-1}+1 .. p_s (p_0 = 0, p_k = n). Repeats are allowed, so
+    # a region may be empty -- when the data have no radial structure an
+    # empty region really is the optimum, and forbidding it would make the
+    # reported misclass worse than the criterion's true minimum.
+    #
+    # Candidates are scored by .bij_best() (utils.R): the exact
+    # bijection-constrained misclassification, i.e. the best total correct
+    # over all k! region-to-group assignments with each group used exactly
+    # once. That is the same criterion .assign_groups() applies to derive
+    # sector/majority downstream, so the search targets exactly the quantity
+    # reported as `misclass`.
+    n_pts <- length(s_dist)
+    cp    <- .cut_radii(s_dist)
+    m     <- length(cp$pos)
+
+    # Non-decreasing (k-1)-tuples of cut positions = combinations with
+    # repetition: take the strictly increasing (k-1)-subsets of
+    # 1..(m + k - 2) and shift row i down by i - 1.
+    pidx <- combn(m + k - 2L, k - 1L) - (0L:(k - 2L))
+    M    <- ncol(pidx)
+    pos  <- matrix(cp$pos[pidx], nrow = k - 1L)
+
+    # cum[i + 1, g] = number of group-g points among sorted points 1..i, so
+    # the count of group g on positions a+1..b is cum[b + 1, g] - cum[a + 1, g].
+    cum <- matrix(0L, nrow = n_pts + 1L, ncol = k)
+    for (g in seq_len(k)) cum[-1L, g] <- cumsum(s_grp == g)
+
+    # Row indices into `cum` bounding region s; scalars where constant over
+    # candidates (region 1 always starts at position 0, region k always
+    # ends at n), which keeps the big vectors down to k - 1 per side.
+    lo_idx <- vector("list", k)
+    hi_idx <- vector("list", k)
+    for (s in seq_len(k)) {
+        lo_idx[[s]] <- if (s == 1L) 1L         else pos[s - 1L, ] + 1L
+        hi_idx[[s]] <- if (s == k)  n_pts + 1L else pos[s, ]      + 1L
+    }
+
+    bb <- .bij_best(cum, lo_idx, hi_idx, k, M)
+
+    if (!full) return(list(misclass = n_pts - bb$max_correct))
+
+    # ---- Margin tie-break among the co-minimal candidates ----
+    max_correct <- bb$max_correct
+    at          <- bb$at
+    mrg_mat <- matrix(cp$margin[pidx[, at, drop = FALSE]], nrow = k - 1L)
+    mrg_at  <- if (k == 2L) mrg_mat[1L, ] else apply(mrg_mat, 2L, min)
+
+    # which.max returns the first maximum and `at` is increasing, so the
+    # earliest candidate in scan order wins ties, matching the convention in
+    # axialLines() and .angular_search().
+    w <- which.max(mrg_at)
+    j <- at[w]
+
+    return(list(misclass = n_pts - max_correct,
+                margin   = mrg_at[w],
+                pos      = pos[, j],
+                radii    = cp$radius[pidx[, j]]))
+}
+
+
+#' @noRd
+.nested_sector <- function(pcoords, cx_vec, cy_vec, radii, k) {
+    # Region of each point: the innermost circle containing it, else k.
+    sector <- rep(k, nrow(pcoords))
+    for (s in (k - 1L):1L) {
+        d_s <- sqrt((pcoords[, 1] - cx_vec[s])^2 + (pcoords[, 2] - cy_vec[s])^2)
+        sector[d_s <= radii[s]] <- s
+    }
+    return(sector)
+}
+
+
+#' @noRd
+.partition_err <- function(sector, grp_int, k) {
+    # Bijection-constrained misclassification of a region assignment -- the
+    # exact quantity radialCircle()/radialCircles() report as `misclass`.
+    count_mat <- matrix(0L, nrow = k, ncol = k)
+    for (r in seq_len(k)) {
+        pts_r <- grp_int[sector == r]
+        if (length(pts_r) > 0L)
+            count_mat[, r] <- tabulate(pts_r, nbins = k)
+    }
+    return(sum(grp_int != .assign_groups(count_mat)[sector]))
+}
+
+
+#' @noRd
+.refine_radii <- function(pcoords, grp_int, cx_vec, cy_vec, radii, k) {
+    # Coordinate descent on the radii against the *reported* objective.
+    # The sequential fit scores each circle in isolation (groups 1..s inside
+    # vs s+1..k outside), which is not the quantity radialCircles() reports,
+    # so a radius optimal for the sequential proxy need not be optimal for
+    # the final k-region partition. Each sweep rescans one radius over all
+    # realisable values -- honouring the nesting constraint on both sides,
+    # since circle s must contain circle s-1 and fit inside circle s+1 --
+    # and keeps a change only when the total strictly improves. The error is
+    # a bounded integer that never increases, so this terminates.
+    n_pts <- nrow(pcoords)
+    d_mat <- vapply(seq_len(k - 1L),
+                    function(s) sqrt((pcoords[, 1] - cx_vec[s])^2 +
+                                     (pcoords[, 2] - cy_vec[s])^2),
+                    numeric(n_pts))
+    cand <- lapply(seq_len(k - 1L),
+                   function(s) .cut_radii(sort(d_mat[, s]))$radius)
+
+    # The centers are fixed throughout, so score off the precomputed distances
+    # rather than calling .nested_sector(), which would recompute all k - 1
+    # distance vectors on every one of the many thousands of evaluations below.
+    sector_at <- function(rr) {
+        sec <- rep(k, n_pts)
+        for (s in (k - 1L):1L) sec[d_mat[, s] <= rr[s]] <- s
+        sec
+    }
+
+    cur <- .partition_err(sector_at(radii), grp_int, k)
+
+    repeat {
+        improved <- FALSE
+        for (s in seq_len(k - 1L)) {
+            lo <- if (s == 1L) 0 else
+                sqrt((cx_vec[s] - cx_vec[s - 1L])^2 +
+                     (cy_vec[s] - cy_vec[s - 1L])^2) + radii[s - 1L]
+            hi <- if (s == k - 1L) Inf else
+                radii[s + 1L] - sqrt((cx_vec[s + 1L] - cx_vec[s])^2 +
+                                     (cy_vec[s + 1L] - cy_vec[s])^2)
+            for (r_try in cand[[s]][cand[[s]] >= lo & cand[[s]] <= hi]) {
+                rr    <- radii
+                rr[s] <- r_try
+                err   <- .partition_err(sector_at(rr), grp_int, k)
+                if (err < cur) {
+                    cur      <- err
+                    radii    <- rr
+                    improved <- TRUE
+                }
+            }
+        }
+        if (!improved) break
+    }
+
+    return(radii)
 }
 
 
@@ -133,8 +300,19 @@
 #' Finds the circle minimising misclassification between two groups of 2D
 #' points. The center is found by multi-start Nelder-Mead (starts: data
 #' centroid plus each group's centroid) unless `cx` and `cy` are supplied.
-#' For a given center, the optimal radius is found by a linear scan over
-#' all `n-1` candidate midpoints without assuming which group is inner.
+#'
+#' **Search at fixed center.** Points are sorted by distance from the center
+#' and every realisable radius is scanned: the inside/outside split is scored
+#' by its exact bijection-constrained misclassification (the better of the
+#' two ways to match the two regions to the two groups) — the same criterion
+#' used to derive `sector`/`majority` below, so the search targets exactly
+#' the quantity reported as `misclass`, and neither group is assumed to be
+#' the inner one. Radii that separate coincident distances are skipped as
+#' unrealisable. The scan also considers the degenerate radii that leave one
+#' region empty; when the configuration has no radial structure these can be
+#' the true minimum, so they are allowed, but on a tie a circle that really
+#' does split the points is preferred. `radialCircles()` with `k = 2` and the
+#' same center returns the same circle.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
 #' @param group Factor with exactly 2 levels.
@@ -211,7 +389,9 @@ radialCircle <- function(crd,
 
         # define function to optimize: fewest misclassified points
         fnToOpt <- function(p) {
-            .radial_cuts_2(pcoords, grp_int, p[1], p[2])$misclass}
+            d <- sqrt((pcoords[, 1] - p[1])^2 + (pcoords[, 2] - p[2])^2)
+            o <- order(d)
+            .radial_search(d[o], grp_int[o], 2L, full = FALSE)$misclass}
 
         # loop over start values, find best center coordinates cx,cy:
         best <- NULL
@@ -230,9 +410,11 @@ radialCircle <- function(crd,
     }
 
     # ---- Radius and sectors at chosen center ----
-    res    <- .radial_cuts_2(pcoords, grp_int, cx, cy)
-    radius <- res$radius
-    sector <- res$sector
+    dists  <- sqrt((pcoords[, 1] - cx)^2 + (pcoords[, 2] - cy)^2)
+    ord    <- order(dists)
+    res    <- .radial_search(dists[ord], grp_int[ord], 2L)
+    radius <- res$radii[1L]
+    sector <- ifelse(dists <= radius, 1L, 2L)
 
     # ---- Unique group assignment ----
     count_mat <- matrix(0L, nrow = 2L, ncol = 2L)
@@ -241,7 +423,7 @@ radialCircle <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = 2L)
     }
-    assignment <- .assign_groups(count_mat)
+    assignment <- .assign_groups(count_mat, levels(group))
     majority   <- levels(group)[assignment]
 
     if (!add) {
@@ -305,9 +487,31 @@ radialCircle <- function(crd,
 #' center is optimised independently by multi-start Nelder-Mead — the
 #' circles are nested but not generally concentric.
 #'
+#' **What is minimised.** Every candidate partition is scored by its exact
+#' bijection-constrained misclassification: the best total correct over all
+#' `k!` ways of matching the `k` regions to the `k` groups, each group used
+#' once. This is the same criterion `sector`/`majority` are derived from, so
+#' the search targets exactly the quantity reported as `misclass`. Radii that
+#' would separate coincident distances are skipped as unrealisable, and radii
+#' leaving a region empty are allowed — on data with no radial structure such
+#' a partition can be the true minimum — but a partition whose every circle
+#' actually splits the points wins any tie.
+#'
+#' **Optimality.** Concentric (`cx` and `cy` supplied): all `k-1` radii are
+#' searched *jointly* over every realisable combination, so the result is
+#' globally optimal for that center. If the number of combinations is too
+#' large to enumerate, the function warns and falls back to the sequential
+#' path below. Optimised centers: circles are fitted sequentially, then all
+#' radii are refined by coordinate descent against the criterion above, so
+#' the result is optimal in each individual radius but not jointly in the
+#' centers.
+#'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
-#' @param group Factor with `k >= 2` levels (factor levels define the
-#'   inside-to-outside ordering).
+#' @param group Factor with `k >= 2` levels. **Factor level order does not
+#'   matter**: the inside-to-outside nesting order is found from the data, so
+#'   relabelling or reordering the levels cannot change the result. Read the
+#'   order off `majority`, which names the group owning each region from the
+#'   innermost outwards.
 #' @param cx,cy Optional shared center for all `k-1` circles. When both
 #'   are supplied the circles are concentric at `(cx, cy)`; otherwise
 #'   each center is optimised.
@@ -356,6 +560,8 @@ radialCircles <- function(crd,
 
     # ---- Input validation ----
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
+    if (any(is.na(crd)))            stop("No NAs allowed in crd!")
+    if (any(is.na(group)))          stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)           stop("Coordinates must have 2 columns")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
@@ -377,56 +583,123 @@ radialCircles <- function(crd,
     # Otherwise each circle's center is optimised independently.
     fixed_center <- !(is.null(cx) || is.null(cy))
 
-    circles <- vector("list", k - 1L)
-    prev_cx <- NULL; prev_cy <- NULL; prev_r <- NULL
+    circles   <- vector("list", k - 1L)
+    exact_fit <- FALSE
 
     if (fixed_center) {
-        # Concentric branch: shared (cx, cy) for all k-1 circles.
+        # Concentric branch: shared (cx, cy) for all k-1 circles. All k-1
+        # radii are searched *jointly* over every realisable combination of
+        # cut positions, scored by the bijection-constrained criterion the
+        # function reports -- so this branch is exactly optimal, not greedy.
         d        <- sqrt((pcoords[, 1] - cx)^2 + (pcoords[, 2] - cy)^2)
         ord      <- order(d)
         d_sorted <- d[ord]
 
-        for (s in seq_len(k - 1L)) {
-            inner_flag <- grp_int <= s
-            r_min      <- if (is.null(prev_r)) 0 else prev_r
-            res        <- .best_radius(d_sorted, inner_flag[ord], r_min)
-            circles[[s]] <- list(cx = cx, cy = cy, r = res$r,
-                                 misclass = res$misclass)
-            prev_r <- res$r
-        }
-    } else {
-        # Independent-centers branch (original behaviour).
-        overall_ctr <- c(mean(pcoords[, 1]), mean(pcoords[, 2]))
-        for (s in seq_len(k - 1L)) {
-            inner_flag <- grp_int <= s
-            inner_ctr  <- c(mean(pcoords[inner_flag, 1]), mean(pcoords[inner_flag, 2]))
-
-            starts <- list(inner_ctr, overall_ctr)
-            if (!is.null(prev_cx)) starts <- c(starts, list(c(prev_cx, prev_cy)))
-
-            circ <- .optimize_circle(pcoords, inner_flag,
-                                     prev_cx, prev_cy, prev_r,
-                                     starts,
-                                     meth = .method)
-            circles[[s]] <- circ
-            prev_cx <- circ$cx; prev_cy <- circ$cy; prev_r <- circ$r
+        # The joint search builds (k-1) x M integer index matrices, so its
+        # cost grows as choose(m + k - 2, k - 1); past a few tens of
+        # millions of cells that is gigabytes. Beyond the cap, fall back to
+        # the same sequential fit plus radius refinement the
+        # independent-centers branch uses -- locally, not globally, optimal,
+        # so say so rather than silently returning a weaker answer.
+        m_pos <- length(.cut_radii(d_sorted)$pos)
+        if (choose(m_pos + k - 2L, k - 1L) * (k - 1L) <= 3e7) {
+            res <- .radial_search(d_sorted, grp_int[ord], k)
+            for (s in seq_len(k - 1L))
+                circles[[s]] <- list(cx = cx, cy = cy, r = res$radii[s])
+            exact_fit <- TRUE
+        } else {
+            warning("too many radius combinations for an exact concentric ",
+                    "search (k = ", k, ", n = ", n_pts, "); falling back to ",
+                    "the sequential fit with radius refinement, which is ",
+                    "not guaranteed to be globally optimal", call. = FALSE)
         }
     }
 
-    cx_vec    <- vapply(circles, function(c) c$cx, numeric(1))
-    cy_vec    <- vapply(circles, function(c) c$cy, numeric(1))
-    radii_vec <- vapply(circles, function(c) c$r,  numeric(1))
+    if (!exact_fit) {
+        # ---- Sequential fit, searched over candidate nesting orders ----
+        # A sequential fit needs to know which groups belong inside circle s.
+        # Taking that from the factor level order would make the result depend
+        # on how the groups happen to be named, so instead every candidate
+        # order from .nesting_orders() is fitted and the one whose final
+        # geometry minimises the *reported* criterion is kept. Both the
+        # candidate set and its iteration order are intrinsic to the
+        # configuration, and improvements are strict, so the outcome is
+        # invariant under any relabelling or reordering of the levels.
+        fit_one <- function(nest_ord) {
+            rank_of           <- integer(k)
+            rank_of[nest_ord] <- seq_len(k)
+            rk                <- rank_of[grp_int]
+
+            out     <- vector("list", k - 1L)
+            prev_cx <- NULL; prev_cy <- NULL; prev_r <- NULL
+
+            if (fixed_center) {
+                for (s in seq_len(k - 1L)) {
+                    r_min    <- if (is.null(prev_r)) 0 else prev_r
+                    res      <- .best_radius(d_sorted, (rk <= s)[ord], r_min)
+                    out[[s]] <- list(cx = cx, cy = cy, r = res$r)
+                    prev_r   <- res$r
+                }
+            } else {
+                overall_ctr <- c(mean(pcoords[, 1]), mean(pcoords[, 2]))
+                for (s in seq_len(k - 1L)) {
+                    inner_flag <- rk <= s
+                    inner_ctr  <- c(mean(pcoords[inner_flag, 1]),
+                                    mean(pcoords[inner_flag, 2]))
+
+                    starts <- list(inner_ctr, overall_ctr)
+                    if (!is.null(prev_cx))
+                        starts <- c(starts, list(c(prev_cx, prev_cy)))
+
+                    circ     <- .optimize_circle(pcoords, inner_flag,
+                                                 prev_cx, prev_cy, prev_r,
+                                                 starts,
+                                                 meth = .method)
+                    out[[s]] <- circ
+                    prev_cx  <- circ$cx; prev_cy <- circ$cy; prev_r <- circ$r
+                }
+            }
+
+            out
+        }
+
+        cands <- .nesting_orders(pcoords, group)
+        if (!isTRUE(attr(cands, "exhaustive")))
+            warning("too many group orderings to search exhaustively (k = ", k,
+                    "); using the nesting order implied by mean distance from ",
+                    "the configuration centroid, which may not be optimal",
+                    call. = FALSE)
+
+        # Every candidate is refined before being scored. Refinement is the
+        # expensive half, so it is tempting to rank the orderings on their
+        # unrefined error and refine only the leaders -- but that measurably
+        # loses quality (refinement re-ranks orderings, and no slack band
+        # recovers it), so all candidates get the full treatment.
+        best <- NULL
+        for (nest_ord in cands) {
+            cc  <- fit_one(nest_ord)
+            cxv <- vapply(cc, function(z) z$cx, numeric(1))
+            cyv <- vapply(cc, function(z) z$cy, numeric(1))
+            # The sequential fit scores each circle in isolation, which is not
+            # the quantity reported below, so refine before scoring.
+            rv  <- .refine_radii(pcoords, grp_int, cxv, cyv,
+                                 vapply(cc, function(z) z$r, numeric(1)), k)
+            err <- .partition_err(
+                .nested_sector(pcoords, cxv, cyv, rv, k), grp_int, k)
+            if (is.null(best) || err < best$err)
+                best <- list(cx = cxv, cy = cyv, r = rv, err = err)
+        }
+
+        for (s in seq_len(k - 1L))
+            circles[[s]] <- list(cx = best$cx[s], cy = best$cy[s], r = best$r[s])
+    }
+
+    cx_vec    <- vapply(circles, function(cc) cc$cx, numeric(1))
+    cy_vec    <- vapply(circles, function(cc) cc$cy, numeric(1))
+    radii_vec <- vapply(circles, function(cc) cc$r,  numeric(1))
 
     # ---- Sector assignment ----
-    sector <- rep(k, n_pts)
-    if (fixed_center) {
-        for (s in (k - 1L):1L) sector[d <= radii_vec[s]] <- s
-    } else {
-        for (s in (k - 1L):1L) {
-            d_s <- sqrt((pcoords[, 1] - cx_vec[s])^2 + (pcoords[, 2] - cy_vec[s])^2)
-            sector[d_s <= radii_vec[s]] <- s
-        }
-    }
+    sector <- .nested_sector(pcoords, cx_vec, cy_vec, radii_vec, k)
 
     # ---- Unique group assignment ----
     count_mat <- matrix(0L, nrow = k, ncol = k)
@@ -435,7 +708,7 @@ radialCircles <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
-    assignment <- .assign_groups(count_mat)
+    assignment <- .assign_groups(count_mat, levels(group))
     majority   <- levels(group)[assignment]
 
     if (!add) {

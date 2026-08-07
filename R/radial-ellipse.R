@@ -214,7 +214,7 @@ radialEllipse <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = 2L)
     }
-    assignment      <- .assign_groups(count_mat)
+    assignment      <- .assign_groups(count_mat, levels(group))
     majority        <- levels(group)[assignment]
     misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
     misclass        <- list(n = length(misclass_idx), indices = misclass_idx)
@@ -292,7 +292,11 @@ radialEllipse <- function(crd,
 #' penalty plateau).
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
-#' @param group Factor with `k >= 2` levels.
+#' @param group Factor with `k >= 2` levels. **Factor level order does not
+#'   matter**: the inside-to-outside nesting order is found from the data, so
+#'   relabelling or reordering the levels cannot change the result. Read the
+#'   order off `majority`, which names the group owning each region from the
+#'   innermost outwards.
 #' @param ellipse Optional length-5 numeric vector `(cx, cy, a, b, angle)`
 #'   specifying the innermost ellipse exactly. When supplied, all outer
 #'   ellipses are uniform scalings of this one; only the scale factors
@@ -373,8 +377,6 @@ radialEllipses <- function(crd,
     # own independently optimised center, semi-axes, and rotation.
     fixed_shape <- !is.null(ellipse)
 
-    ellipses <- vector("list", k - 1L)
-
     if (fixed_shape) {
         cx_fix    <- ellipse[1]
         cy_fix    <- ellipse[2]
@@ -394,64 +396,108 @@ radialEllipses <- function(crd,
         crit_t   <- sqrt((u / a_fix)^2 + (v / b_fix)^2)
         ord      <- order(crit_t)
         t_sorted <- crit_t[ord]
-
-        # Innermost ellipse: exactly as supplied (t_1 = 1)
-        ellipses[[1]] <- list(cx = cx_fix, cy = cy_fix,
-                              a = a_fix, b = b_fix, angle = angle_fix)
-
-        # Outer ellipses: search t_s subject to t_s > t_{s-1}, reusing
-        # .best_radius() with the critical scales playing the role of
-        # distances and t playing the role of radius.
-        if (k >= 3L) {
-            prev_t <- 1
-            for (s in 2L:(k - 1L)) {
-                inner_flag <- grp_int <= s
-                res <- .best_radius(t_sorted, inner_flag[ord], r_min = prev_t)
-                t_s <- res$r
-                ellipses[[s]] <- list(cx = cx_fix, cy = cy_fix,
-                                      a = a_fix * t_s,
-                                      b = b_fix * t_s,
-                                      angle = angle_fix)
-                prev_t <- t_s
-            }
-        }
-    } else {
-        # Independent-ellipse branch (original behaviour).
-        prev <- NULL
-        for (s in seq_len(k - 1L)) {
-            inner_flag <- grp_int <= s
-            starts     <- list(.init_ellipse_params(coords, inner_flag))
-            if (!is.null(prev)) {
-                prev_inflated <- c(prev$cx, prev$cy,
-                                   prev$a * 1.2, prev$b * 1.2,
-                                   prev$angle)
-                starts <- c(starts, list(prev_inflated))
-            }
-            ell <- .optimize_ellipse(coords, inner_flag,
-                                     prev = prev, starts = starts)
-            ellipses[[s]] <- ell
-            prev          <- ell
-        }
     }
+
+    # Fit all k-1 ellipses for one candidate nesting order (innermost group
+    # first). Both paths need to know which groups belong inside ellipse s;
+    # taking that from the factor level order would make the result depend on
+    # how the groups happen to be named, so the order is searched below
+    # instead.
+    fit_one <- function(nest_ord) {
+        rank_of           <- integer(k)
+        rank_of[nest_ord] <- seq_len(k)
+        rk                <- rank_of[grp_int]
+
+        out <- vector("list", k - 1L)
+
+        if (fixed_shape) {
+            # Innermost ellipse: exactly as supplied (t_1 = 1)
+            out[[1]] <- list(cx = cx_fix, cy = cy_fix,
+                             a = a_fix, b = b_fix, angle = angle_fix)
+
+            # Outer ellipses: search t_s subject to t_s > t_{s-1}, reusing
+            # .best_radius() with the critical scales playing the role of
+            # distances and t playing the role of radius.
+            if (k >= 3L) {
+                prev_t <- 1
+                for (s in 2L:(k - 1L)) {
+                    res <- .best_radius(t_sorted, (rk <= s)[ord],
+                                        r_min = prev_t)
+                    t_s <- res$r
+                    out[[s]] <- list(cx = cx_fix, cy = cy_fix,
+                                     a = a_fix * t_s,
+                                     b = b_fix * t_s,
+                                     angle = angle_fix)
+                    prev_t <- t_s
+                }
+            }
+        } else {
+            # Independent-ellipse branch (original behaviour).
+            prev <- NULL
+            for (s in seq_len(k - 1L)) {
+                inner_flag <- rk <= s
+                starts     <- list(.init_ellipse_params(coords, inner_flag))
+                if (!is.null(prev)) {
+                    prev_inflated <- c(prev$cx, prev$cy,
+                                       prev$a * 1.2, prev$b * 1.2,
+                                       prev$angle)
+                    starts <- c(starts, list(prev_inflated))
+                }
+                ell      <- .optimize_ellipse(coords, inner_flag,
+                                              prev = prev, starts = starts)
+                out[[s]] <- ell
+                prev     <- ell
+            }
+        }
+
+        out
+    }
+
+    # Region of each point: the innermost ellipse containing it, else k.
+    sector_of <- function(ell) {
+        sec <- rep(k, n_pts)
+        if (fixed_shape) {
+            t_vec <- vapply(ell, function(e) e$a, numeric(1)) / a_fix
+            for (s in (k - 1L):1L) sec[crit_t <= t_vec[s]] <- s
+        } else {
+            for (s in (k - 1L):1L) {
+                inside      <- .in_ellipse(coords, ell[[s]]$cx, ell[[s]]$cy,
+                                           ell[[s]]$a, ell[[s]]$b,
+                                           ell[[s]]$angle)
+                sec[inside] <- s
+            }
+        }
+        sec
+    }
+
+    # ---- Search over candidate nesting orders ----
+    # Both the candidate set and its iteration order are intrinsic to the
+    # configuration, and improvements are strict, so the result is invariant
+    # under any relabelling or reordering of the factor levels.
+    cands <- .nesting_orders(coords, group)
+    if (!isTRUE(attr(cands, "exhaustive")))
+        warning("too many group orderings to search exhaustively (k = ", k,
+                "); using the nesting order implied by mean distance from the ",
+                "configuration centroid, which may not be optimal",
+                call. = FALSE)
+
+    best <- NULL
+    for (nest_ord in cands) {
+        ell <- fit_one(nest_ord)
+        sec <- sector_of(ell)
+        err <- .partition_err(sec, grp_int, k)
+        if (is.null(best) || err < best$err)
+            best <- list(ell = ell, sector = sec, err = err)
+    }
+
+    ellipses <- best$ell
+    sector   <- best$sector
 
     cx_vec    <- vapply(ellipses, function(e) e$cx,    numeric(1))
     cy_vec    <- vapply(ellipses, function(e) e$cy,    numeric(1))
     a_vec     <- vapply(ellipses, function(e) e$a,     numeric(1))
     b_vec     <- vapply(ellipses, function(e) e$b,     numeric(1))
     angle_vec <- vapply(ellipses, function(e) e$angle, numeric(1))
-
-    # ---- Sector assignment ----
-    sector <- rep(k, n_pts)
-    if (fixed_shape) {
-        t_vec <- a_vec / a_fix
-        for (s in (k - 1L):1L) sector[crit_t <= t_vec[s]] <- s
-    } else {
-        for (s in (k - 1L):1L) {
-            inside         <- .in_ellipse(coords, cx_vec[s], cy_vec[s],
-                                          a_vec[s], b_vec[s], angle_vec[s])
-            sector[inside] <- s
-        }
-    }
 
     # ---- Majority labels and misclassification ----
     count_mat <- matrix(0L, nrow = k, ncol = k)
@@ -460,7 +506,7 @@ radialEllipses <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
-    assignment      <- .assign_groups(count_mat)
+    assignment      <- .assign_groups(count_mat, levels(group))
     majority        <- levels(group)[assignment]
     misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
     misclass        <- list(n = length(misclass_idx), indices = misclass_idx)

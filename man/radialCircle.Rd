@@ -53,8 +53,20 @@ point), and \code{majority} (\code{character[2]}).
 Finds the circle minimising misclassification between two groups of 2D
 points. The center is found by multi-start Nelder-Mead (starts: data
 centroid plus each group's centroid) unless \code{cx} and \code{cy} are supplied.
-For a given center, the optimal radius is found by a linear scan over
-all \code{n-1} candidate midpoints without assuming which group is inner.
+}
+\details{
+\strong{Search at fixed center.} Points are sorted by distance from the center
+and every realisable radius is scanned: the inside/outside split is scored
+by its exact bijection-constrained misclassification (the better of the
+two ways to match the two regions to the two groups) — the same criterion
+used to derive \code{sector}/\code{majority} below, so the search targets exactly
+the quantity reported as \code{misclass}, and neither group is assumed to be
+the inner one. Radii that separate coincident distances are skipped as
+unrealisable. The scan also considers the degenerate radii that leave one
+region empty; when the configuration has no radial structure these can be
+the true minimum, so they are allowed, but on a tie a circle that really
+does split the points is preferred. \code{radialCircles()} with \code{k = 2} and the
+same center returns the same circle.
 }
 \examples{
 set.seed(1)

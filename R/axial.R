@@ -180,6 +180,13 @@ axialLine <- function(crd,
 #' - **Cuts**: for each angle, exact brute-force enumeration over all
 #'   `C(n-1, k-1)` ways to split the sorted projections into `k` segments.
 #'
+#' Each candidate is scored by its exact **bijection-constrained**
+#' misclassification: the best total correct over all `k!` ways of matching
+#' the `k` segments to the `k` groups, each group used exactly once. This is
+#' the same criterion `sector`/`majority` are derived from, so the search
+#' minimises exactly the quantity reported as `misclass`. Every segment is
+#' non-empty, so a group whose region would be empty is not considered.
+#'
 #' The `(angle, cuts)` combination with lowest total misclassification wins.
 #' Tie-breaker: among configurations with the same misclass count, the one
 #' with the largest minimum margin (perpendicular distance from a cut line
@@ -247,7 +254,7 @@ axialLines <- function(crd,
 
     # ---- Input validation ----
     if (any(is.na(crd)))       stop("No NAs allowed in crd!")
-    if (any(is.na(crd)))       stop("No NAs allowed in group!")
+    if (any(is.na(group)))     stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2) stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)      stop("Coordinates must be 2-dimensional!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
@@ -264,9 +271,11 @@ axialLines <- function(crd,
     grp_int <- as.integer(group)
     n_pts   <- nrow(coords)
     
-    # combos: compute cut-position combinations (independent of angle)
-    # each (n over k) selection of k points defines k cut-positions
-    if (k >= 3L) combos <- combn(n_pts - 1L, k - 1L)
+    # combos: cut-position combinations (independent of angle). Column ci
+    # gives the k - 1 sorted positions after which a cut falls, so all k
+    # segments are non-empty.
+    combos <- combn(n_pts - 1L, k - 1L)
+    M      <- ncol(combos)
     
     # ---- Candidate angles to check (0, pi) ----
     # Grid in [0, pi) plus LDA's LD1 direction as a high-quality seed.
@@ -282,13 +291,23 @@ axialLines <- function(crd,
     # first i sorted points) let every candidate partition be scored by
     # vector arithmetic with no per-cut re-tabulation. A segment spanning
     # sorted positions a..b has group counts cum[b + 1, ] - cum[a, ], and
-    # contributes (b - a + 1) - max_g(count) misclassified points; all
-    # C(n - 1, k - 1) partitions are scored together via vectorised pmax.
+    # and all C(n - 1, k - 1) partitions are scored together.
+    #
+    # The score is the exact *bijection-constrained* misclassification -- the
+    # best total correct over all k! segment-to-group assignments with each
+    # group used exactly once -- computed by .bij_best() (utils.R). That is
+    # the same criterion .assign_groups() applies to derive sector/majority
+    # below, so the search minimises exactly the quantity reported as
+    # `misclass`. Scoring each segment by its own local majority instead (as
+    # this function used to) lets two segments claim the same group, and so
+    # minimises a total no bijection can achieve: the returned lines then need
+    # not minimise the returned number. Do not revert to per-segment maxima.
     #
     # Tie-breaker: among configurations with the same misclassification
-    # count, prefer the one with the largest minimum margin. The cut at the
-    # midpoint of s_proj[sp] and s_proj[sp + 1] has margin
-    # (s_proj[sp + 1] - s_proj[sp]) / 2; for k - 1 cuts, take the min.
+    # count, prefer the one with the largest minimum margin. A cut after
+    # sorted position p sits at the midpoint of s_proj[p] and s_proj[p + 1]
+    # and has margin half that gap; a candidate's margin is the min over its
+    # k - 1 cuts. Computed for the co-minimal candidates only, not all M.
     best_err    <- n_pts
     best_margin <- -Inf
     best_theta  <- theta_lda
@@ -308,64 +327,37 @@ axialLines <- function(crd,
         # cum: table of cumulative per-group counts over the sorted sequence:
         cum <- matrix(0L, nrow = n_pts + 1L, ncol = k)
         for (g in seq_len(k)) cum[-1L, g] <- cumsum(s_grp == g)
-        total <- cum[n_pts + 1L, ]
 
-        if (k == 2L) {
-            # Single cut after sorted position sp (1 .. n - 1). Inner counts
-            # are cum[sp + 1, ], outer counts total - cum[sp + 1, ].
-            sp     <- 1L:(n_pts - 1L)
-            c_in   <- cum[sp + 1L, , drop = FALSE]
-            max_in <- pmax(c_in[, 1L], c_in[, 2L])
-            max_ou <- pmax(total[1L] - c_in[, 1L], total[2L] - c_in[, 2L])
-            err    <- (sp - max_in) + ((n_pts - sp) - max_ou)
-            margin <- (s_proj[sp + 1L] - s_proj[sp]) / 2
-            cuts   <- matrix((s_proj[sp] + s_proj[sp + 1L]) / 2, ncol = 1L)
-            } 
-        else {
-            # combos is (k - 1) x M (M is number of possible cuts); 
-            # column ci gives the k - 1 cut positions.
-            # Accumulate, per segment, the max group count across all M
-            # columns; segment s spans positions combos[s - 1] + 1 .. combos[s]
-            # (with implicit bounds 0 and n_pts at the ends).
-            M       <- ncol(combos)
-            sum_max <- integer(M)
-            gap     <- matrix(0, nrow = M, ncol = k - 1L)
-            
-            # loop over the k groups:
-            for (s in seq_len(k)) {
-                lo    <- if (s == 1L) rep(0L, M)     else combos[s - 1L, ]
-                hi    <- if (s == k)  rep(n_pts, M)  else combos[s, ]
-                cnt   <- cum[hi + 1L, , drop = FALSE] - 
-                          cum[lo + 1L, , drop = FALSE]
-                r_max <- cnt[, 1L]
-                for (g in 2L:k) r_max <- pmax(r_max, cnt[, g])
-                sum_max <- sum_max + r_max
-            }
-            
-            err <- n_pts - sum_max
-
-            # Per-column gaps, margins, and cut midpoints.
-            for (s in seq_len(k - 1L))
-                gap[, s] <- s_proj[combos[s, ] + 1L] - s_proj[combos[s, ]]
-            
-            margin <- (if (k - 1L == 1L) gap[, 1L]
-                       else do.call(pmin, as.data.frame(gap))) / 2
-            
-            cuts   <- t((matrix(s_proj[combos],      nrow = k - 1L) +
-                         matrix(s_proj[combos + 1L], nrow = k - 1L)) / 2)
+        # Row indices into `cum` bounding segment s, which spans sorted
+        # positions combos[s - 1, ] + 1 .. combos[s, ] (implicit bounds 0 and
+        # n_pts at the ends); scalars where constant over candidates.
+        lo_idx <- vector("list", k)
+        hi_idx <- vector("list", k)
+        for (s in seq_len(k)) {
+            lo_idx[[s]] <- if (s == 1L) 1L         else combos[s - 1L, ] + 1L
+            hi_idx[[s]] <- if (s == k)  n_pts + 1L else combos[s, ]      + 1L
         }
 
+        bb <- .bij_best(cum, lo_idx, hi_idx, k, M)
+        m  <- n_pts - bb$max_correct
+        at <- bb$at
+
+        # Margins of the co-minimal candidates only, then the tie-break.
+        cp_at   <- combos[, at, drop = FALSE]
+        gap_mat <- matrix(s_proj[cp_at + 1L] - s_proj[cp_at], nrow = k - 1L)
+        mrg_at  <- (if (k == 2L) gap_mat[1L, ] else apply(gap_mat, 2L, min)) / 2
+
         # Best at this angle: lowest err, ties broken by largest margin.
-        # which.max returns the first maximum, so the lowest-index (earliest
-        # in scan order) column wins ties, matching the original loops.
-        m  <- min(err)
-        at <- which(err == m)
-        j  <- at[which.max(margin[at])]
-        if (m < best_err || (m == best_err && margin[j] > best_margin)) {
+        # which.max returns the first maximum and `at` is increasing, so the
+        # lowest-index (earliest in scan order) candidate wins ties, matching
+        # the original loops.
+        w_at <- which.max(mrg_at)
+        if (m < best_err || (m == best_err && mrg_at[w_at] > best_margin)) {
+            cut_pos     <- combos[, at[w_at]]
             best_err    <- m
-            best_margin <- margin[j]
+            best_margin <- mrg_at[w_at]
             best_theta  <- theta
-            best_cuts   <- cuts[j, ]
+            best_cuts   <- (s_proj[cut_pos] + s_proj[cut_pos + 1L]) / 2
         }
     }
 
@@ -392,7 +384,7 @@ axialLines <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
-    assignment <- .assign_groups(count_mat)
+    assignment <- .assign_groups(count_mat, levels_)
     majority   <- levels_[assignment]
 
     if (!add) {

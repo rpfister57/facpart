@@ -106,7 +106,7 @@
     }
 
     # ---- Stage 2: exact bijection-constrained score, on survivors only ----
-    perms <- gtools::permutations(k, k)
+    perms <- .perms_k(k)
 
     # Exact best-correct over all k! arc-to-group assignments (each group
     # used exactly once) for the candidates in `sel` -- the same criterion
@@ -414,7 +414,7 @@ angularPartition <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
-    assignment <- .assign_groups(count_mat)
+    assignment <- .assign_groups(count_mat, levels(group))
     majority   <- levels(group)[assignment]
 
     misclass_idx    <- which(as.character(group) != majority[sector])

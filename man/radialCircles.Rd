@@ -22,8 +22,11 @@ radialCircles(
 \arguments{
 \item{crd}{Numeric matrix or data frame with exactly 2 columns.}
 
-\item{group}{Factor with \code{k >= 2} levels (factor levels define the
-inside-to-outside ordering).}
+\item{group}{Factor with \code{k >= 2} levels. \strong{Factor level order does not
+matter}: the inside-to-outside nesting order is found from the data, so
+relabelling or reordering the levels cannot change the result. Read the
+order off \code{majority}, which names the group owning each region from the
+innermost outwards.}
 
 \item{cx, cy}{Optional shared center for all \code{k-1} circles. When both
 are supplied the circles are concentric at \verb{(cx, cy)}; otherwise
@@ -66,6 +69,25 @@ center (concentric); only the radii are searched, subject to
 \verb{r_s >= r_\{s-1\}}. When either is \code{NULL} (default), each circle's
 center is optimised independently by multi-start Nelder-Mead — the
 circles are nested but not generally concentric.
+
+\strong{What is minimised.} Every candidate partition is scored by its exact
+bijection-constrained misclassification: the best total correct over all
+\verb{k!} ways of matching the \code{k} regions to the \code{k} groups, each group used
+once. This is the same criterion \code{sector}/\code{majority} are derived from, so
+the search targets exactly the quantity reported as \code{misclass}. Radii that
+would separate coincident distances are skipped as unrealisable, and radii
+leaving a region empty are allowed — on data with no radial structure such
+a partition can be the true minimum — but a partition whose every circle
+actually splits the points wins any tie.
+
+\strong{Optimality.} Concentric (\code{cx} and \code{cy} supplied): all \code{k-1} radii are
+searched \emph{jointly} over every realisable combination, so the result is
+globally optimal for that center. If the number of combinations is too
+large to enumerate, the function warns and falls back to the sequential
+path below. Optimised centers: circles are fitted sequentially, then all
+radii are refined by coordinate descent against the criterion above, so
+the result is optimal in each individual radius but not jointly in the
+centers.
 }
 \examples{
 \dontrun{

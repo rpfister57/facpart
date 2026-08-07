@@ -14,18 +14,26 @@ export(radialEllipse)
 export(radialEllipses)
 importFrom(MASS,lda)
 importFrom(cluster,ellipsoidhull)
-importFrom(grDevices,adjustcolor)
-importFrom(grDevices,hcl.colors)
-importFrom(graphics,abline)
-importFrom(graphics,par)
-importFrom(graphics,points)
-importFrom(graphics,polygon)
-importFrom(graphics,polypath)
-importFrom(graphics,segments)
-importFrom(plotrix,draw.circle)
-importFrom(plotrix,draw.ellipse)
-importFrom(stats,as.dist)
-importFrom(stats,cov)
-importFrom(stats,optim)
-importFrom(stats,predict)
+importFrom(grDevices,
+  adjustcolor,
+  hcl.colors
+)
+importFrom(graphics,
+  abline,
+  par,
+  points,
+  polygon,
+  polypath,
+  segments
+)
+importFrom(plotrix,
+  draw.circle,
+  draw.ellipse
+)
+importFrom(stats,
+  as.dist,
+  cov,
+  optim,
+  predict
+)
 importFrom(utils,combn)

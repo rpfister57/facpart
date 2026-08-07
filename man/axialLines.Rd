@@ -69,6 +69,13 @@ projected onto \verb{(cos theta, sin theta)}.
 \code{C(n-1, k-1)} ways to split the sorted projections into \code{k} segments.
 }
 
+Each candidate is scored by its exact \strong{bijection-constrained}
+misclassification: the best total correct over all \verb{k!} ways of matching
+the \code{k} segments to the \code{k} groups, each group used exactly once. This is
+the same criterion \code{sector}/\code{majority} are derived from, so the search
+minimises exactly the quantity reported as \code{misclass}. Every segment is
+non-empty, so a group whose region would be empty is not considered.
+
 The \verb{(angle, cuts)} combination with lowest total misclassification wins.
 Tie-breaker: among configurations with the same misclass count, the one
 with the largest minimum margin (perpendicular distance from a cut line

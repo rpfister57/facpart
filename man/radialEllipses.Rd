@@ -20,7 +20,11 @@ radialEllipses(
 \arguments{
 \item{crd}{Numeric matrix or data frame with exactly 2 columns.}
 
-\item{group}{Factor with \code{k >= 2} levels.}
+\item{group}{Factor with \code{k >= 2} levels. \strong{Factor level order does not
+matter}: the inside-to-outside nesting order is found from the data, so
+relabelling or reordering the levels cannot change the result. Read the
+order off \code{majority}, which names the group owning each region from the
+innermost outwards.}
 
 \item{ellipse}{Optional length-5 numeric vector \verb{(cx, cy, a, b, angle)}
 specifying the innermost ellipse exactly. When supplied, all outer
