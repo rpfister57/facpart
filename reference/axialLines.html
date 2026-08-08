@@ -124,7 +124,13 @@ augmented by LDA's LD1 direction. For each angle <code>theta</code>, points are
 projected onto <code>(cos theta, sin theta)</code>.</p></li>
 <li><p><strong>Cuts</strong>: for each angle, exact brute-force enumeration over all
 <code>C(n-1, k-1)</code> ways to split the sorted projections into <code>k</code> segments.</p></li>
-</ul><p>The <code>(angle, cuts)</code> combination with lowest total misclassification wins.
+</ul><p>Each candidate is scored by its exact <strong>bijection-constrained</strong>
+misclassification: the best total correct over all <code>k!</code> ways of matching
+the <code>k</code> segments to the <code>k</code> groups, each group used exactly once. This is
+the same criterion <code>sector</code>/<code>majority</code> are derived from, so the search
+minimises exactly the quantity reported as <code>misclass</code>. Every segment is
+non-empty, so a group whose region would be empty is not considered.</p>
+<p>The <code>(angle, cuts)</code> combination with lowest total misclassification wins.
 Tie-breaker: among configurations with the same misclass count, the one
 with the largest minimum margin (perpendicular distance from a cut line
 to the nearest point) is preferred — keeps cut lines visually away from

@@ -97,6 +97,14 @@ If `output = TRUE`, a list with:
 - **Cuts**: for each angle, exact brute-force enumeration over all
   `C(n-1, k-1)` ways to split the sorted projections into `k` segments.
 
+Each candidate is scored by its exact **bijection-constrained**
+misclassification: the best total correct over all `k!` ways of matching
+the `k` segments to the `k` groups, each group used exactly once. This
+is the same criterion `sector`/`majority` are derived from, so the
+search minimises exactly the quantity reported as `misclass`. Every
+segment is non-empty, so a group whose region would be empty is not
+considered.
+
 The `(angle, cuts)` combination with lowest total misclassification
 wins. Tie-breaker: among configurations with the same misclass count,
 the one with the largest minimum margin (perpendicular distance from a

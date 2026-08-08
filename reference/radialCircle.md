@@ -3,8 +3,6 @@
 Finds the circle minimising misclassification between two groups of 2D
 points. The center is found by multi-start Nelder-Mead (starts: data
 centroid plus each group's centroid) unless `cx` and `cy` are supplied.
-For a given center, the optimal radius is found by a linear scan over
-all `n-1` candidate midpoints without assuming which group is inner.
 
 ## Usage
 
@@ -78,6 +76,22 @@ If `output = TRUE`, a list with `center`, `radius`, `misclass`
 (integer), `misclass_points` (data frame with columns `x`, `y`, `label`
 for each misclassified point), `sector` (`1` inside / `2` outside per
 point), and `majority` (`character[2]`).
+
+## Details
+
+**Search at fixed center.** Points are sorted by distance from the
+center and every realisable radius is scanned: the inside/outside split
+is scored by its exact bijection-constrained misclassification (the
+better of the two ways to match the two regions to the two groups) — the
+same criterion used to derive `sector`/`majority` below, so the search
+targets exactly the quantity reported as `misclass`, and neither group
+is assumed to be the inner one. Radii that separate coincident distances
+are skipped as unrealisable. The scan also considers the degenerate
+radii that leave one region empty; when the configuration has no radial
+structure these can be the true minimum, so they are allowed, but on a
+tie a circle that really does split the points is preferred.
+[`radialCircles()`](https://rpfister57.github.io/facpart/reference/radialCircles.md)
+with `k = 2` and the same center returns the same circle.
 
 ## Examples
 

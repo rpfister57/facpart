@@ -99,7 +99,10 @@ misclassification (best achievable total correct over all `k!`
 arc-to-group assignments, each group used exactly once) – the same
 region-to-group matching criterion used to derive `sector`/`majority`
 below, so the search targets exactly the quantity reported as
-`misclass`.
+`misclass`. Every wedge is non-empty, so a partition leaving a group's
+sector empty is not considered (as in
+[`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md);
+the radial functions do allow it).
 
 All per-candidate quantities are computed as length-`M` vectors indexed
 out of a cumulative group-count table, so the loops run over `k` / `k!`

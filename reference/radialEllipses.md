@@ -4,7 +4,9 @@ Generalises
 [`radialEllipse()`](https://rpfister57.github.io/facpart/reference/radialEllipse.md)
 to `k >= 2` groups using `k-1` nested ellipses. The nesting constraint
 (ellipse `s-1` lies inside ellipse `s`) is enforced during optimisation.
-Groups are ordered by factor level (level 1 = innermost).
+The inside-to-outside ordering of the groups is searched, not read off
+the factor levels, so the result does not depend on how the groups are
+named.
 
 ## Usage
 
@@ -31,7 +33,11 @@ radialEllipses(
 
 - group:
 
-  Factor with `k >= 2` levels.
+  Factor with `k >= 2` levels. **Factor level order does not matter**:
+  the inside-to-outside nesting order is found from the data, so
+  relabelling or reordering the levels cannot change the result. Read
+  the order off `majority`, which names the group owning each region
+  from the innermost outwards.
 
 - ellipse:
 

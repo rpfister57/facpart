@@ -131,7 +131,9 @@ score of a candidate is its exact bijection-constrained misclassification
 (best achievable total correct over all <code>k!</code> arc-to-group assignments,
 each group used exactly once) – the same region-to-group matching
 criterion used to derive <code>sector</code>/<code>majority</code> below, so the search targets
-exactly the quantity reported as <code>misclass</code>.</p>
+exactly the quantity reported as <code>misclass</code>. Every wedge is non-empty, so a
+partition leaving a group's sector empty is not considered (as in
+<code><a href="axialLines.html">axialLines()</a></code>; the radial functions do allow it).</p>
 <p>All per-candidate quantities are computed as length-<code>M</code> vectors indexed
 out of a cumulative group-count table, so the loops run over <code>k</code> / <code>k!</code>
 rather than over candidates – analogous to the vectorised cut search in
