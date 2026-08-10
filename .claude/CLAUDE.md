@@ -31,7 +31,7 @@ devtools::test()                                          # all tests
 testthat::test_file("tests/testthat/test-guttman.R")     # single file
 ```
 
-Formal tests cover `guttman.R` (`tests/testthat/test-guttman.R` — two assertions), `radial-circle.R` (`tests/testthat/test-radial-circle.R`), `axial.R` (`tests/testthat/test-axial.R`) and the cross-cutting factor-level-order invariance of every partition function (`tests/testthat/test-order-invariance.R`). The partition test files are the model to follow for the other partition families: it defines a `with_null_dev()` helper that wraps each call in `pdf(NULL)` / `dev.off()` plus `plot.new()`/`plot.window()`, and an independent `bij_err()` reimplementation of the bijection-constrained error so assertions never route through the same package internals they are testing. Its core property tests are *self-consistency* (`misclass` equals the error the returned geometry actually achieves) and *optimality* (equals an exhaustive brute-force reference) — both catch objective/report mismatches that equal-`misclass` comparisons miss. Ad-hoc testing for the remaining functions is done interactively via `devtools::load_all()` followed by manual calls.
+Formal tests cover `guttman.R` (`test-guttman.R` — two assertions), `angular.R` (`test-angular.R`), `radial-circle.R` (`test-radial-circle.R`), `axial.R` (`test-axial.R`) and the cross-cutting factor-level-order invariance of every partition function (`test-order-invariance.R`), all under `tests/testthat/`. `radial-ellipse.R` and `ellipse.R` have no file of their own; they are exercised only through the order-invariance and validation-parity tests. The partition test files are the model to follow for the other partition families: it defines a `with_null_dev()` helper that wraps each call in `pdf(NULL)` / `dev.off()` plus `plot.new()`/`plot.window()`, and an independent `bij_err()` reimplementation of the bijection-constrained error so assertions never route through the same package internals they are testing. Its core property tests are *self-consistency* (`misclass` equals the error the returned geometry actually achieves) and *optimality* (equals an exhaustive brute-force reference) — both catch objective/report mismatches that equal-`misclass` comparisons miss. Ad-hoc testing for the remaining functions is done interactively via `devtools::load_all()` followed by manual calls.
 
 Testing a **partition** function is different from testing `mu2()`: they all draw, and several read `par("usr")`, so a headless `Rscript` invocation silently opens the default device and leaves a stray `Rplots.pdf` in the working directory. Wrap such calls in `pdf(NULL)` / `dev.off()` (or `withr::with_pdf`) and assert on the returned `misclass` / `sector` / geometry fields rather than on the plot.
 
@@ -167,6 +167,21 @@ Four `utils.R` helpers currently have **no callers**: `.permutations()` (superse
 
 Measured runtime and candidate-count tables across n and k, with the caveats that explain their ~10x variance, live in the `facpart-angular-perf` skill (`.claude/skills/facpart-angular-perf/SKILL.md`) — consult it before worrying about angular performance or after changing the search code. Headline: `k <= 4` is effectively free up to n=50; `k = 5` is the inflection point; supplying `cx`/`cy` is the single biggest lever.
 
+### Error messages are harmonised — one wording per condition
+
+The same check must read the same way in every function. As of the harmony pass these are the canonical strings, and a new function should reuse them verbatim rather than invent a variant:
+
+| condition | message |
+|---|---|
+| `!is.numeric(as.matrix(crd))` | `Coordinate data must be numeric!` |
+| `any(is.na(crd))` | `No NAs allowed in crd!` |
+| `any(is.na(group))` | `No NAs allowed in group!` |
+| `length(dim(crd)) != 2` | `Coordinates must have two dimensions!` |
+| `dim(crd)[2] != 2` | `Coordinates must have 2 columns!` |
+| `nrow(crd) != length(group)` | `nrow(crd) must equal length(group)!` |
+
+Before the pass there were four spellings of the NA messages (`No NA allowed in input!`, `No NA allowed in crd!`, …) and — worse — five functions reported the **column-count** check `dim(crd)[2] != 2` as `Coordinates must be 2-dimensional!`, duplicating the wording of the *preceding* `length(dim(crd))` check and describing the wrong thing. `test-angular.R` asserts several of these with `fixed = TRUE`, so changing a message means updating that file. All eight partition/ellipse entry points now validate `crd` numeric-ness, NAs in `crd`, and column count; the six that take `group` also check NAs in `group` and the level count. `mu2()`/`mu2df()` in `guttman.R` keep their own vocabulary — different argument names, different domain.
+
 ## Coding Conventions
 
 - Use `_` not `.` for object names (e.g., `grp_int`, not `grp.int`).
@@ -192,7 +207,15 @@ pkgdown::build_site()
 
 The `docs/` directory is excluded from the package tarball via `.Rbuildignore`.
 
-**Caveat — the FacetedPartitions article has no source in the repo.** `docs/articles/FacetedPartitions.html`/`.md` and its figures are committed, but there is no `vignettes/` directory and no `.Rmd`/`.qmd` anywhere in the tree. `build_site_github_pages()` cleans `docs/` before building, so a rebuild drops the article from `docs/`; only the `clean: false` deploy keeps the already-published copy alive on `gh-pages`. If the article needs editing, restore/author its `.Rmd` under `vignettes/` first — do not hand-edit the generated HTML.
+### Articles / vignettes
+
+The single article lives at **`vignettes/articles/FacetedPartitions.Rmd`** — that is the only editable source. `docs/articles/FacetedPartitions.html` and `docs/articles/FacetedPartitions_files/` are *generated*; never hand-edit them, and never put an `.Rmd` under `docs/` (pkgdown only reads `vignettes/`, and `build_site_github_pages()` cleans `docs/` before building, so a source file parked there is silently destroyed on the next build — that was the state before this was fixed).
+
+It is a **web-only article, not a vignette**: `vignettes/articles/` is listed in `.Rbuildignore`, so `R CMD build` does not ship it and `browseVignettes("facpart")` will not find it. Consequently **`DESCRIPTION` must not carry a `VignetteBuilder:` field** — with no vignette directly in `vignettes/`, that field makes `R CMD check` warn about a missing vignette index. `knitr` and `rmarkdown` stay in `Suggests` (pkgdown and the chunk options need them). The `.Rmd` still carries `%\VignetteIndexEntry{}` / `%\VignetteEngine{}` metadata; inside `vignettes/articles/` that is inert. To promote it to a real vignette, move it up to `vignettes/`, drop the `.Rbuildignore` line, and add `VignetteBuilder: knitr` back.
+
+It `require()`s **smacof** (a `Suggests`), so a machine without smacof cannot knit it. CI installs Suggests because the workflow sets `needs: website`. Knits in ~3 s.
+
+Rebuild just the article with `pkgdown::build_article("FacetedPartitions")`; the whole site with `pkgdown::build_site()`.
 
 ## Known R CMD check Issues (as of v0.1.2)
 

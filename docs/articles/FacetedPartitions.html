@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Facet Theory and Partitions • facpart</title>
+<title>Facet Theory and Regional Partitions • facpart</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Facet Theory and Partitions">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Facet Theory and Regional Partitions">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">facpart</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/FacetedPartitions.html">Facet Theory and Partitions</a></li>
+<li><a class="dropdown-item" href="../articles/FacetedPartitions.html">Facet Theory and Regional Partitions</a></li>
   </ul>
 </li>
       </ul>
@@ -54,7 +54,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Facet Theory and Partitions</h1>
+      <h1>Facet Theory and Regional Partitions</h1>
             
       
 
@@ -66,17 +66,23 @@
 <div class="section level2">
 <h2 id="facets-configurations-and-partitions">Facets, Configurations, and Partitions<a class="anchor" aria-label="anchor" href="#facets-configurations-and-partitions"></a>
 </h2>
-<p>Facet Theory (FT) is a meta-approach to empirical research proposed
-by Louis Guttman ( ) and since then developed by many others ( ). We
+<p>Facet Theory (FT) is a meta-approach to empirical research orignally
+proposed by Louis Guttman (1957, 1959, 1965) and since then developed by
+many others (Borg &amp; Shye, 1995; Canter, 1985; Guttman &amp;
+Greenbaum, 1998; Shye, 1998, 1999; Shye, Elizur &amp; Hoffman, 1994). We
 strongly advise to acquire a basic understanding of FT before using this
 package, for example Shye (1998). An essential step in FT applications
 is Multidimensional Scaling (MDS) of similarities/distances; for
 introductions see Borg and Groenen (2005), and also refer to the
-vignettes of the <em>smacof</em> package, to which this package is
-closely related and which should be installed when using
-<em>facpart</em>.</p>
+vignettes of the <em>smacof</em> package, which should be installed when
+using <em>facpart</em>.</p>
+<p>The current version of the package can be installed from github. We
+recommend to load the packages facpart and smacof in parallel.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va"><a href="https://rpfister57.github.io/facpart/">facpart</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<span><span class="co"># remotes::install_github(repo = "https://github.com/rpfister57/facpart.git")</span></span>
+<span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va"><a href="https://rpfister57.github.io/facpart/">facpart</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: facpart</span></span>
 <span><span class="co">#&gt; Loading required package: plotrix</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va">smacof</span><span class="op">)</span></span>
@@ -90,13 +96,15 @@ closely related and which should be installed when using
 <span><span class="co">#&gt;     transform</span></span></code></pre></div>
 <p>Assume you are studying some domain (e. g., intelligence), and you
 measure a set of items from that domain, say intelligence test items.
-Theoretically, each item is classified according to the elements of a
-<em>facet</em>: With respect to intelligence items, a typical facet is
-the <em>modality</em> of the test item, with elements being
-<em>verbal</em>, <em>numerical</em>, and <em>figural</em>. Thus, each
-test item is mapped onto exactly one of these categories. The theory is
-assumed to be confirmed if these elements can be identified as
-geometrical patterns in an empirical space of the test items.</p>
+Based on your theory, each item can be classified according to the
+elements of a <em>facet</em>, which is a defining aspect of the domain
+under study. With respect to intelligence items, a typical facet is the
+<em>modality</em> (or symbol system) of the test item, with elements
+being <em>verbal</em>, <em>numerical</em>, and <em>figural</em>. Thus,
+each test item is mapped onto exactly one of these categories. The
+theory is assumed to be confirmed if these facet elements can be
+identified as geometrical patterns in an empirical space constructed
+from measurements of the items.</p>
 <p>The canonical approach is to submit the correlations among the items
 to a multidimensional scaling procedure. As a result we obtain
 2-dimensional (or higher dimensional) configurations of points (=
@@ -108,13 +116,16 @@ A simple pattern might be that all items belonging to a specific
 category (e. g., verbal items) are in close vicinity, but apart from
 items of a different category. If no such separation can be detected,
 the theory must be modified.</p>
-<p>The patterns emphasized by FT are called <em>regional
-partitions</em>. Three types of partitions are commonly identified:</p>
+<p>Methods such as factor analysis or cluster analysis have
+traditionally been used to find patterns in correlations. However, the
+patterns emphasized by FT are called <em>regional partitions</em>, and
+are difficult to detect by traditional methods, if at all.</p>
+<p>Three types of partitions are commonly distinguished:</p>
 <ul>
 <li><p><em>Axial</em> partition: categories are separated by straight
-parallel lines.</p></li>
-<li><p><em>Radial</em> partition: categories are separated by nested
-circles.</p></li>
+parallel lines (axes).</p></li>
+<li><p><em>Radial</em> partition: categories are separated by circles
+with different radii, emanating from a center.</p></li>
 <li><p><em>Angular</em> partition: categories are separated by lines
 with different angles from a common origin.</p></li>
 </ul>
@@ -122,19 +133,261 @@ with different angles from a common origin.</p></li>
 package provides functions to search for best fitting partitions.</p>
 </div>
 <div class="section level2">
+<h2 id="a-brief-overview">A Brief Overview<a class="anchor" aria-label="anchor" href="#a-brief-overview"></a>
+</h2>
+<p>We briefly demonstrate the essential concepts using artificial data
+from the functions’ help pages.</p>
+<div class="section level3">
+<h3 id="axial-partitions">Axial Partitions<a class="anchor" aria-label="anchor" href="#axial-partitions"></a>
+</h3>
+<p>Axial partitions represent regions separated by straight lines. The
+<em>axialLines()</em> function attempts to separate the facet groups
+using straight parallel lines. The help page provides a simple
+demonstration. Koordinates for 30 points are generated, and three facet
+elements are assigned to ten points, respectively.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">9876</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">crd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>             <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span>,  <span class="fl">0</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>             <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span>,  <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">grp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">10</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">10</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/axialLines.html">axialLines</a></span><span class="op">(</span><span class="va">crd</span>, <span class="va">grp</span>, fill <span class="op">=</span> <span class="cn">TRUE</span>, add <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="FacetedPartitions_files/figure-html/axialLines-1.png" class="r-plt" alt="" width="600"></p>
+<pre><code><span><span class="co">#&gt; $slope</span></span>
+<span><span class="co">#&gt; [1] 2.747477</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $intercepts</span></span>
+<span><span class="co">#&gt; [1] -3.045128  1.767640</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $angle</span></span>
+<span><span class="co">#&gt; [1] 2.792527</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $margin</span></span>
+<span><span class="co">#&gt; [1] 0.0137848</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass</span></span>
+<span><span class="co">#&gt; [1] 4</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass_points</span></span>
+<span><span class="co">#&gt;              x          y label</span></span>
+<span><span class="co">#&gt; 1  3.990025564 -0.8970880     b</span></span>
+<span><span class="co">#&gt; 2  0.417433005  0.8182769     c</span></span>
+<span><span class="co">#&gt; 3 -0.338888791 -0.0549359     c</span></span>
+<span><span class="co">#&gt; 4  0.002191396  0.2750843     c</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $sector</span></span>
+<span><span class="co">#&gt;  [1] 3 3 3 3 3 3 3 3 3 3 2 2 2 2 2 2 2 2 1 2 1 2 1 1 2 1 2 1 1 1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $majority</span></span>
+<span><span class="co">#&gt; [1] "c" "b" "a"</span></span></code></pre>
+<p>The resulting plot shows, from left to right, the regions for the
+elements ‘a’, ‘b’, and ‘c’, each region separated by a straight line.
+The separation is not perfect, but as good as possible, that is, with a
+minimum of misclassification per region.</p>
+</div>
+<div class="section level3">
+<h3 id="radial-partitions">Radial Partitions<a class="anchor" aria-label="anchor" href="#radial-partitions"></a>
+</h3>
+<p>Radial partitions represent circular regions separated by circles or
+ellipses. Given a center point, the regions extend from that center,
+each additional outer region having a larger radius and including the
+previous inner region. The <em>radialCircles()</em> and the
+<em>radialEllipses()</em> functions search for such circular regions
+separating the facet elements.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">9876</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">g1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">0</span>, <span class="fl">0.2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">0</span>, <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">th2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span></span>
+<span><span class="va">g2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fl">1.2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">th2</span><span class="op">)</span>, <span class="fl">1.2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">th2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">0</span>, <span class="fl">0.1</span><span class="op">)</span>, <span class="fl">15</span><span class="op">)</span></span>
+<span><span class="va">th3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span></span>
+<span><span class="va">g3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fl">2.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">th3</span><span class="op">)</span>, <span class="fl">2.5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">th3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">0</span>, <span class="fl">0.1</span><span class="op">)</span>, <span class="fl">15</span><span class="op">)</span></span>
+<span><span class="va">crd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">g1</span>, <span class="va">g2</span>, <span class="va">g3</span><span class="op">)</span></span>
+<span><span class="va">grp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">15</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">15</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/radialCircles.html">radialCircles</a></span><span class="op">(</span><span class="va">crd</span>, <span class="va">grp</span>, fill <span class="op">=</span> <span class="cn">TRUE</span>, add <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="FacetedPartitions_files/figure-html/radialCircles-1.png" class="r-plt" alt="" width="600"></p>
+<pre><code><span><span class="co">#&gt; $cx</span></span>
+<span><span class="co">#&gt; [1] -0.04242828 -0.09219946</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $cy</span></span>
+<span><span class="co">#&gt; [1] 0.11678559 0.07745636</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $radii</span></span>
+<span><span class="co">#&gt; [1] 0.8775219 1.8299541</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass_points</span></span>
+<span><span class="co">#&gt; [1] x     y     label</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $sector</span></span>
+<span><span class="co">#&gt;  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 3 3</span></span>
+<span><span class="co">#&gt; [39] 3 3 3 3 3 3 3</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $majority</span></span>
+<span><span class="co">#&gt; [1] "a" "b" "c"</span></span></code></pre>
+<p>A three-element facet is generated, with elements ‘a’, ‘b’, and ‘c’.
+The plot shows the radial partions, that is, an inner regions containing
+points ‘a’, a region with points ‘b’ enclosing the inner ‘a’-region, and
+a peripheral region with points ‘c’.</p>
+<p>In an analogous way, the <em>radialElllipses()</em> functions
+searches for best fitting ellipses, generating a nested partitioning of
+ellipsoid functions.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">9876</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">g1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">0</span>, <span class="fl">0.2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">0</span>, <span class="fl">0.15</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">th2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span></span>
+<span><span class="va">g2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fl">1.4</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">th2</span><span class="op">)</span>, <span class="fl">1.0</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">th2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">0</span>, <span class="fl">0.1</span><span class="op">)</span>, <span class="fl">15</span><span class="op">)</span></span>
+<span><span class="va">th3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">15</span>, <span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span></span>
+<span><span class="va">g3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fl">2.8</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">th3</span><span class="op">)</span>, <span class="fl">2.0</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">th3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">0</span>, <span class="fl">0.1</span><span class="op">)</span>, <span class="fl">15</span><span class="op">)</span></span>
+<span><span class="va">crd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">g1</span>, <span class="va">g2</span>, <span class="va">g3</span><span class="op">)</span></span>
+<span><span class="va">grp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">15</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">15</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="fl">15</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/radialEllipses.html">radialEllipses</a></span><span class="op">(</span><span class="va">crd</span>, <span class="va">grp</span>, fill <span class="op">=</span> <span class="cn">TRUE</span>, add <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="FacetedPartitions_files/figure-html/radialEllipses-1.png" class="r-plt" alt="" width="600"></p>
+<pre><code><span><span class="co">#&gt; $cx</span></span>
+<span><span class="co">#&gt; [1] -0.04242828 -0.10404963</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $cy</span></span>
+<span><span class="co">#&gt; [1] 0.08758920 0.06189351</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $a</span></span>
+<span><span class="co">#&gt; [1] 0.6364627 1.7861115</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $b</span></span>
+<span><span class="co">#&gt; [1] 0.4456963 1.2389542</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $angle</span></span>
+<span><span class="co">#&gt; [1] 2.423333 3.118879</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass</span></span>
+<span><span class="co">#&gt; $misclass$n</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass$indices</span></span>
+<span><span class="co">#&gt; integer(0)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass_points</span></span>
+<span><span class="co">#&gt; [1] x     y     label</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $sector</span></span>
+<span><span class="co">#&gt;  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 3 3 3 3 3 3 3 3</span></span>
+<span><span class="co">#&gt; [39] 3 3 3 3 3 3 3</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $majority</span></span>
+<span><span class="co">#&gt; [1] "a" "b" "c"</span></span></code></pre>
+<p>Generally, for radial partition functions, the separating circles or
+ellipses need not have a common center, but are constrained to be
+nested, that is, each outer region will include the interior
+regions.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="angular-partitions">Angular Partitions<a class="anchor" aria-label="anchor" href="#angular-partitions"></a>
+</h2>
+<p>Angular partitions represent wedge-like regions, originating from a
+common center; the regions will look similar to triangular pieces from a
+round piece of cake or pizza. The <em>angularPartition()</em> function
+searches for such regions, generating lines with different angles
+emanating from a common origin.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">9876</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="fl">3</span>, <span class="fl">4</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="fl">3</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">12</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">36</span>, <span class="fl">0</span>, <span class="fl">0.25</span><span class="op">)</span></span>
+<span><span class="va">r</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">36</span>, <span class="fl">0.5</span>, <span class="fl">1.5</span><span class="op">)</span></span>
+<span><span class="va">crd</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">r</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="va">r</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">grp</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/angularPartition.html">angularPartition</a></span><span class="op">(</span><span class="va">crd</span>, <span class="va">grp</span>, add <span class="op">=</span> <span class="cn">FALSE</span>, fill <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="FacetedPartitions_files/figure-html/angularPartition-1.png" class="r-plt" alt="" width="600"></p>
+<pre><code><span><span class="co">#&gt; $cuts</span></span>
+<span><span class="co">#&gt; [1] -0.7517708  1.1775085 -2.9571945</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $margin</span></span>
+<span><span class="co">#&gt; [1] 0.3707055</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass</span></span>
+<span><span class="co">#&gt; [1] 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass_points</span></span>
+<span><span class="co">#&gt; [1] x     y     label</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $sector</span></span>
+<span><span class="co">#&gt;  [1] 3 3 3 3 3 3 3 3 3 3 3 3 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $majority</span></span>
+<span><span class="co">#&gt; [1] "b" "c" "a"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $center</span></span>
+<span><span class="co">#&gt; [1] -0.001846992 -0.039872202</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $pt_angles</span></span>
+<span><span class="co">#&gt;  [1]  0.32149865 -0.24286594 -0.01371260  0.00695637  0.06268145 -0.24513717</span></span>
+<span><span class="co">#&gt;  [7]  0.18369496 -0.42183313  0.18711272  0.04052829  0.56823932 -0.33152769</span></span>
+<span><span class="co">#&gt; [13]  2.05257795  1.78677774  1.99153876  2.09094730  2.51915703  2.01009170</span></span>
+<span><span class="co">#&gt; [19]  2.72260523  2.05795544  2.20873940  2.33541115  2.05475273  2.01442570</span></span>
+<span><span class="co">#&gt; [25] -2.35380896 -2.21628526 -1.98863070 -2.03203318 -1.08170854 -2.23652965</span></span>
+<span><span class="co">#&gt; [31] -1.90492012 -2.07545851 -2.26925484 -2.12004313 -2.33215861 -2.08743358</span></span></code></pre>
+<p>The plot shows how the three facet elements ‘a’, ‘b’, and ‘c’ are
+separated by straight lines with a common origin in a wedge-like
+pattern.</p>
+</div>
+<div class="section level2">
 <h2 id="the-basic-workflow">The Basic Workflow<a class="anchor" aria-label="anchor" href="#the-basic-workflow"></a>
 </h2>
-<p>As an example we take the Intelligence study (Guttman &amp; Levy,
-1991). The correlation matrix of 12 intelligence test items and the
-assignment to two facets (Material, Modality) is provided in the
-<em>gutt91</em> data file (slightly modified from Guttman1991 from the
-smacof package). We extract the correlation matrix and the facet
-variables.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>As an example we take the intelligence study by Guttman and Levy
+(1991). The correlation matrix of 12 intelligence test items and the
+assignment to three facets (Material, Modality, Rule) is provided in the
+<em>gutt91</em> data object (modified and extended Guttman1991 data from
+the smacof package). The 12 test items are actually 12 subtests from the
+WISC-R, and the sample are 2200 U.S. children aged 6.5 to 16.5 years
+(see Guttman &amp; Levy, 1991).</p>
+<p>The gutt91 data contain a lot of further information, but for the
+moment we just extract the correlation matrix and the dataframe with
+facet definitions.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">gutt91</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">Kor</span> <span class="op">&lt;-</span> <span class="va">gutt91</span><span class="op">$</span><span class="va">gutt91_cor</span></span>
-<span><span class="va">Facets</span> <span class="op">&lt;-</span> <span class="va">gutt91</span><span class="op">$</span><span class="va">gutt91_var</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">Kor</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">Facets</span> <span class="op">&lt;-</span> <span class="va">gutt91</span><span class="op">$</span><span class="va">gutt91_df</span></span>
+<span></span>
+<span><span class="va">Facets</span></span>
+<span><span class="co">#&gt;                                 items Material  Modality     Rule         X1</span></span>
+<span><span class="co">#&gt; Information               Information     Oral    verbal applFact -0.2536557</span></span>
+<span><span class="co">#&gt; Similarities             Similarities     Oral    verbal    infer -0.1137925</span></span>
+<span><span class="co">#&gt; Arithmetic                 Arithmetic     Oral numerical applFact -0.4410249</span></span>
+<span><span class="co">#&gt; Vocabulary                 Vocabulary     Oral    verbal applFact -0.2341282</span></span>
+<span><span class="co">#&gt; Comprehension           Comprehension     Oral    verbal    infer -0.1887449</span></span>
+<span><span class="co">#&gt; DigitSpan                   DigitSpan     Oral numerical  applSTM -0.8928474</span></span>
+<span><span class="co">#&gt; PictureCompletion   PictureCompletion     Oral   figural applFact  0.1978224</span></span>
+<span><span class="co">#&gt; PictureArrangement PictureArrangement   Manual   figural applFact  0.3642192</span></span>
+<span><span class="co">#&gt; BlockDesign               BlockDesign   Manual   figural applFact  0.2707838</span></span>
+<span><span class="co">#&gt; ObjectAssembly         ObjectAssembly   Manual   figural applFact  0.5647150</span></span>
+<span><span class="co">#&gt; Coding                         Coding    Paper   figural  applSTM -0.2123476</span></span>
+<span><span class="co">#&gt; Mazes                           Mazes    Paper   figural  applSTM  0.9390008</span></span>
+<span><span class="co">#&gt;                             X2         D1          D2           D3</span></span>
+<span><span class="co">#&gt; Information        -0.15190509 -0.2607345 -0.14330818  0.022241000</span></span>
+<span><span class="co">#&gt; Similarities       -0.21840762 -0.1254660 -0.27272665  0.035737532</span></span>
+<span><span class="co">#&gt; Arithmetic          0.16780236 -0.4232661  0.10074101  0.310579184</span></span>
+<span><span class="co">#&gt; Vocabulary         -0.12571647 -0.2623318 -0.13834063 -0.012430979</span></span>
+<span><span class="co">#&gt; Comprehension      -0.41232278 -0.2455010 -0.32650735 -0.184040673</span></span>
+<span><span class="co">#&gt; DigitSpan           0.49987343 -0.7355785  0.63826052  0.363434120</span></span>
+<span><span class="co">#&gt; PictureCompletion  -0.68657756  0.3135845 -0.53410786  0.248713125</span></span>
+<span><span class="co">#&gt; PictureArrangement -0.47923328  0.2842056 -0.23684569 -0.567151304</span></span>
+<span><span class="co">#&gt; BlockDesign         0.06385235  0.2830315 -0.04178309  0.083479149</span></span>
+<span><span class="co">#&gt; ObjectAssembly     -0.18450416  0.6240344 -0.29125210  0.009257765</span></span>
+<span><span class="co">#&gt; Coding              1.18363379 -0.2406658  0.82913448 -0.701789299</span></span>
+<span><span class="co">#&gt; Mazes               0.34350503  0.7886878  0.41673555  0.391970379</span></span>
+<span><span class="va">Kor</span></span>
 <span><span class="co">#&gt;                    Information Similarities Arithmetic Vocabulary Comprehension</span></span>
 <span><span class="co">#&gt; Information               1.00         0.62       0.54       0.55          0.42</span></span>
 <span><span class="co">#&gt; Similarities              0.62         1.00       0.69       0.36          0.48</span></span>
@@ -173,40 +426,37 @@ variables.</p>
 <span><span class="co">#&gt; BlockDesign                  0.29   0.48  0.24</span></span>
 <span><span class="co">#&gt; ObjectAssembly               1.00   0.19  0.37</span></span>
 <span><span class="co">#&gt; Coding                       0.24   1.00  0.21</span></span>
-<span><span class="co">#&gt; Mazes                        0.37   0.21  1.00</span></span>
-<span><span class="va">Facets</span></span>
-<span><span class="co">#&gt;                 items Material  Modality</span></span>
-<span><span class="co">#&gt; 1         Information     Oral    verbal</span></span>
-<span><span class="co">#&gt; 2        Similarities     Oral    verbal</span></span>
-<span><span class="co">#&gt; 3          Arithmetic     Oral numerical</span></span>
-<span><span class="co">#&gt; 4          Vocabulary     Oral    verbal</span></span>
-<span><span class="co">#&gt; 5       Comprehension     Oral    verbal</span></span>
-<span><span class="co">#&gt; 6           DigitSpan     Oral numerical</span></span>
-<span><span class="co">#&gt; 7   PictureCompletion     Oral   figural</span></span>
-<span><span class="co">#&gt; 8  PictureArrangement   Manual   figural</span></span>
-<span><span class="co">#&gt; 9         BlockDesign   Manual   figural</span></span>
-<span><span class="co">#&gt; 10     ObjectAssembly   Manual   figural</span></span>
-<span><span class="co">#&gt; 11             Coding    Paper numerical</span></span>
-<span><span class="co">#&gt; 12              Mazes    Paper   figural</span></span></code></pre></div>
-<p>In the Facets dataframe we can see that the first facet
+<span><span class="co">#&gt; Mazes                        0.37   0.21  1.00</span></span></code></pre></div>
+<p>The items in the Facets dataframe are named according to the labels
+in Guttman and Levy (1991). We see that the first facet
 <em>Material</em> assigns to each item the materiality of the task the
-item represents: It can be ‘oral’ if it is just based on oral
-communication, or ‘manual’ if the participant has to actually do
-something with his or her hands, or ‘paper’ if the item requires to
-read/write from a sheet of paper. The second facet <em>Modality</em>
-defines the symbol system involved: ‘verbal’ refers to text in natural
+item represents (Guttman and Levy, 1991, call this <em>Mode of
+Expression</em>): It can be ‘oral’ if it is just based on oral
+communication, or ‘manual’ if the participant has to actually manipulate
+something with his or her hands, or ‘paper’ if the item requires to use
+paper and pencil to write something. The second facet <em>Modality</em>
+defines the symbol system involved (Guttman and Levy, 1991, call this
+<em>Format of Communication</em>): ‘verbal’ refers to text in natural
 language, ‘numerical’ refers to numbers and mathematical notation, and
-‘figural’ refers to drawings, geometric shapes, etc.</p>
+‘figural’ refers to drawings, geometric shapes, or pictorial
+representations. The third facet <em>Rule</em> (called <em>Rule
+Task</em> by Guttman and Levy) defines the core of what an intelligence
+item is: it asks about an objective rule, and the answer can be correct
+or false. Either the required rule has to be inferred by the testee
+(‘infer’), or a factual rule hast to be applied (‘applFact’), or what
+just has been learned and is stored in short term memory (‘applSTM’).
+For details about the theoretical rationale refer to Guttman and Levy
+(1991).</p>
 <p>Theoretically, we expect that these distinctions show up in specific
-patterns or <em>partitions</em> of a geometrical representation of the
-items. Thus, we perform a multidimensional scaling analysis of the
-correlation matrix. Since MDS takes distances as input data, we have to
-convert the correlation matrix (which are similarities) to distances.
+patterns or <em>regional partitions</em> of a geometrical representation
+of the items. Thus, we perform a multidimensional scaling analysis of
+the correlation matrix. Since MDS takes distances as input data, we have
+to convert the correlation matrix (which are similarities) to distances.
 The conversion of correlations to distances follows the equation
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><msqrt><mrow><mn>1</mn><mo>−</mo><mi>r</mi></mrow></msqrt></mrow><annotation encoding="application/x-tex">d = \sqrt {1 - r}</annotation></semantics></math></p>
 <p>The distances are then submitted to MDS. For converting and for MDS
 we use functions from the <em>smacof</em> package.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Kor_D</span> <span class="op">&lt;-</span> <span class="fu">smacof</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/smacof/man/sim2diss.html" class="external-link">sim2diss</a></span><span class="op">(</span><span class="va">Kor</span>, method <span class="op">=</span> <span class="st">"corr"</span>, to.dist <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">gutt91_mds</span> <span class="op">&lt;-</span> <span class="fu">smacof</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/smacof/man/smacofSym.html" class="external-link">mds</a></span><span class="op">(</span><span class="va">Kor_D</span>, type <span class="op">=</span> <span class="st">"ordinal"</span><span class="op">)</span></span>
@@ -221,105 +471,113 @@ we use functions from the <em>smacof</em> package.</p>
 <span><span class="co">#&gt; Number of iterations: 67</span></span></code></pre></div>
 <p>The Stress-1 value of the resulting 2-dimensional configuration is
 <em>0.102</em> which is usually considered a good fit (note that
-currently <em>facpart</em> only applies to 2-dimensional
+currently <em>facpart</em> only works with 2-dimensional
 configurations). To plot the fit we can simply take the output object
 <em>gutt91_mds</em> as argument for the plot function. However, usually
 another approach is preferable which gives more control; in particular,
 we want the facet elements as labels, not the item names. Thus, we first
 plot only the coordinates of the 12 items, which are in
 <em>gutt91_mds$conf</em>. Then we add the facet labels for
-<em>Material</em> with the <code><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text()</a></code> function; the labels are
+<em>Modality</em> with the <code><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text()</a></code> function; the labels are
 in the Facets data frame. The resulting plot now nicely shows the
-configuration of the three categories for materiality, and we can check
-if a regular pattern can be identified.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+configuration of the three categories for modality, and we can check if
+a regular pattern can be identified.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">)</span></span></code></pre></div>
 <p><img src="FacetedPartitions_files/figure-html/MDSplot-1.png" class="r-plt" alt="" width="600"></p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, </span>
 <span>     asp <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, labels <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Material</span>, </span>
-<span>     cex <span class="op">=</span> <span class="fl">0.8</span>, pos <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v<span class="op">=</span><span class="fl">0</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, labels <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Modality</span>, </span>
+<span>     cex <span class="op">=</span> <span class="fl">0.8</span>, pos <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v<span class="op">=</span><span class="fl">0</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>h<span class="op">=</span><span class="fl">0</span>, lty <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="FacetedPartitions_files/figure-html/MDSplot-2.png" class="r-plt" alt="" width="600"></p>
-<p>Let’s assume that our theory predicts that the Material facet can be
+<p>Let’s assume that our theory predicts that the Modality facet can be
 partitioned according to an <em>angular partition</em>, that is, from a
-common origin, lines or rays of different angles divide the space into
+common origin lines or rays of different angles divide the space into
 wedge-like regions. The <code><a href="../reference/angularPartition.html">angularPartition()</a></code> function does
 exactly this: It searches for a best fitting angular partition, so that
 each region contains only items of one specific facet element. If that
 is not perfectly possible, it minimizes the number of misclassified
 items and yields the best possible partitioning. The necessary arguments
-are the point coordinates (crd =), and the facet labels for each point
-(group =). The coordinates must be a numeric matrix or data frame with
-two columns, and the facet labels must be a factor with levels
-corresponding to the labels.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+are the point coordinates (crd =), and the facet assignments for each
+point (group =). The coordinates must be a numeric matrix or data frame
+with two numeric columns, and the facet labels should be a factor with
+levels corresponding to the facet labels.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, </span>
 <span>     asp <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, labels <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Material</span>, </span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, labels <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Modality</span>, </span>
 <span>     cex <span class="op">=</span> <span class="fl">0.8</span>, pos <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/angularPartition.html">angularPartition</a></span><span class="op">(</span>crd <span class="op">=</span> <span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>,</span>
-<span>                 group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Material</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">gutt91_mod_ang</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/angularPartition.html">angularPartition</a></span><span class="op">(</span>crd <span class="op">=</span> <span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>,</span>
+<span>                                   group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Modality</span>, </span>
+<span>                                   add <span class="op">=</span> <span class="cn">TRUE</span>, fill <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p><img src="FacetedPartitions_files/figure-html/angularPartition1-1.png" class="r-plt" alt="" width="600"></p>
-<pre><code><span><span class="co">#&gt; $cuts</span></span>
-<span><span class="co">#&gt; PictureCompletion       BlockDesign            Coding </span></span>
-<span><span class="co">#&gt;        -1.1055948         0.2911366         2.1897593 </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $margin</span></span>
-<span><span class="co">#&gt; [1] 0.01656079</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $misclass</span></span>
-<span><span class="co">#&gt; [1] 0</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $misclass_points</span></span>
-<span><span class="co">#&gt; [1] x     y     label</span></span>
-<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $sector</span></span>
-<span><span class="co">#&gt;  [1] 2 2 2 2 2 2 2 3 3 3 1 1</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $majority</span></span>
-<span><span class="co">#&gt; [1] "Paper"  "Oral"   "Manual"</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $center</span></span>
-<span><span class="co">#&gt; [1] 3.145632e-16 1.110223e-16</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $pt_angles</span></span>
-<span><span class="co">#&gt;        Information       Similarities         Arithmetic         Vocabulary </span></span>
-<span><span class="co">#&gt;         -2.6020094         -2.0511100          2.7780239         -2.6488194 </span></span>
-<span><span class="co">#&gt;      Comprehension          DigitSpan  PictureCompletion PictureArrangement </span></span>
-<span><span class="co">#&gt;         -2.0000848          2.6312076         -1.2902663         -0.9209234 </span></span>
-<span><span class="co">#&gt;        BlockDesign     ObjectAssembly             Coding              Mazes </span></span>
-<span><span class="co">#&gt;          0.2315753         -0.3157876          1.7483111          0.3506980</span></span></code></pre>
 <p>The partition lines are drawn into the existing plot, emerging from a
 center at (0,0), and separating the configuration into three regions: an
 upper wedge containing the two Paper items, a lower right wedge
 containing the three Manual items, and a left wedge containing the Oral
 items. No misclassified items are observed.</p>
-<p>Just for demonstration purposes, we add the partions obtained by the
-other major functions (axial, circles, ellipses):</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, </span>
 <span>     asp <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, labels <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Material</span>, </span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, labels <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Rule</span>, </span>
+<span>     cex <span class="op">=</span> <span class="fl">0.8</span>, pos <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">gutt91Rule</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/radialCircles.html">radialCircles</a></span><span class="op">(</span>crd <span class="op">=</span> <span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>,</span>
+<span>                 group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Rule</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="FacetedPartitions_files/figure-html/angularPartition2-1.png" class="r-plt" alt="" width="600"></p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="../reference/highlightMisclass.html">highlightMisclass</a></span><span class="op">(</span><span class="va">gutt91Rule</span><span class="op">)</span></span></code></pre></div>
+<p>Just for demonstration purposes, we add the partions obtained by the
+other major functions (axial, circles, ellipses):</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, </span>
+<span>     asp <span class="op">=</span> <span class="fl">1</span>, las <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html" class="external-link">text</a></span><span class="op">(</span><span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>, labels <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Rule</span>, </span>
 <span>     cex <span class="op">=</span> <span class="fl">0.8</span>, pos <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/axialLines.html">axialLines</a></span><span class="op">(</span>crd <span class="op">=</span> <span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>,</span>
-<span>           group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Material</span><span class="op">)</span></span>
+<span>           group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Rule</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $slope</span></span>
-<span><span class="co">#&gt; [1] -1.279942</span></span>
+<span><span class="co">#&gt; [1] -1.327045</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $intercepts</span></span>
-<span><span class="co">#&gt; [1] -0.1885547  0.7250697</span></span>
+<span><span class="co">#&gt; [1] -0.5756567  0.7333685</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $angle</span></span>
-<span><span class="co">#&gt; [1] 0.6632251</span></span>
+<span><span class="co">#&gt; [1] 0.6457718</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $margin</span></span>
-<span><span class="co">#&gt; [1] 0.108049</span></span>
+<span><span class="co">#&gt; [1] 0.05244161</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass</span></span>
+<span><span class="co">#&gt; [1] 2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $misclass_points</span></span>
+<span><span class="co">#&gt;                       x          y   label</span></span>
+<span><span class="co">#&gt; Similarities -0.1137925 -0.2184076   infer</span></span>
+<span><span class="co">#&gt; DigitSpan    -0.8928474  0.4998734 applSTM</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $sector</span></span>
+<span><span class="co">#&gt;  [1] 2 2 2 2 1 1 2 2 2 2 3 3</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $majority</span></span>
+<span><span class="co">#&gt; [1] "infer"    "applFact" "applSTM"</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/radialCircles.html">radialCircles</a></span><span class="op">(</span>crd <span class="op">=</span> <span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>,</span>
+<span>                 group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Rule</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $cx</span></span>
+<span><span class="co">#&gt; [1] -0.15126870  0.01846602</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $cy</span></span>
+<span><span class="co">#&gt; [1] -0.3153652 -0.2252236</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $radii</span></span>
+<span><span class="co">#&gt; [1] 0.1484136 0.8433509</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $misclass</span></span>
 <span><span class="co">#&gt; [1] 0</span></span>
@@ -329,53 +587,28 @@ other major functions (axial, circles, ellipses):</p>
 <span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $sector</span></span>
-<span><span class="co">#&gt;  [1] 1 1 1 1 1 1 1 2 2 2 3 3</span></span>
+<span><span class="co">#&gt;  [1] 2 1 2 2 1 3 2 2 2 2 3 3</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $majority</span></span>
-<span><span class="co">#&gt; [1] "Oral"   "Manual" "Paper"</span></span>
-<span></span>
-<span><span class="fu"><a href="../reference/radialCircles.html">radialCircles</a></span><span class="op">(</span>crd <span class="op">=</span> <span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>,</span>
-<span>                 group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Material</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $cx</span></span>
-<span><span class="co">#&gt; [1] -0.27519590 -0.07266533</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $cy</span></span>
-<span><span class="co">#&gt; [1] -0.1324648 -0.1527139</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $radii</span></span>
-<span><span class="co">#&gt; [1] 0.4616087 1.0874684</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $misclass</span></span>
-<span><span class="co">#&gt; [1] 2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $misclass_points</span></span>
-<span><span class="co">#&gt;                            x          y label</span></span>
-<span><span class="co">#&gt; DigitSpan         -0.8928474  0.4998734  Oral</span></span>
-<span><span class="co">#&gt; PictureCompletion  0.1978224 -0.6865776  Oral</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $sector</span></span>
-<span><span class="co">#&gt;  [1] 1 1 1 1 1 2 2 2 2 2 3 3</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $majority</span></span>
-<span><span class="co">#&gt; [1] "Oral"   "Manual" "Paper"</span></span>
+<span><span class="co">#&gt; [1] "infer"    "applFact" "applSTM"</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/radialEllipses.html">radialEllipses</a></span><span class="op">(</span>crd <span class="op">=</span> <span class="va">gutt91_mds</span><span class="op">$</span><span class="va">conf</span>,</span>
-<span>                 group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Material</span><span class="op">)</span></span></code></pre></div>
+<span>                 group <span class="op">=</span> <span class="va">Facets</span><span class="op">$</span><span class="va">Rule</span><span class="op">)</span></span></code></pre></div>
 <p><img src="FacetedPartitions_files/figure-html/allPartitions-1.png" class="r-plt" alt="" width="600"></p>
 <pre><code><span><span class="co">#&gt; $cx</span></span>
-<span><span class="co">#&gt; [1] -0.27519590 -0.07266533</span></span>
+<span><span class="co">#&gt; [1] -0.15126870  0.01846602</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $cy</span></span>
-<span><span class="co">#&gt; [1] -0.1324648 -0.1527139</span></span>
+<span><span class="co">#&gt; [1] -0.3153652 -0.2252236</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $a</span></span>
-<span><span class="co">#&gt; [1] 1.015923 1.260164</span></span>
+<span><span class="co">#&gt; [1] 0.10000 0.68604</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $b</span></span>
-<span><span class="co">#&gt; [1] 0.1361728 0.4894227</span></span>
+<span><span class="co">#&gt; [1] 0.1315365 0.4351220</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $angle</span></span>
-<span><span class="co">#&gt; [1] 2.284205 2.532150</span></span>
+<span><span class="co">#&gt; [1] 0.000000 2.653376</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $misclass</span></span>
 <span><span class="co">#&gt; $misclass$n</span></span>
@@ -390,20 +623,20 @@ other major functions (axial, circles, ellipses):</p>
 <span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $sector</span></span>
-<span><span class="co">#&gt;  [1] 1 1 1 1 1 1 1 2 2 2 3 3</span></span>
+<span><span class="co">#&gt;  [1] 2 1 2 2 1 3 2 2 2 2 3 3</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $majority</span></span>
-<span><span class="co">#&gt; [1] "Oral"   "Manual" "Paper"</span></span></code></pre>
-<p>To summarize, the basic workflow is:</p>
+<span><span class="co">#&gt; [1] "infer"    "applFact" "applSTM"</span></span></code></pre>
+<p>To summarize, the <em>basic workflow</em> is:</p>
 <ul>
-<li><p>Construct a <em>distance matrix D</em> (or correlation matrix K)
-of a set of n items. If necessary, convert K to D with
-<code><a href="https://rdrr.io/pkg/smacof/man/sim2diss.html" class="external-link">smacof::sim2diss()</a></code>.</p></li>
-<li><p>Construct <em>facet labels</em>: Assign to each of n items
-exactly one of k (k &lt; n) labels corresponding to their facet
-elements. Store the assignment as a factor F with length = n (same item
-order as in D).</p></li>
-<li><p>Apply multidimensional scaling to D, such as
+<li><p>Construct a <em>distance matrix D</em> of a set of n items,
+typically from a <em>correlation matrix K</em>. If necessary, convert K
+to D with <code><a href="https://rdrr.io/pkg/smacof/man/sim2diss.html" class="external-link">smacof::sim2diss()</a></code>.</p></li>
+<li><p>Assign <em>facet labels</em>: Assign to each of n items exactly
+one of k (k &lt; n) labels corresponding to their facet elements. Store
+the assignment as a factor F with length = n (same item order as in
+D).</p></li>
+<li><p>Apply non-metric multidimensional scaling to D, such as
 <code>smacof::mds(D, ndim = 2, type = "ordinal")</code>. Check for fit
 and store the result object, for example as <em>out_mds</em>.</p></li>
 <li><p><em>Plot</em> the point configuration, for example
@@ -411,13 +644,14 @@ and store the result object, for example as <em>out_mds</em>.</p></li>
 <li><p>Apply one of the <code>partition functions</code>; necessary
 arguments are <code>crd</code> (the point coordinates) and
 <code>group</code> (the facet assignments).</p></li>
-<li><p>Check the resulting plot.</p></li>
+<li><p>Check the resulting plot. Check for regional fit and
+misclassifications.</p></li>
 </ul>
 <p>More details will be provided in the following discussions of the
 major partition functions.</p>
 </div>
 <div class="section level2">
-<h2 id="axial-partitions">Axial Partitions<a class="anchor" aria-label="anchor" href="#axial-partitions"></a>
+<h2 id="axial-partitions-1">Axial Partitions<a class="anchor" aria-label="anchor" href="#axial-partitions-1"></a>
 </h2>
 <p>An axial partition partitions the configuration into stripes
 separated by parallel lines. For example, two parallel lines divide the
@@ -437,7 +671,7 @@ function.</p>
 contexts.</p>
 </div>
 <div class="section level2">
-<h2 id="radial-partitions">Radial Partitions<a class="anchor" aria-label="anchor" href="#radial-partitions"></a>
+<h2 id="radial-partitions-1">Radial Partitions<a class="anchor" aria-label="anchor" href="#radial-partitions-1"></a>
 </h2>
 <p>A radial partition creates quasi-circular regions, emanating from a
 central region of the configuration. Thus, the partitioning regions are
@@ -465,7 +699,7 @@ data frame with 21 rows (test items), the coordinates D1 and D2 from a
 2-dimensional MDS, and the facet labels (gfacets). For plotting we
 extract a two-character vector <em>gf</em> representing the facet
 elements.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">guttman65mds</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">guttman65mds</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 'data.frame':    21 obs. of  3 variables:</span></span>
@@ -493,7 +727,7 @@ thus, a gradient of cognitive ability would emerge going outwards from
 the center. In facet theoretical terms, the facet is assumed to play a
 radial role. We apply the function<code><a href="../reference/radialCircles.html">radialCircles()</a></code> to find
 the best partitions in terms of circles enclosig the central region.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">circlesGutt65_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/radialCircles.html">radialCircles</a></span><span class="op">(</span></span>
 <span>    crd <span class="op">=</span> <span class="va">guttman65mds</span><span class="op">[</span> , <span class="fl">2</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span>,</span>
 <span>    group <span class="op">=</span> <span class="va">gf</span>,</span>
@@ -502,8 +736,35 @@ the best partitions in terms of circles enclosig the central region.</p>
 <span><span class="fu"><a href="../reference/highlightMisclass.html">highlightMisclass</a></span><span class="op">(</span><span class="va">circlesGutt65_out</span><span class="op">)</span></span></code></pre></div>
 <p><img src="FacetedPartitions_files/figure-html/radialCirclesGutt65-1.png" class="r-plt" alt="" width="600"></p>
 <p>Exactly one point is misclassified, and we can highlight
-misclassified points with the highlightMiclass() function.</p>
+misclassified points with the highlightMisclass() function.</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<p>Borg, I., &amp; Shye, S. (1995). Facet theory: Form and content.
+Sage.</p>
+<p>Canter, D. (Ed.). (1985). Facet theory: Approaches to social
+research. Springer.</p>
+<p>Guttman, L. (1957). Empirical Verification of the Radex Structure of
+Mental Abilities and Personality Traits. Educational and Psychological
+Measurement, 17, 391–407.</p>
+<p>Guttman, L. (1959). Introduction to Facet Design and Analysis. In
+Proceedings of the Fifteenth International Congress of Psychology,
+130–132.</p>
+<p>Guttman, L. (1965). A Faceted Definition of Intelligence. In R.
+Eifermann (Ed.), Studies in Psychology.</p>
+<p>Guttman, L., &amp; Levy, S. (1991). Two structural laws for
+intelligence tests. Intelligence, 15(1), 79–103. <a href="https://doi.org/10.1016/0160-2896(91)90023-7" class="external-link uri">https://doi.org/10.1016/0160-2896(91)90023-7</a></p>
+<p>Guttman, R., &amp; Greenbaum, C. W. (1998). Facet theory: Its
+development and current status. European Psychologist, 3(1), 13–36. <a href="https://doi.org/10.1027/1016-9040.3.1.13" class="external-link uri">https://doi.org/10.1027/1016-9040.3.1.13</a></p>
+<p>Shye, S. (1998). Modern facet theory: Content design and measurement
+in behavioral research. European Journal of Psychological Assessment,
+14(2), 160–171.</p>
+<p>Shye, S. (1999). Facet theory. In A. E. Kazdin (Ed.), Encyclopedia of
+statistical sciences: Update (Vol. 3, pp. 231–239). Wiley</p>
+<p>Shye, S., Elizur, D., &amp; Hoffman, M. (1994). Introduction to facet
+theory: Content, theory, and application. Sage.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -516,7 +777,7 @@ misclassified points with the highlightMiclass() function.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
