@@ -119,3 +119,9 @@ see also: rpfister57.github.io/facpart
 - [`radialEllipses()`](https://rpfister57.github.io/facpart/reference/radialEllipses.md)
   : K-group radial-elliptic partition (nested ellipses)
 
+# Articles
+
+### All vignettes
+
+- [Facet Theory and Regional
+  Partitions](https://rpfister57.github.io/facpart/articles/FacetedPartitions.md):

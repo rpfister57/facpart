@@ -94,7 +94,7 @@ angularPartition(crd = gutt91_mds$conf, group = Facets$Modality, add = FALSE)
 #> [1] "numerical" "verbal"    "figural"  
 #> 
 #> $center
-#> [1]  1.838807e-16 -1.966698e-17
+#> [1] 2.486482e-16 1.306893e-16
 #> 
 #> $pt_angles
 #>        Information       Similarities         Arithmetic         Vocabulary 
