@@ -16,8 +16,10 @@ angularPartition(
   group,
   cx = NULL,
   cy = NULL,
+  fill = FALSE,
   output = TRUE,
   col = "darkorange",
+  cols = NULL,
   lwd = 2,
   lty = 1,
   add = TRUE
@@ -38,6 +40,10 @@ angularPartition(
 
   Center; optimised when either is `NULL`.
 
+- fill:
+
+  If `TRUE`, shade the `k` wedge sectors (default `FALSE`).
+
 - output:
 
   If `TRUE` (default), return list of results.
@@ -45,6 +51,10 @@ angularPartition(
 - col:
 
   Ray colour (default `"darkorange"`).
+
+- cols:
+
+  Length-`k` fill colours; auto-generated if `NULL`.
 
 - lwd:
 
@@ -83,12 +93,32 @@ If `output = TRUE`, a list with:
 
 **Search at fixed center.** Points are sorted by their angle from the
 center. A partition is a choice of `k` cut-gaps among the `n` gaps
-between consecutive points (`combn(n, k)` candidates); per-arc majority
-counts are read from a cumulative count table and total
-misclassification is minimised. Cut angles are placed at the arc
-midpoint between adjacent points. Tie-breaker: among k-tuples with the
-same misclass count, the one with the largest minimum 2D perpendicular
-distance from a cut ray to the nearest point wins.
+between consecutive points (`combn(n, k)` candidates, `M` in total). The
+score of a candidate is its exact bijection-constrained
+misclassification (best achievable total correct over all `k!`
+arc-to-group assignments, each group used exactly once) – the same
+region-to-group matching criterion used to derive `sector`/`majority`
+below, so the search targets exactly the quantity reported as
+`misclass`. Every wedge is non-empty, so a partition leaving a group's
+sector empty is not considered (as in
+[`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md);
+the radial functions do allow it).
+
+All per-candidate quantities are computed as length-`M` vectors indexed
+out of a cumulative group-count table, so the loops run over `k` / `k!`
+rather than over candidates – analogous to the vectorised cut search in
+[`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md).
+Scoring proceeds in two stages: a cheap upper bound (each arc
+independently taking its own local-majority group, which no bijection
+can beat) is evaluated for all `M` candidates, and only those whose
+bound is high enough to still win are then scored exactly over all `k!`
+assignments. The bound is tight in practice, so typically only a handful
+of candidates need the exact scan.
+
+Cut angles are placed at the arc midpoint between adjacent points.
+Tie-breaker: among k-tuples with the same misclass count, the one with
+the largest minimum 2D perpendicular distance from a cut ray to the
+nearest point wins (computed only for the co-minimal candidates).
 
 **Search optimal center.** When `cx` and `cy` are `NULL` (default), the
 center is optimised by multi-start Nelder-Mead — the brute-force above
@@ -107,6 +137,6 @@ r     <- runif(36, 0.5, 1.5)
 crd   <- cbind(r * cos(theta), r * sin(theta))
 grp   <- factor(rep(c("a", "b", "c"), each = 12))
 plot(crd, asp = 1)
-angularPartition(crd, grp)
+angularPartition(crd, grp, fill = TRUE)
 } # }
 ```

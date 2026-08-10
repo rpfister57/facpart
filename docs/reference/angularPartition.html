@@ -17,7 +17,7 @@ New York: Springer.)"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">facpart</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,10 +26,6 @@ New York: Springer.)"></head><body>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/FacetedPartitions.html">Facet Theory and Partitions</a></li>
-  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
       </ul></div>
@@ -61,8 +57,10 @@ New York: Springer.)</p>
 <span>  <span class="va">group</span>,</span>
 <span>  cx <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cy <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  fill <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  output <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  col <span class="op">=</span> <span class="st">"darkorange"</span>,</span>
+<span>  cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lwd <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  lty <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  add <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -85,12 +83,20 @@ New York: Springer.)</p>
 <dd><p>Center; optimised when either is <code>NULL</code>.</p></dd>
 
 
+<dt id="arg-fill">fill<a class="anchor" aria-label="anchor" href="#arg-fill"></a></dt>
+<dd><p>If <code>TRUE</code>, shade the <code>k</code> wedge sectors (default <code>FALSE</code>).</p></dd>
+
+
 <dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
 <dd><p>If <code>TRUE</code> (default), return list of results.</p></dd>
 
 
 <dt id="arg-col">col<a class="anchor" aria-label="anchor" href="#arg-col"></a></dt>
 <dd><p>Ray colour (default <code>"darkorange"</code>).</p></dd>
+
+
+<dt id="arg-cols">cols<a class="anchor" aria-label="anchor" href="#arg-cols"></a></dt>
+<dd><p>Length-<code>k</code> fill colours; auto-generated if <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-lwd">lwd<a class="anchor" aria-label="anchor" href="#arg-lwd"></a></dt>
@@ -120,12 +126,27 @@ New York: Springer.)</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Search at fixed center.</strong> Points are sorted by their angle from the
 center. A partition is a choice of <code>k</code> cut-gaps among the <code>n</code> gaps
-between consecutive points (<code>combn(n, k)</code> candidates); per-arc majority
-counts are read from a cumulative count table and total misclassification
-is minimised. Cut angles are placed at the arc midpoint between adjacent
-points. Tie-breaker: among k-tuples with the same misclass count, the one
-with the largest minimum 2D perpendicular distance from a cut ray to the
-nearest point wins.</p>
+between consecutive points (<code>combn(n, k)</code> candidates, <code>M</code> in total). The
+score of a candidate is its exact bijection-constrained misclassification
+(best achievable total correct over all <code>k!</code> arc-to-group assignments,
+each group used exactly once) – the same region-to-group matching
+criterion used to derive <code>sector</code>/<code>majority</code> below, so the search targets
+exactly the quantity reported as <code>misclass</code>. Every wedge is non-empty, so a
+partition leaving a group's sector empty is not considered (as in
+<code><a href="axialLines.html">axialLines()</a></code>; the radial functions do allow it).</p>
+<p>All per-candidate quantities are computed as length-<code>M</code> vectors indexed
+out of a cumulative group-count table, so the loops run over <code>k</code> / <code>k!</code>
+rather than over candidates – analogous to the vectorised cut search in
+<code><a href="axialLines.html">axialLines()</a></code>. Scoring proceeds in two stages: a cheap upper bound (each
+arc independently taking its own local-majority group, which no bijection
+can beat) is evaluated for all <code>M</code> candidates, and only those whose bound
+is high enough to still win are then scored exactly over all <code>k!</code>
+assignments. The bound is tight in practice, so typically only a handful
+of candidates need the exact scan.</p>
+<p>Cut angles are placed at the arc midpoint between adjacent points.
+Tie-breaker: among k-tuples with the same misclass count, the one with the
+largest minimum 2D perpendicular distance from a cut ray to the nearest
+point wins (computed only for the co-minimal candidates).</p>
 <p><strong>Search optimal center.</strong> When <code>cx</code> and <code>cy</code> are <code>NULL</code> (default), the center
 is optimised by multi-start Nelder-Mead — the brute-force above runs
 as the inner objective at each candidate center. Starts are the data
@@ -143,7 +164,7 @@ directly (no optimisation).</p>
 <span class="r-in"><span><span class="va">crd</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">r</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="va">r</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">grp</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">crd</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">angularPartition</span><span class="op">(</span><span class="va">crd</span>, <span class="va">grp</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">angularPartition</span><span class="op">(</span><span class="va">crd</span>, <span class="va">grp</span>, fill <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
@@ -157,7 +178,7 @@ directly (no optimisation).</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
