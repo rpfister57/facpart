@@ -9,6 +9,7 @@ angularPartition(
   group,
   cx = NULL,
   cy = NULL,
+  n_grid = 7L,
   fill = FALSE,
   output = TRUE,
   col = "darkorange",
@@ -24,6 +25,10 @@ angularPartition(
 \item{group}{Factor with \verb{n >= k >= 2} levels, same length as nrow of crd.}
 
 \item{cx, cy}{Center; optimised when either is \code{NULL}.}
+
+\item{n_grid}{Side length of the coarse fallback grid (\code{n_grid^2} extra
+evaluations of the cheap inner search); only used when the heuristic
+starts don't already reach zero misclassification. Default \code{7L}.}
 
 \item{fill}{If \code{TRUE}, shade the \code{k} wedge sectors (default \code{FALSE}).}
 
@@ -90,9 +95,16 @@ point wins (computed only for the co-minimal candidates).
 \strong{Search optimal center.} When \code{cx} and \code{cy} are \code{NULL} (default), the center
 is optimised by multi-start Nelder-Mead — the brute-force above runs
 as the inner objective at each candidate center. Starts are the data
-centroid plus the centroid of each non-empty group. \code{parscale} is set
-to the data range. When \code{cx} and \code{cy} are supplied, they are used
-directly (no optimisation).
+centroid plus the centroid of each non-empty group and the four
+bounding-box corners. \code{parscale} is set to the data range. Because
+the inner objective is piecewise-constant, Nelder-Mead can get stuck
+on a flat plateau around any of those starts without ever seeing a
+better region; if none of them reaches zero misclassification, a
+coarse \code{n_grid} x \code{n_grid} scan of the bounding box, padded by half the
+data range on each side (the best center is not always inside the
+convex hull of the points), locates a cell in a better region and one
+more Nelder-Mead run is seeded there. When \code{cx} and \code{cy} are supplied,
+they are used directly (no optimisation).
 }
 \examples{
 \dontrun{

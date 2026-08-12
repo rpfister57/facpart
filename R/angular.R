@@ -12,8 +12,22 @@
     # returns the radiant of the line bisecting b - a
     # delta (also if cycled around 2pi):
     delta <- (b - a) %% (2 * pi)
-    return(atan2(sin(a + delta / 2), 
+    return(atan2(sin(a + delta / 2),
                  cos(a + delta / 2)) )
+}
+
+
+#' @noRd
+.snap_zero <- function(s0, parscale, tol = sqrt(.Machine$double.eps)) {
+    # optim()'s Nelder-Mead sizes the initial simplex step for coordinate i
+    # as fabs(par[i]) when nonzero, and only falls back to a sane
+    # parscale-sized step when par[i] == 0 exactly (an exact-equality check,
+    # not a "close to zero" one). Centroids of mean-centered data (e.g. any
+    # MDS output) are ~1e-16, not exactly 0, so they silently hit the
+    # degenerate branch: optim() reports convergence after 3 evaluations
+    # without moving from the start. Snap near-zero start coordinates to
+    # exact 0 so the non-degenerate fallback step-size kicks in instead.
+    ifelse(abs(s0) < parscale * tol, 0, s0)
 }
 
 
@@ -224,13 +238,23 @@
 #' **Search optimal center.** When `cx` and `cy` are `NULL` (default), the center
 #' is optimised by multi-start Nelder-Mead — the brute-force above runs
 #' as the inner objective at each candidate center. Starts are the data
-#' centroid plus the centroid of each non-empty group. `parscale` is set
-#' to the data range. When `cx` and `cy` are supplied, they are used
-#' directly (no optimisation).
+#' centroid plus the centroid of each non-empty group and the four
+#' bounding-box corners. `parscale` is set to the data range. Because
+#' the inner objective is piecewise-constant, Nelder-Mead can get stuck
+#' on a flat plateau around any of those starts without ever seeing a
+#' better region; if none of them reaches zero misclassification, a
+#' coarse `n_grid` x `n_grid` scan of the bounding box, padded by half the
+#' data range on each side (the best center is not always inside the
+#' convex hull of the points), locates a cell in a better region and one
+#' more Nelder-Mead run is seeded there. When `cx` and `cy` are supplied,
+#' they are used directly (no optimisation).
 #'
 #' @param crd Numeric matrix or numeric data frame with exactly 2 columns; no NAs.
 #' @param group Factor with `n >= k >= 2` levels, same length as nrow of crd.
 #' @param cx,cy Center; optimised when either is `NULL`.
+#' @param n_grid Side length of the coarse fallback grid (`n_grid^2` extra
+#'   evaluations of the cheap inner search); only used when the heuristic
+#'   starts don't already reach zero misclassification. Default `7L`.
 #' @param fill If `TRUE`, shade the `k` wedge sectors (default `FALSE`).
 #' @param output If `TRUE` (default), return list of results.
 #' @param col Ray colour (default `"darkorange"`).
@@ -265,6 +289,7 @@ angularPartition <- function(crd,
                              group,
                              cx = NULL,
                              cy = NULL,
+                             n_grid = 7L,
                              fill = FALSE,
                              output = TRUE,
                              col = "darkorange",
@@ -313,10 +338,8 @@ angularPartition <- function(crd,
         parscale <- c(x_range, y_range)
         # parscale <- c(1, 1)
 
-        # start values for center: overall mean, group means
+        # start values for center: overall mean, group means, max, min
         starts <- list(c(mean(coords[, 1]), mean(coords[, 2])))
-        starts <- c(starts, list(c(min(coords[ , 1]), min(coords[ , 2]))))
-        starts <- c(starts, list(c(max(coords[ , 1]), max(coords[ , 2]))))
         
         for (g in seq_len(k)) {
             in_g <- which(grp_int == g)
@@ -326,6 +349,12 @@ angularPartition <- function(crd,
                                    mean(coords[in_g, 2]))))
             }
         }
+        
+        starts <- c(starts, list(c(min(coords[ , 1]), min(coords[ , 2]))))
+        starts <- c(starts, list(c(max(coords[ , 1]), max(coords[ , 2]))))
+        starts <- c(starts, list(c(min(coords[ , 1]), max(coords[ , 2]))))
+        starts <- c(starts, list(c(max(coords[ , 1]), min(coords[ , 2]))))
+        
 
         # function to optimize: n of misclassification from .angular_search()
         # parameter to optimize: p = center coordinates
@@ -335,27 +364,103 @@ angularPartition <- function(crd,
         }
 
         best <- NULL
-        
+
         # minimization loops over all starting values from starts:
         for (s0 in starts) {
-            
+            s0 <- .snap_zero(s0, parscale)
+
             opt <- optim(par     = s0,
                          fn      = fnToOpt,
                          method  = "Nelder-Mead",
-                         control = list(reltol = 1e-8, 
-                                        maxit = 2000,
+                         control = list(reltol = 1e-8,
+                                        maxit = 3000,
                                         parscale = parscale))
-            
-            if (is.null(best) || opt$value < best$value) best <- opt
+
+            if ((is.null(best)) || (opt$value < best$value)) best <- opt
             if (best$value == 0) break          # zero misclass is optimal
         }
-        cx <- best$par[1]
-        cy <- best$par[2]
+
+        # ---- Coarse grid fallback ----
+        # fnToOpt() is piecewise-constant, so Nelder-Mead's local,
+        # gradient-free search can get stuck on a flat plateau around any
+        # heuristic start above without ever seeing a better region --
+        # even past the exact-zero degeneracy .snap_zero() rules out, its
+        # fallback step is still only a fixed fraction of parscale, and a
+        # plateau can be wider than that (confirmed on real MDS data: a
+        # plateau of misclass = 1 extending +-0.15 around the centroid,
+        # with the true misclass = 0 region starting only around 0.3-0.6
+        # away -- outside that fallback step, so every heuristic start
+        # stalled on it). Only pay for the scan when the heuristics above
+        # didn't already reach the provable optimum (misclass = 0); it
+        # gives Nelder-Mead a non-degenerate foothold inside the region
+        # the scan found, rather than asking it to escape a plateau blind.
+        #
+        # Two grids, not one widened grid: the best center is sometimes
+        # inside the bounding box in a region narrow enough that a single
+        # grid spanning a wider, padded box (same n_grid) is too coarse to
+        # land in it, and sometimes outside the box entirely (confirmed on
+        # real MDS data: for one grouping the in-box grid's best cell gave
+        # misclass = 1 where 0 was reachable a bit further inside; for
+        # another grouping on the *same* configuration, misclass = 3 was
+        # the best reachable inside the box at all, but 2 was reachable
+        # ~25% of the data range beyond it). Widening a single fixed-size
+        # grid to reach the second case coarsens it enough to miss the
+        # first, so scan both the plain bounding box and, separately, one
+        # padded by half the data range on each side, and refine from
+        # whichever of the two grids' best cells wins.
+        if (best$value > 0) {
+            rng_x <- range(coords[, 1])
+            rng_y <- range(coords[, 2])
+            pad_x <- x_range / 2
+            pad_y <- y_range / 2
+
+            grids <- list(
+                list(gx = seq(rng_x[1],         rng_x[2],         length.out = n_grid),
+                     gy = seq(rng_y[1],         rng_y[2],         length.out = n_grid)),
+                list(gx = seq(rng_x[1] - pad_x, rng_x[2] + pad_x, length.out = n_grid),
+                     gy = seq(rng_y[1] - pad_y, rng_y[2] + pad_y, length.out = n_grid))
+            )
+
+            for (grd in grids) {
+                gx <- grd$gx
+                gy <- grd$gy
+
+                grid_best_val <- Inf
+                grid_best_p   <- NULL
+                for (gx0 in gx) {
+                    for (gy0 in gy) {
+                        v <- fnToOpt(c(gx0, gy0))
+                        if (v < grid_best_val) {
+                            grid_best_val <- v
+                            grid_best_p   <- c(gx0, gy0)
+                        }
+                    }
+                }
+
+                opt <- optim(par     = .snap_zero(grid_best_p, parscale),
+                             fn      = fnToOpt,
+                             method  = "Nelder-Mead",
+                             control = list(reltol = 1e-8,
+                                            maxit = 3000,
+                                            parscale = parscale))
+
+                if (opt$value < best$value) best <- opt
+                if (best$value == 0) break          # zero misclass is optimal
+            }
+        }
+
+        cx_best <- best$par[1]
+        cy_best <- best$par[2]
     }
 
     # ---- Final search at chosen center ----
+    if (is.null(cx) || is.null(cy)) {
+        cx <- cx_best
+        cy <- cy_best
+    }
+    
     res         <- .angular_search(coords, grp_int,
-                                   cx, cy,
+                                   cx = cx, cy = cy,
                                    k, n_pts, combos, full = TRUE)
     
     best_err    <- res$misclass
@@ -430,12 +535,12 @@ angularPartition <- function(crd,
     else return(list(
         cuts            = best_cuts,
         margin          = best_margin,
-        misclass        = length(misclass_idx),
-        misclass_points = misclass_points,
         sector          = sector,
         majority        = majority,
         center          = c(cx, cy),
-        pt_angles       = pt_angles))
+        pt_angles       = pt_angles,
+        misclass        = length(misclass_idx),
+        misclass_points = misclass_points))
 
 }
 
