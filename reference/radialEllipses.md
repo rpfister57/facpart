@@ -15,6 +15,7 @@ radialEllipses(
   crd,
   group,
   ellipse = NULL,
+  n_grid = 7L,
   fill = FALSE,
   output = TRUE,
   col = "purple",
@@ -44,6 +45,14 @@ radialEllipses(
   Optional length-5 numeric vector `(cx, cy, a, b, angle)` specifying
   the innermost ellipse exactly. When supplied, all outer ellipses are
   uniform scalings of this one; only the scale factors are searched.
+
+- n_grid:
+
+  Side length of the coarse fallback grid used when optimising an
+  ellipse's center (`n_grid^2` extra evaluations of the cheap inner
+  search per ellipse); only used when an ellipse's heuristic starts
+  don't already reach zero misclassification, and ignored when `ellipse`
+  is supplied. Default `7L`.
 
 - fill:
 
@@ -96,7 +105,13 @@ independently optimised center, semi-axes, and rotation, fitted by
 Nelder-Mead. Multi-start uses the covariance ellipse of the inner groups
 plus an inflated copy of the previous ellipse (a guaranteed- feasible
 starting point that avoids stalling on the infeasibility penalty
-plateau).
+plateau). As in
+[`radialEllipse()`](https://rpfister57.github.io/facpart/reference/radialEllipse.md),
+the inner search is piecewise-constant and can stall on a flat plateau
+around either start; when that happens for a given ellipse, a coarse
+`n_grid` x `n_grid` fallback relocates its center before one more full
+refit (ignored in the fixed-`ellipse` mode, which has no Nelder-Mead
+step).
 
 ## Examples
 

@@ -25,6 +25,7 @@ radialCircles(
   lwd = 2,
   lty = 1,
   .method = "Nelder-Mead",
+  n_grid = 7L,
   add = TRUE
 )
 ```
@@ -78,6 +79,14 @@ radialCircles(
   `"Nelder-Mead"` (default) or `"SANN"`; ignored when `cx` and `cy` are
   both supplied.
 
+- n_grid:
+
+  Side length of the coarse fallback grid used when optimising a
+  circle's center (`n_grid^2` extra evaluations of the cheap inner
+  search per circle); only used when a circle's heuristic starts don't
+  already reach zero misclassification, and ignored when `cx` and `cy`
+  are both supplied. Default `7L`.
+
 - add:
 
   If `TRUE` (default), add to existing plot; if `FALSE`, call
@@ -115,7 +124,12 @@ large to enumerate, the function warns and falls back to the sequential
 path below. Optimised centers: circles are fitted sequentially, then all
 radii are refined by coordinate descent against the criterion above, so
 the result is optimal in each individual radius but not jointly in the
-centers.
+centers. Each circle's own center search is multi-start Nelder-Mead
+(starts: that circle's inner-group centroid, the overall centroid, and
+the previous circle's center); as in
+[`radialCircle()`](https://rpfister57.github.io/facpart/reference/radialCircle.md),
+a coarse grid fallback seeds one more run when none of those reaches
+zero misclassification for that circle.
 
 ## Examples
 

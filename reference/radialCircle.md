@@ -3,6 +3,12 @@
 Finds the circle minimising misclassification between two groups of 2D
 points. The center is found by multi-start Nelder-Mead (starts: data
 centroid plus each group's centroid) unless `cx` and `cy` are supplied.
+Because the inner search is piecewise-constant, Nelder-Mead can stall on
+a flat plateau around any of those starts; if none reaches zero
+misclassification, a coarse `n_grid` x `n_grid` scan of the bounding
+box, padded by half the data range on each side (the best center is not
+always inside the convex hull of the points), locates a cell in a better
+region and one more Nelder-Mead run is seeded there.
 
 ## Usage
 
@@ -19,6 +25,7 @@ radialCircle(
   lwd = 2,
   lty = 1,
   .method = "Nelder-Mead",
+  n_grid = 7L,
   add = TRUE
 )
 ```
@@ -64,6 +71,12 @@ radialCircle(
 - .method:
 
   `"Nelder-Mead"` (default) or `"SANN"`.
+
+- n_grid:
+
+  Side length of the coarse fallback grid (`n_grid^2` extra evaluations
+  of the cheap inner search); only used when the heuristic starts don't
+  already reach zero misclassification. Default `7L`.
 
 - add:
 
