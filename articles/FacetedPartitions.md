@@ -279,13 +279,6 @@ angularPartition(crd, grp, add = FALSE, fill = TRUE)
     #> $margin
     #> [1] 0.3707055
     #> 
-    #> $misclass
-    #> [1] 0
-    #> 
-    #> $misclass_points
-    #> [1] x     y     label
-    #> <0 rows> (or 0-length row.names)
-    #> 
     #> $sector
     #>  [1] 3 3 3 3 3 3 3 3 3 3 3 3 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2
     #> 
@@ -302,6 +295,13 @@ angularPartition(crd, grp, add = FALSE, fill = TRUE)
     #> [19]  2.72260523  2.05795544  2.20873940  2.33541115  2.05475273  2.01442570
     #> [25] -2.35380896 -2.21628526 -1.98863070 -2.03203318 -1.08170854 -2.23652965
     #> [31] -1.90492012 -2.07545851 -2.26925484 -2.12004313 -2.33215861 -2.08743358
+    #> 
+    #> $misclass
+    #> [1] 0
+    #> 
+    #> $misclass_points
+    #> [1] x     y     label
+    #> <0 rows> (or 0-length row.names)
 
 The plot shows how the three facet elements ‘a’, ‘b’, and ‘c’ are
 separated by straight lines with a common origin in a wedge-like

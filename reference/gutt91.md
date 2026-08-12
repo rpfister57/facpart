@@ -80,13 +80,6 @@ angularPartition(crd = gutt91_mds$conf, group = Facets$Modality, add = FALSE)
 #> $margin
 #> [1] 0.1103395
 #> 
-#> $misclass
-#> [1] 0
-#> 
-#> $misclass_points
-#> [1] x     y     label
-#> <0 rows> (or 0-length row.names)
-#> 
 #> $sector
 #>  [1] 2 2 1 2 2 1 3 3 3 3 3 3
 #> 
@@ -94,7 +87,7 @@ angularPartition(crd = gutt91_mds$conf, group = Facets$Modality, add = FALSE)
 #> [1] "numerical" "verbal"    "figural"  
 #> 
 #> $center
-#> [1] 2.486482e-16 1.306893e-16
+#> [1] 0 0
 #> 
 #> $pt_angles
 #>        Information       Similarities         Arithmetic         Vocabulary 
@@ -103,5 +96,12 @@ angularPartition(crd = gutt91_mds$conf, group = Facets$Modality, add = FALSE)
 #>         -2.0000848          2.6312076         -1.2902663         -0.9209234 
 #>        BlockDesign     ObjectAssembly             Coding              Mazes 
 #>          0.2315753         -0.3157876          1.7483111          0.3506980 
+#> 
+#> $misclass
+#> [1] 0
+#> 
+#> $misclass_points
+#> [1] x     y     label
+#> <0 rows> (or 0-length row.names)
 #> 
 ```
