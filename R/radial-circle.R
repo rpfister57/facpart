@@ -68,7 +68,8 @@
                              inner_flag,
                              prev_cx, prev_cy, prev_r,
                              starts,
-                             meth = "Nelder-Mead") {
+                             meth = "Nelder-Mead",
+                             n_grid = 7L) {
     has_prev <- !is.null(prev_r)
 
     parscale <- c(diff(range(pcoords[, 1])), diff(range(pcoords[, 2])))
@@ -83,15 +84,39 @@
             .best_radius(d[ord], inner_flag[ord], rmin)$misclass)
     }
 
-    # multi-start: keep the optim() result with lowest misclassification
+    # multi-start: keep the optim() result with lowest misclassification.
+    # eval_ctr() is piecewise-constant, so Nelder-Mead can stall on a flat
+    # plateau around any of `starts` -- including the centroid, which is
+    # ~1e-16 for mean-centered data (e.g. any MDS output) and hits optim()'s
+    # near-zero initial-simplex degeneracy on top of that (see .snap_zero(),
+    # utils.R). Confirmed on real MDS data: every single-group-vs-rest
+    # circle fit here got stuck several misclassifications above the true
+    # optimum when started from the (near-zero) overall centroid alone.
     best <- NULL
     for (s0 in starts) {
-        opt <- optim(par = s0,
+        opt <- optim(par = .snap_zero(s0, parscale),
                      fn = eval_ctr,
                      method = meth,
                      control = list(reltol = 1e-8, maxit = 2000,
                                     parscale = parscale))
         if (is.null(best) || opt$value < best$value) best <- opt
+        if (best$value == 0) break          # zero misclass is optimal
+    }
+
+    # ---- Coarse grid fallback ----
+    # Only pay for it when the starts above didn't already reach the
+    # provable optimum; see .grid_seeds() (utils.R) for why two grids are
+    # scanned rather than one.
+    if (best$value > 0) {
+        for (p in .grid_seeds(eval_ctr, range(pcoords[, 1]), range(pcoords[, 2]), n_grid)) {
+            opt <- optim(par = .snap_zero(p, parscale),
+                         fn = eval_ctr,
+                         method = meth,
+                         control = list(reltol = 1e-8, maxit = 2000,
+                                        parscale = parscale))
+            if (opt$value < best$value) best <- opt
+            if (best$value == 0) break      # zero misclass is optimal
+        }
     }
 
     cx_opt <- best$par[1]; cy_opt <- best$par[2]
@@ -300,6 +325,12 @@
 #' Finds the circle minimising misclassification between two groups of 2D
 #' points. The center is found by multi-start Nelder-Mead (starts: data
 #' centroid plus each group's centroid) unless `cx` and `cy` are supplied.
+#' Because the inner search is piecewise-constant, Nelder-Mead can stall on
+#' a flat plateau around any of those starts; if none reaches zero
+#' misclassification, a coarse `n_grid` x `n_grid` scan of the bounding
+#' box, padded by half the data range on each side (the best center is not
+#' always inside the convex hull of the points), locates a cell in a
+#' better region and one more Nelder-Mead run is seeded there.
 #'
 #' **Search at fixed center.** Points are sorted by distance from the center
 #' and every realisable radius is scanned: the inside/outside split is scored
@@ -324,6 +355,9 @@
 #' @param lwd Line width (default `2`).
 #' @param lty Line type (default `1`).
 #' @param .method `"Nelder-Mead"` (default) or `"SANN"`.
+#' @param n_grid Side length of the coarse fallback grid (`n_grid^2` extra
+#'   evaluations of the cheap inner search); only used when the heuristic
+#'   starts don't already reach zero misclassification. Default `7L`.
 #' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
 #'   `plot()` first.
 #'
@@ -353,6 +387,7 @@ radialCircle <- function(crd,
                        lwd = 2,
                        lty = 1,
                        .method = "Nelder-Mead",
+                       n_grid = 7L,
                        add = TRUE) {
 
     # ---- Input validation ----
@@ -397,14 +432,35 @@ radialCircle <- function(crd,
         best <- NULL
         for (s0 in starts) {
             opt <- optim(
-                par     = s0,
+                par     = .snap_zero(s0, parscale),
                 fn      = fnToOpt,
                 method  = .method,
                 control = list(reltol = 1e-8, maxit = 2000,
                                parscale = parscale)
             )
             if (is.null(best) || opt$value < best$value) best <- opt
+            if (best$value == 0) break          # zero misclass is optimal
         }
+
+        # ---- Coarse grid fallback ----
+        # Only pay for it when the starts above didn't already reach the
+        # provable optimum; see .grid_seeds() (utils.R) for why two grids
+        # (plain bounding box, and one padded by half the data range) are
+        # scanned rather than one.
+        if (best$value > 0) {
+            for (p in .grid_seeds(fnToOpt, range(pcoords[, 1]), range(pcoords[, 2]), n_grid)) {
+                opt <- optim(
+                    par     = .snap_zero(p, parscale),
+                    fn      = fnToOpt,
+                    method  = .method,
+                    control = list(reltol = 1e-8, maxit = 2000,
+                                   parscale = parscale)
+                )
+                if (opt$value < best$value) best <- opt
+                if (best$value == 0) break      # zero misclass is optimal
+            }
+        }
+
         cx <- best$par[1]
         cy <- best$par[2]
     }
@@ -506,7 +562,11 @@ radialCircle <- function(crd,
 #' path below. Optimised centers: circles are fitted sequentially, then all
 #' radii are refined by coordinate descent against the criterion above, so
 #' the result is optimal in each individual radius but not jointly in the
-#' centers.
+#' centers. Each circle's own center search is multi-start Nelder-Mead
+#' (starts: that circle's inner-group centroid, the overall centroid, and
+#' the previous circle's center); as in [radialCircle()], a coarse grid
+#' fallback seeds one more run when none of those reaches zero
+#' misclassification for that circle.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
 #' @param group Factor with `k >= 2` levels. **Factor level order does not
@@ -525,6 +585,11 @@ radialCircle <- function(crd,
 #' @param lty Line type (default `1`).
 #' @param .method `"Nelder-Mead"` (default) or `"SANN"`; ignored when
 #'   `cx` and `cy` are both supplied.
+#' @param n_grid Side length of the coarse fallback grid used when
+#'   optimising a circle's center (`n_grid^2` extra evaluations of the
+#'   cheap inner search per circle); only used when a circle's heuristic
+#'   starts don't already reach zero misclassification, and ignored when
+#'   `cx` and `cy` are both supplied. Default `7L`.
 #' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
 #'   `plot()` first.
 #'
@@ -558,6 +623,7 @@ radialCircles <- function(crd,
                         lwd = 2,
                         lty = 1,
                         .method = "Nelder-Mead",
+                        n_grid = 7L,
                         add = TRUE) {
 
     # ---- Input validation ----
@@ -656,7 +722,8 @@ radialCircles <- function(crd,
                     circ     <- .optimize_circle(pcoords, inner_flag,
                                                  prev_cx, prev_cy, prev_r,
                                                  starts,
-                                                 meth = .method)
+                                                 meth = .method,
+                                                 n_grid = n_grid)
                     out[[s]] <- circ
                     prev_cx  <- circ$cx; prev_cy <- circ$cy; prev_r <- circ$r
                 }

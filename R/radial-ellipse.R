@@ -86,7 +86,8 @@
 
 
 #' @noRd
-.optimize_ellipse <- function(coords, inner_flag, prev = NULL, starts) {
+.optimize_ellipse <- function(coords, inner_flag, prev = NULL, starts,
+                              n_grid = 7L) {
     x_range   <- diff(range(coords[, 1]))
     y_range   <- diff(range(coords[, 2]))
     if (x_range == 0) x_range <- 1
@@ -99,8 +100,17 @@
     else
         NULL
 
+    # .eval_ellipse()'s misclass is piecewise-constant, so Nelder-Mead can
+    # stall on a flat plateau around any of `starts` -- including a start
+    # whose (cx, cy) happens to be near zero (e.g. a group centered close
+    # to the configuration centroid of mean-centered MDS data), which also
+    # hits optim()'s near-zero initial-simplex degeneracy (see
+    # .snap_zero(), utils.R). Confirmed on real MDS data: one group's own
+    # covariance-based init landed inside such a plateau and stalled
+    # several misclassifications above the true optimum.
     best <- NULL
     for (init in starts) {
+        init[1:2] <- .snap_zero(init[1:2], parscale[1:2])
         opt <- optim(
             par        = init,
             fn         = .eval_ellipse,
@@ -112,7 +122,39 @@
                               parscale = parscale)
         )
         if (is.null(best) || opt$value < best$value) best <- opt
+        if (best$value == 0) break          # zero misclass is optimal
     }
+
+    # ---- Coarse grid fallback (center only) ----
+    # A full 5D grid is infeasible, so this relocates just (cx, cy):
+    # holding (a, b, angle) at whatever the starts above already found,
+    # scan for a better center, then re-optimise all 5 parameters together
+    # from there. Only pay for it when the starts didn't already reach the
+    # provable optimum; see .grid_seeds() (utils.R) for why two grids
+    # (plain bounding box, and one padded by half the data range) are
+    # scanned rather than one.
+    if (best$value > 0) {
+        shape    <- best$par[3:5]
+        eval_ctr <- function(ctr) {
+            .eval_ellipse(c(ctr[1], ctr[2], shape),
+                         coords, inner_flag, prev_bnd)
+        }
+        for (p in .grid_seeds(eval_ctr, range(coords[, 1]), range(coords[, 2]), n_grid)) {
+            opt <- optim(
+                par        = c(.snap_zero(p, parscale[1:2]), shape),
+                fn         = .eval_ellipse,
+                coords     = coords,
+                inner_flag = inner_flag,
+                prev_bnd   = prev_bnd,
+                method     = "Nelder-Mead",
+                control    = list(reltol = 1e-8, maxit = 5000,
+                                  parscale = parscale)
+            )
+            if (opt$value < best$value) best <- opt
+            if (best$value == 0) break      # zero misclass is optimal
+        }
+    }
+
     p <- best$par
     list(cx       = p[1],
          cy       = p[2],
@@ -124,7 +166,7 @@
 
 
 #' @noRd
-.elliptic_cuts_2 <- function(coords, grp_int) {
+.elliptic_cuts_2 <- function(coords, grp_int, n_grid = 7L) {
     best_res <- NULL
     best_mc  <- .Machine$integer.max
 
@@ -132,7 +174,8 @@
         inner_flag <- grp_int == which_inner
         init       <- .init_ellipse_params(coords, inner_flag)
         res        <- .optimize_ellipse(coords, inner_flag,
-                                        prev = NULL, starts = list(init))
+                                        prev = NULL, starts = list(init),
+                                        n_grid = n_grid)
         if (res$misclass < best_mc) {
             best_mc  <- res$misclass
             best_res <- res
@@ -150,10 +193,22 @@
 #' Finds the ellipse minimising misclassification between two groups of 2D
 #' points. All 5 parameters (cx, cy, a, b, angle) are found by Nelder-Mead,
 #' starting from the covariance ellipse of each group in turn; the ordering
-#' with the lower misclassification is retained.
+#' with the lower misclassification is retained. Because the inner search is
+#' piecewise-constant, Nelder-Mead can stall on a flat plateau around either
+#' start (confirmed on real MDS data: a group's own covariance-based init
+#' can itself be near enough to the configuration centroid to land in one);
+#' if a group's start doesn't reach zero misclassification, a coarse
+#' `n_grid` x `n_grid` scan relocates just the center (holding the fitted
+#' shape and orientation fixed) over the bounding box, padded by half the
+#' data range on each side, and one more full 5-parameter Nelder-Mead run is
+#' seeded from the best cell found.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
 #' @param group Factor with exactly 2 levels.
+#' @param n_grid Side length of the coarse fallback grid (`n_grid^2` extra
+#'   evaluations of the cheap inner search per group tried as inner);
+#'   only used when a group's covariance-based start doesn't already reach
+#'   zero misclassification. Default `7L`.
 #' @param fill If `TRUE`, shade inner ellipse and outer region.
 #' @param output If `TRUE` (default), return results list.
 #' @param col Ellipse border colour (default `"purple"`).
@@ -182,6 +237,7 @@
 #' @export
 radialEllipse <- function(crd,
                            group,
+                           n_grid = 7L,
                            fill = FALSE,
                            output = TRUE,
                            col = "purple",
@@ -205,7 +261,7 @@ radialEllipse <- function(crd,
     grp_int <- as.integer(group)
 
     # ---- Optimise ellipse ----
-    res    <- .elliptic_cuts_2(coords, grp_int)
+    res    <- .elliptic_cuts_2(coords, grp_int, n_grid = n_grid)
     ell    <- res$ellipse
     sector <- res$sector
 
@@ -292,7 +348,11 @@ radialEllipse <- function(crd,
 #' Nelder-Mead. Multi-start uses the covariance ellipse of the inner
 #' groups plus an inflated copy of the previous ellipse (a guaranteed-
 #' feasible starting point that avoids stalling on the infeasibility
-#' penalty plateau).
+#' penalty plateau). As in [radialEllipse()], the inner search is
+#' piecewise-constant and can stall on a flat plateau around either start;
+#' when that happens for a given ellipse, a coarse `n_grid` x `n_grid`
+#' fallback relocates its center before one more full refit (ignored in
+#' the fixed-`ellipse` mode, which has no Nelder-Mead step).
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
 #' @param group Factor with `k >= 2` levels. **Factor level order does not
@@ -304,6 +364,11 @@ radialEllipse <- function(crd,
 #'   specifying the innermost ellipse exactly. When supplied, all outer
 #'   ellipses are uniform scalings of this one; only the scale factors
 #'   are searched.
+#' @param n_grid Side length of the coarse fallback grid used when
+#'   optimising an ellipse's center (`n_grid^2` extra evaluations of the
+#'   cheap inner search per ellipse); only used when an ellipse's
+#'   heuristic starts don't already reach zero misclassification, and
+#'   ignored when `ellipse` is supplied. Default `7L`.
 #' @param fill If `TRUE`, shade each elliptic sector.
 #' @param output If `TRUE` (default), return results list.
 #' @param col Ellipse border colour (default `"purple"`).
@@ -340,6 +405,7 @@ radialEllipse <- function(crd,
 radialEllipses <- function(crd,
                             group,
                             ellipse = NULL,
+                            n_grid = 7L,
                             fill = FALSE,
                             output = TRUE,
                             col = "purple",
@@ -449,7 +515,8 @@ radialEllipses <- function(crd,
                     starts <- c(starts, list(prev_inflated))
                 }
                 ell      <- .optimize_ellipse(coords, inner_flag,
-                                              prev = prev, starts = starts)
+                                              prev = prev, starts = starts,
+                                              n_grid = n_grid)
                 out[[s]] <- ell
                 prev     <- ell
             }

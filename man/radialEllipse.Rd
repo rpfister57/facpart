@@ -7,6 +7,7 @@
 radialEllipse(
   crd,
   group,
+  n_grid = 7L,
   fill = FALSE,
   output = TRUE,
   col = "purple",
@@ -20,6 +21,11 @@ radialEllipse(
 \item{crd}{Numeric matrix or data frame with exactly 2 columns.}
 
 \item{group}{Factor with exactly 2 levels.}
+
+\item{n_grid}{Side length of the coarse fallback grid (\code{n_grid^2} extra
+evaluations of the cheap inner search per group tried as inner);
+only used when a group's covariance-based start doesn't already reach
+zero misclassification. Default \code{7L}.}
 
 \item{fill}{If \code{TRUE}, shade inner ellipse and outer region.}
 
@@ -46,7 +52,15 @@ If \code{output = TRUE}, a list with \code{cx}, \code{cy}, \code{a}, \code{b}, \
 Finds the ellipse minimising misclassification between two groups of 2D
 points. All 5 parameters (cx, cy, a, b, angle) are found by Nelder-Mead,
 starting from the covariance ellipse of each group in turn; the ordering
-with the lower misclassification is retained.
+with the lower misclassification is retained. Because the inner search is
+piecewise-constant, Nelder-Mead can stall on a flat plateau around either
+start (confirmed on real MDS data: a group's own covariance-based init
+can itself be near enough to the configuration centroid to land in one);
+if a group's start doesn't reach zero misclassification, a coarse
+\code{n_grid} x \code{n_grid} scan relocates just the center (holding the fitted
+shape and orientation fixed) over the bounding box, padded by half the
+data range on each side, and one more full 5-parameter Nelder-Mead run is
+seeded from the best cell found.
 }
 \examples{
 \dontrun{

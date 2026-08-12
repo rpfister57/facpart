@@ -18,20 +18,6 @@
 
 
 #' @noRd
-.snap_zero <- function(s0, parscale, tol = sqrt(.Machine$double.eps)) {
-    # optim()'s Nelder-Mead sizes the initial simplex step for coordinate i
-    # as fabs(par[i]) when nonzero, and only falls back to a sane
-    # parscale-sized step when par[i] == 0 exactly (an exact-equality check,
-    # not a "close to zero" one). Centroids of mean-centered data (e.g. any
-    # MDS output) are ~1e-16, not exactly 0, so they silently hit the
-    # degenerate branch: optim() reports convergence after 3 evaluations
-    # without moving from the start. Snap near-zero start coordinates to
-    # exact 0 so the non-degenerate fallback step-size kicks in instead.
-    ifelse(abs(s0) < parscale * tol, 0, s0)
-}
-
-
-#' @noRd
 .angular_search <- function(coords,
                             grp_int,
                             cx, cy,
@@ -350,10 +336,14 @@ angularPartition <- function(crd,
             }
         }
         
-        starts <- c(starts, list(c(min(coords[ , 1]), min(coords[ , 2]))))
-        starts <- c(starts, list(c(max(coords[ , 1]), max(coords[ , 2]))))
-        starts <- c(starts, list(c(min(coords[ , 1]), max(coords[ , 2]))))
-        starts <- c(starts, list(c(max(coords[ , 1]), min(coords[ , 2]))))
+        starts <- c(starts, list(c(min(coords[ , 1]), 
+                                   min(coords[ , 2]))))
+        starts <- c(starts, list(c(max(coords[ , 1]), 
+                                   max(coords[ , 2]))))
+        starts <- c(starts, list(c(min(coords[ , 1]), 
+                                   max(coords[ , 2]))))
+        starts <- c(starts, list(c(max(coords[ , 1]), 
+                                   min(coords[ , 2]))))
         
 
         # function to optimize: n of misclassification from .angular_search()
@@ -394,50 +384,14 @@ angularPartition <- function(crd,
         # didn't already reach the provable optimum (misclass = 0); it
         # gives Nelder-Mead a non-degenerate foothold inside the region
         # the scan found, rather than asking it to escape a plateau blind.
-        #
-        # Two grids, not one widened grid: the best center is sometimes
-        # inside the bounding box in a region narrow enough that a single
-        # grid spanning a wider, padded box (same n_grid) is too coarse to
-        # land in it, and sometimes outside the box entirely (confirmed on
-        # real MDS data: for one grouping the in-box grid's best cell gave
-        # misclass = 1 where 0 was reachable a bit further inside; for
-        # another grouping on the *same* configuration, misclass = 3 was
-        # the best reachable inside the box at all, but 2 was reachable
-        # ~25% of the data range beyond it). Widening a single fixed-size
-        # grid to reach the second case coarsens it enough to miss the
-        # first, so scan both the plain bounding box and, separately, one
-        # padded by half the data range on each side, and refine from
-        # whichever of the two grids' best cells wins.
+        # `.grid_seeds()` (utils.R) scans both the plain bounding box and
+        # one padded by half the data range on each side -- see its
+        # comment for why one widened grid isn't enough. Shared with
+        # radialCircle(s)() and radialEllipse(s)(), which hit the same
+        # plateau-stall pathology on their own center searches.
         if (best$value > 0) {
-            rng_x <- range(coords[, 1])
-            rng_y <- range(coords[, 2])
-            pad_x <- x_range / 2
-            pad_y <- y_range / 2
-
-            grids <- list(
-                list(gx = seq(rng_x[1],         rng_x[2],         length.out = n_grid),
-                     gy = seq(rng_y[1],         rng_y[2],         length.out = n_grid)),
-                list(gx = seq(rng_x[1] - pad_x, rng_x[2] + pad_x, length.out = n_grid),
-                     gy = seq(rng_y[1] - pad_y, rng_y[2] + pad_y, length.out = n_grid))
-            )
-
-            for (grd in grids) {
-                gx <- grd$gx
-                gy <- grd$gy
-
-                grid_best_val <- Inf
-                grid_best_p   <- NULL
-                for (gx0 in gx) {
-                    for (gy0 in gy) {
-                        v <- fnToOpt(c(gx0, gy0))
-                        if (v < grid_best_val) {
-                            grid_best_val <- v
-                            grid_best_p   <- c(gx0, gy0)
-                        }
-                    }
-                }
-
-                opt <- optim(par     = .snap_zero(grid_best_p, parscale),
+            for (p in .grid_seeds(fnToOpt, range(coords[, 1]), range(coords[, 2]), n_grid)) {
+                opt <- optim(par     = .snap_zero(p, parscale),
                              fn      = fnToOpt,
                              method  = "Nelder-Mead",
                              control = list(reltol = 1e-8,

@@ -205,6 +205,70 @@
 
 
 #' @noRd
+# optim()'s Nelder-Mead sizes the initial simplex step for coordinate i as
+# fabs(par[i]) when nonzero, and only falls back to a sane parscale-sized
+# step when par[i] == 0 exactly (an exact-equality check, not a "close to
+# zero" one). Centroids of mean-centered data (e.g. any MDS output) are
+# ~1e-16, not exactly 0, so they silently hit the degenerate branch: optim()
+# reports convergence after 3 evaluations without moving from the start.
+# Snap near-zero start coordinates to exact 0 so the non-degenerate fallback
+# step-size kicks in instead. Shared by angularPartition(), radialCircle(s)()
+# and radialEllipse(s)(), all of which multi-start Nelder-Mead from a
+# centroid-derived point.
+.snap_zero <- function(s0, parscale, tol = sqrt(.Machine$double.eps)) {
+    ifelse(abs(s0) < parscale * tol, 0, s0)
+}
+
+
+#' @noRd
+# Coarse fallback seeds for a 2D center search: fnToOpt() is assumed
+# piecewise-constant (an integer misclassification count), so a local,
+# gradient-free optim() run can stall on a flat plateau around any start
+# without ever finding a genuinely better region. Confirmed on real MDS data
+# two ways: a plateau extending well beyond optim()'s own step size but
+# still *inside* the data's bounding box, and separately a configuration
+# where the true optimum sits *outside* the bounding box entirely. One grid
+# widened to reach outside points would be too coarse to land in a narrow
+# region still inside the box, so this scans the plain bounding box and,
+# separately, one padded by `pad_frac` of the data range on each side, and
+# returns the best cell of EACH grid (as a list of two points) for the
+# caller to seed one more optim() run from apiece.
+#
+# Shared by angularPartition(), radialCircle()/radialCircles() and
+# radialEllipse()/radialEllipses(); callers trigger this only when their
+# heuristic starts didn't already reach the provable optimum (misclass = 0),
+# since it costs 2 * n_grid^2 extra evaluations of the cheap inner search.
+.grid_seeds <- function(fnToOpt, rng_x, rng_y, n_grid, pad_frac = 0.5) {
+    pad_x <- diff(rng_x); if (pad_x == 0) pad_x <- 1
+    pad_y <- diff(rng_y); if (pad_y == 0) pad_y <- 1
+    pad_x <- pad_x * pad_frac
+    pad_y <- pad_y * pad_frac
+
+    grids <- list(
+        list(gx = seq(rng_x[1],         rng_x[2],         length.out = n_grid),
+             gy = seq(rng_y[1],         rng_y[2],         length.out = n_grid)),
+        list(gx = seq(rng_x[1] - pad_x, rng_x[2] + pad_x, length.out = n_grid),
+             gy = seq(rng_y[1] - pad_y, rng_y[2] + pad_y, length.out = n_grid))
+    )
+
+    lapply(grids, function(grd) {
+        best_val <- Inf
+        best_p   <- NULL
+        for (gx0 in grd$gx) {
+            for (gy0 in grd$gy) {
+                v <- fnToOpt(c(gx0, gy0))
+                if (v < best_val) {
+                    best_val <- v
+                    best_p   <- c(gx0, gy0)
+                }
+            }
+        }
+        best_p
+    })
+}
+
+
+#' @noRd
 # Candidate nesting orders, each a permutation of the k group indices with the
 # innermost group first.
 #
