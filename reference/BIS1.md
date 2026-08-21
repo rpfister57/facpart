@@ -48,8 +48,8 @@ Jäger, 1992; Süß, 2015).
 
 Pfister, H.-R., & Beauducel, A. (1993). Stability of operation and
 content facets: A facet analysis of the Berlin model of intelligence
-structure BIS. Proceedings of the Fourth International Facet Theory
-Conference, Prague.
+structure BIS. Paper presented at the Fourth International Facet Theory
+Conference, Prague, 1993.
 
 Pfister, H.-R., & Jäger, A. O. (1992). Topografische Analysen zum
 Berliner Intelligenzstrukturmodell BIS. Diagnostica, 38(2), 91-115.
