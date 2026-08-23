@@ -62,7 +62,7 @@
 #' Data are based on analyses in: 
 #' Pfister, H.-R., & Beauducel, A. (1993). Data contain the correlation
 #' matrix among 12 intelligence tests, and the corresponding 2-facets
-#' assignment
+#' assignment.
 #' 
 #' @format
 #' A list with two components: Bis1_cor is a correlation matrix, and
@@ -106,3 +106,43 @@
 #' Bis1Cells_mds_ax$misclass
 #' 
 "BIS1"
+
+#' Life Satisfaction Data
+#' 
+#' Data are from Levy (1976; see Borg & Groenen, 2005). Life is a list
+#' containing the correlations among fifteen items asking about life
+#' satisfaction, and the corresponding assignments to two facets.
+#' 
+#' @format
+#' A list with two components: life is a correlation matrix of
+#' fifteen items from a survy asking about different areas of life
+#' satisfaction; life_facets is a data frame with assignments to
+#' two facets: Status (2 elements), and Area (8 elements). For details
+#' see Levy (1976) and Borg and Groenen (2005).
+#' \describe{
+#'   \item{life}{A correlation matrix of 15 items about aspects of life satisfaction}
+#'   \item{life_facets}{A data frame with 15 rows and 3 variables:}
+#'   \item{Status}{The Status facet with 2 elements}
+#'   \item{Area}{The Area facet with 8 elements}
+#' }
+#' @references
+#' Borg, I., & Groenen, P. J. F. (2005) (2nd ed.). Modern multidimensional 
+#' scaling. Theory and applications. New York: Springer.
+#' 
+#' Levy, S. (1976). Use of the mapping sentence for coordinating theory
+#' and research: A cross-cultural example. Quality and Quantity, 10, 117-125.
+#' @examples
+#' data(Life)
+#' life <- Life$life
+#' life_facets <- Life$life_facets
+#' lifeD <- smacof::sim2diss(life, method = "corr")
+#' life_mds <- smacof::mds(delta = lifeD, type = "ordinal")
+#' life_mds
+#' plot(x = life_mds$conf, pch = 19,
+#'   xlim = c(-1, 1.5), ylim = c(-1, 1), asp = 1)
+#' text(x = life_mds$conf, labels = life_facets$Area, 
+#'   cex = 0.7, pos = 4)
+#'   angularPartition(crd = life_mds$conf,
+#'                    group = life_facets$Area)
+#'
+"Life"
