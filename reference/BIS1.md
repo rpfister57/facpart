@@ -2,7 +2,7 @@
 
 Data are based on analyses in: Pfister, H.-R., & Beauducel, A. (1993).
 Data contain the correlation matrix among 12 intelligence tests, and the
-corresponding 2-facets assignment
+corresponding 2-facets assignment.
 
 ## Usage
 
