@@ -16,6 +16,7 @@ angularPartition(
   group,
   cx = NULL,
   cy = NULL,
+  n_grid = 7L,
   fill = FALSE,
   output = TRUE,
   col = "darkorange",
@@ -39,6 +40,12 @@ angularPartition(
 - cx, cy:
 
   Center; optimised when either is `NULL`.
+
+- n_grid:
+
+  Side length of the coarse fallback grid (`n_grid^2` extra evaluations
+  of the cheap inner search); only used when the heuristic starts don't
+  already reach zero misclassification. Default `7L`.
 
 - fill:
 
@@ -123,9 +130,16 @@ nearest point wins (computed only for the co-minimal candidates).
 **Search optimal center.** When `cx` and `cy` are `NULL` (default), the
 center is optimised by multi-start Nelder-Mead — the brute-force above
 runs as the inner objective at each candidate center. Starts are the
-data centroid plus the centroid of each non-empty group. `parscale` is
-set to the data range. When `cx` and `cy` are supplied, they are used
-directly (no optimisation).
+data centroid plus the centroid of each non-empty group and the four
+bounding-box corners. `parscale` is set to the data range. Because the
+inner objective is piecewise-constant, Nelder-Mead can get stuck on a
+flat plateau around any of those starts without ever seeing a better
+region; if none of them reaches zero misclassification, a coarse
+`n_grid` x `n_grid` scan of the bounding box, padded by half the data
+range on each side (the best center is not always inside the convex hull
+of the points), locates a cell in a better region and one more
+Nelder-Mead run is seeded there. When `cx` and `cy` are supplied, they
+are used directly (no optimisation).
 
 ## Examples
 

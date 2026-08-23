@@ -19,7 +19,7 @@ and the result does not depend on how the groups are named."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">facpart</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,6 +71,7 @@ and the result does not depend on how the groups are named.</p>
 <span>  lwd <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  lty <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  .method <span class="op">=</span> <span class="st">"Nelder-Mead"</span>,</span>
+<span>  n_grid <span class="op">=</span> <span class="fl">7L</span>,</span>
 <span>  add <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -126,6 +127,14 @@ each center is optimised.</p></dd>
 <code>cx</code> and <code>cy</code> are both supplied.</p></dd>
 
 
+<dt id="arg-n-grid">n_grid<a class="anchor" aria-label="anchor" href="#arg-n-grid"></a></dt>
+<dd><p>Side length of the coarse fallback grid used when
+optimising a circle's center (<code>n_grid^2</code> extra evaluations of the
+cheap inner search per circle); only used when a circle's heuristic
+starts don't already reach zero misclassification, and ignored when
+<code>cx</code> and <code>cy</code> are both supplied. Default <code>7L</code>.</p></dd>
+
+
 <dt id="arg-add">add<a class="anchor" aria-label="anchor" href="#arg-add"></a></dt>
 <dd><p>If <code>TRUE</code> (default), add to existing plot; if <code>FALSE</code>, call
 <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> first.</p></dd>
@@ -161,7 +170,11 @@ large to enumerate, the function warns and falls back to the sequential
 path below. Optimised centers: circles are fitted sequentially, then all
 radii are refined by coordinate descent against the criterion above, so
 the result is optimal in each individual radius but not jointly in the
-centers.</p>
+centers. Each circle's own center search is multi-start Nelder-Mead
+(starts: that circle's inner-group centroid, the overall centroid, and
+the previous circle's center); as in <code><a href="radialCircle.html">radialCircle()</a></code>, a coarse grid
+fallback seeds one more run when none of those reaches zero
+misclassification for that circle.</p>
     </div>
 
     <div class="section level2">

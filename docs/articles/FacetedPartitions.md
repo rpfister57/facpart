@@ -2,13 +2,13 @@
 
 ## Facets, Configurations, and Partitions
 
-Facet Theory (FT) is a meta-approach to empirical research orignally
-proposed by Louis Guttman (1957, 1959, 1965) and since then developed by
-many others (Borg & Shye, 1995; Canter, 1985; Guttman & Greenbaum, 1998;
-Shye, 1998, 1999; Shye, Elizur & Hoffman, 1994). We strongly advise to
-acquire a basic understanding of FT before using this package, for
-example Shye (1998). An essential step in FT applications is
-Multidimensional Scaling (MDS) of similarities/distances; for
+Facet Theory (FT) is a scientific meta-approach to empirical research
+orignally proposed by Louis Guttman (1957, 1959, 1965) and since then
+developed by many others (Borg & Shye, 1995; Canter, 1985; Guttman &
+Greenbaum, 1998; Shye, 1998, 1999; Shye, Elizur & Hoffman, 1994). We
+strongly advise to acquire a basic understanding of FT before using this
+package, for example Shye (1998). An essential step in FT applications
+is Multidimensional Scaling (MDS) of similarities/distances; for
 introductions see Borg and Groenen (2005), and also refer to the
 vignettes of the *smacof* package, which should be installed when using
 *facpart*.
@@ -47,8 +47,8 @@ confirmed if these facet elements can be identified as geometrical
 patterns in an empirical space constructed from measurements of the
 items.
 
-The canonical approach is to submit the correlations among the items to
-a multidimensional scaling procedure. As a result we obtain
+The canonical approach starts with submitting the proximities among the
+items to a multidimensional scaling procedure. As a result we obtain
 2-dimensional (or higher dimensional) configurations of points (=
 items), with highly correlated items being close to each other, and
 items with small or negative correlations being farther apart. This
@@ -61,10 +61,10 @@ the theory must be modified.
 
 Methods such as factor analysis or cluster analysis have traditionally
 been used to find patterns in correlations. However, the patterns
-emphasized by FT are called *regional partitions*, and are difficult to
-detect by traditional methods, if at all.
+emphasized by FT are *regional partitions*, and are difficult to detect
+by traditional methods, if at all.
 
-Three types of partitions are commonly distinguished:
+Three types of regional partitions are commonly distinguished:
 
 - *Axial* partition: categories are separated by straight parallel lines
   (axes).
@@ -279,13 +279,6 @@ angularPartition(crd, grp, add = FALSE, fill = TRUE)
     #> $margin
     #> [1] 0.3707055
     #> 
-    #> $misclass
-    #> [1] 0
-    #> 
-    #> $misclass_points
-    #> [1] x     y     label
-    #> <0 rows> (or 0-length row.names)
-    #> 
     #> $sector
     #>  [1] 3 3 3 3 3 3 3 3 3 3 3 3 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 2 2
     #> 
@@ -302,6 +295,13 @@ angularPartition(crd, grp, add = FALSE, fill = TRUE)
     #> [19]  2.72260523  2.05795544  2.20873940  2.33541115  2.05475273  2.01442570
     #> [25] -2.35380896 -2.21628526 -1.98863070 -2.03203318 -1.08170854 -2.23652965
     #> [31] -1.90492012 -2.07545851 -2.26925484 -2.12004313 -2.33215861 -2.08743358
+    #> 
+    #> $misclass
+    #> [1] 0
+    #> 
+    #> $misclass_points
+    #> [1] x     y     label
+    #> <0 rows> (or 0-length row.names)
 
 The plot shows how the three facet elements ‘a’, ‘b’, and ‘c’ are
 separated by straight lines with a common origin in a wedge-like
@@ -420,8 +420,9 @@ Theoretically, we expect that these distinctions show up in specific
 patterns or *regional partitions* of a geometrical representation of the
 items. Thus, we perform a multidimensional scaling analysis of the
 correlation matrix. Since MDS takes distances as input data, we have to
-convert the correlation matrix (which are similarities) to distances.
-The conversion of correlations to distances follows the equation
+convert the correlation matrix (which are similarities) to
+dissimilarities (distances). The conversion of correlations to distances
+follows the equation
 ``` math
 d = \sqrt {1 - r}
 ```
@@ -631,7 +632,7 @@ radialEllipses(crd = gutt91_mds$conf,
     #> $majority
     #> [1] "infer"    "applFact" "applSTM"
 
-To summarize, the *basic workflow* is:
+To summarize, the *basic workflow* follows these steps:
 
 - Construct a *distance matrix D* of a set of n items, typically from a
   *correlation matrix K*. If necessary, convert K to D with
@@ -641,41 +642,145 @@ To summarize, the *basic workflow* is:
   \< n) labels corresponding to their facet elements. Store the
   assignment as a factor F with length = n (same item order as in D).
 
-- Apply non-metric multidimensional scaling to D, such as
+- Apply *non-metric multidimensional scaling* to D, such as
   `smacof::mds(D, ndim = 2, type = "ordinal")`. Check for fit and store
   the result object, for example as *out_mds*.
 
 - *Plot* the point configuration, for example `plot(out_mds)`.
 
-- Apply one of the `partition functions`; necessary arguments are `crd`
-  (the point coordinates) and `group` (the facet assignments).
+- Apply one of the *partition functions*; necessary arguments are `crd=`
+  (the point coordinates) and `group=` (the facet assignments).
 
 - Check the resulting plot. Check for regional fit and
-  misclassifications.
+  *misclassifications.*
 
-More details will be provided in the following discussions of the major
+More details will be provided in the following discussions of the
 partition functions.
 
 ## Axial Partitions
 
-An axial partition partitions the configuration into stripes separated
-by parallel lines. For example, two parallel lines divide the
-configuration into three stripes or bands, inducing an order along a
-dimension (a *simplex*). If each stripe contains exactly one type of
-facet element, we will have a perfect separation of facet elements. If
-we have two facets, and each facet yields an axial partition (with
-approximately orthogonal dimensions), the resulting pattern is called a
-*duplex*.
+An axial partition cuts the configuration into stripes separated by
+parallel lines. For example, two parallel lines divide the configuration
+into three stripes or bands, inducing an order along a dimension (a
+*simplex*). If each stripe contains exactly one type of facet element,
+we will have a perfect separation of facet elements. If we have two
+facets, and each facet yields an axial partition with approximately
+orthogonal lines, the resulting pattern is called a *duplex*.
 
 In the simple case of only two facet elements, a single line suffices to
 separate the two elements. This is basically equivalent to linear
 discriminant analysis, with the point coordinates serving as the
 independent and the facet elements as the dependent grouping variable.
 The partitioning line will then be orthogonal to the discriminant
-function.
+function. The
+[`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md)
+function basically does this: find the discriminant function and plot
+the perpendicular separation line. Because this is just a special case
+of an axial partition with any number of facet elements, we will not
+discuss this further.
 
-As an example, we use a study about student emotions in learning
-contexts.
+The
+[`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md)
+function searches for axial partitions of any number of facet elements.
+However, note that with the number of facet elements $`k \ge 5`$, the
+amount of time to find a solution will increase exponentially; with
+$`k < 5`$ the solution will be found instantaneously.
+
+The package includes the *BIS1* data set. BIS refers to ‘Berlin Model of
+Intelligence Structure’, which is a two-faceted model of intelligence
+tests (Pfister & Jäger, 1992; Süß, 2015); the data are from Pfister and
+Beauducel (1993). The BIS1 data is a list with two components: (1)
+Bis1_cor = a correlation matrix among 12 intelligence tests, (2)
+Bis1_facets = a data frame containing the two-faceted definitions of the
+12 tests. Facet one refers to the cognitive *operation* involved
+(*Operation*) and distinguishes four types (one-letter abbreviation in
+parantheses): Speed of processing (B), short-term memory (M), creativity
+(E), and reasoning (K). Facet two refers to the task *content* or symbol
+system involved (*Inhalt*), distinguishing three types: figural (F),
+verbal (V), and numeric (N). Thus, each of the 12 variables is a
+combination of operation and content; for example, BF is a test
+requiring the speeded processing of figural information.
+
+First, we extract the correlation matrix and convert it to distances.
+Then we perform a ordinal MDS on the distances.
+
+``` r
+
+Bis1_cor <- BIS1$Bis1_cor
+Bis1_D <- smacof::sim2diss(s = Bis1_cor, method = "corr", to.dist = TRUE)
+
+Bis1_mds <- smacof::mds(delta = Bis1_D, type = "ordinal")
+Bis1_mds
+#> 
+#> Call:
+#> smacof::mds(delta = Bis1_D, type = "ordinal")
+#> 
+#> Model: Symmetric SMACOF 
+#> Number of objects: 12 
+#> Stress-1 value: 0.096 
+#> Number of iterations: 27
+plot(Bis1_mds, asp = 1)
+```
+
+![](FacetedPartitions_files/figure-html/Bis1cor-1.png)
+
+On first view, we observe that the 12 variables are mainly clustered
+according to the operation facet. We impose an axial partitioning on the
+operation facet; the assignment of facet elements to variables is in the
+Bis1_facets data frame.
+
+``` r
+
+Bis1_facets <- BIS1$Bis1_facets
+
+plot(Bis1_mds, asp = 1)
+Bis1_op <- axialLines(crd = Bis1_mds$conf, 
+                      group = Bis1_facets$Operation, fill = TRUE)
+Bis1_op
+#> $slope
+#> [1] 0.3249197
+#> 
+#> $intercepts
+#> [1] -0.36520021 -0.03009699  0.25221398
+#> 
+#> $angle
+#> [1] 1.884956
+#> 
+#> $margin
+#> [1] 0.04643439
+#> 
+#> $misclass
+#> [1] 0
+#> 
+#> $misclass_points
+#> [1] x     y     label
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $sector
+#>  [1] 3 3 3 1 1 1 4 4 4 2 2 2
+#> 
+#> $majority
+#> [1] "M" "K" "B" "E"
+
+# add perpendicular line
+slope_perp <- -1/Bis1_op$slope
+abline(a = 0, b = slope_perp, col = "red", lwd = 2)
+```
+
+![](FacetedPartitions_files/figure-html/Bis1axial-1.png)
+
+The separation into parallel regions is perfect. Approximately, from
+upper left to lower right, the order is E, B, K, M. The result object
+from axialLines() confirms that the number of misclassification is zero,
+that is, all variables belonging to one facet element are located in the
+same region, and no other facet element is located in another region. It
+also gives us the slope (just one, because the lines are parallel) and
+the three intercepts of the separating lines. We can add a line
+perpendicular to the parallels as a dimension representing the order of
+the operation facet elements. We draw this line (its slope is simply the
+negative inverse) to facilitate interpretation. Projecting the variables
+onto that line, we see that this dimension has the EV (verbal
+creativity) test and the MF (figural memory) as opposing ends.
 
 ## Radial Partitions
 
@@ -756,9 +861,168 @@ highlightMisclass(circlesGutt65_out)
 Exactly one point is misclassified, and we can highlight misclassified
 points with the highlightMisclass() function.
 
+### Elliptical Partions
+
+Elliptical partitions can be viewed as generalizations of circular
+partitions. Whereas a circle is defined by just two parameters (center,
+radius), an ellipse is defined by four parameters: a center, two radii a
+and b, perpendicular to the main axis of the ellipse, and an angle
+indicating the rotation angle of the main axis. The function
+[`radialEllipses()`](https://rpfister57.github.io/facpart/reference/radialEllipses.md)
+follows the same constraints as the circel function, that is, ellipses
+separating the facet elements are required to be nested, but not
+necessarily to share the same center (or other parameters). The
+additional parameters provide additional degrees of freedom to search
+for an optimal partition, and thus elllipses will usually yield a better
+fit than circles.
+
+As an example we take the BIS1 data (see the section about Axial
+Partitions). We plot the MDS-configuration, showing the two-faceted
+labels (operation facet: B, K, M, E; content facet: N, F, V). We saw
+that the operation facet can be perfectly partitioned by parallel lines
+(axial partition). Here, we try to separate the content facet (Inhalt)
+by elliptical regions.
+
+``` r
+
+plot(Bis1_mds, asp = 1)
+Bis1_in <- radialEllipses(crd = Bis1_mds$conf, 
+                          group = Bis1_facets$Inhalt, 
+                          fill = TRUE)
+Bis1_in$misclass
+#> $n
+#> [1] 2
+#> 
+#> $indices
+#> [1]  2 11
+highlightMisclass(Bis1_in)
+```
+
+![](FacetedPartitions_files/figure-html/Bis1ellipses-1.png)
+
+We obtain two mislocations (out of 12 variables): BV, and KV. Otherwise,
+the separation into elliptical regions seems successful, with the N
+elements (numerical tests) in the central region, the F elements
+(figural test) in the middle region, and the V elements (verbal test) in
+the periphery.
+
+Just by visual inspection the BV test is clearly mislocated within the
+figural region, close to BF. However, the KV test is located very close
+to the border of the F-region, and it seems that a minimal movement of
+the enclosing elliptical line would position the KV point just outside
+the line, thus reducing the number of misclassification by one.
+
+This reduction can actually be achieved by increasing the `n_grid`
+argument to `n_grid = 15` (default is 7). As all partition functions in
+the facpart package, radialEllipses() relies on a brute force search to
+find the optimal parameters. The search space can be more or less
+fine-grained, and if it is too coarse the search algorithm might get
+stuck in a non-optimal solution.
+
+``` r
+
+plot(Bis1_mds, asp = 1)
+
+Bis1_in2 <- radialEllipses(crd = Bis1_mds$conf, 
+                          group = Bis1_facets$Inhalt, 
+                          n_grid = 15,
+                          fill = TRUE)
+Bis1_in2$misclass
+#> $n
+#> [1] 1
+#> 
+#> $indices
+#> [1] 2
+highlightMisclass(Bis1_in2)
+```
+
+![](FacetedPartitions_files/figure-html/Bis1ellipses_2-1.png)
+
+Increasing the n_grid argument to 15 yields the optimal separation of
+facet elements: the ellipse has been slightly moved to the left,
+locating the KV test correctly in the outer region (in fact, just the
+center of the ellipse has changed, all other parameters a, b, and angle,
+remain unchanged). Increasing the search space comes with a cost, that
+is, the time needed to find a solution, but usually the cost in
+negligible. The search time essentially depends on the number of points
+n and the number of groups k (facet elements); if n exceeds 40 and/or k
+exceeds 5, time will increase noticeable.
+
+## Angular Partitions
+
+In a study about well-being, Levy (1976) asked respondents (US sample)
+about the satisfaction with different aspects of life. The data set
+*Life* contains the correlation matrix of fifteen items, asking
+respondents how satisfied they are with their housing situation, with
+the city, with friendships, etc. (data are from Borg & Groenen, 2005).
+Levy (1976) defined a 2-faceted mapping sentence; here, we focus on the
+facet *Area of Life* with eight elements.
+
+The correlations are in *Life\$life*, and the facet assigments in
+*Life\$life_facets*. The eight areas are “education”, “economy”,
+“residence” ,“sparetime” ,“family”, “health”, “work”, and “general”. As
+usual, we convert the correlations to distances and perform an ordinal
+MDS on the distances. We then plot the two-dimensional configuration,
+with labels indicating the respective area of life.
+
+``` r
+
+data(Life)
+
+life_facets <- Life$life_facets
+
+life_D <- smacof::sim2diss(Life$life, method = "corr")
+life_mds <- smacof::mds(delta = life_D, ndim = 2, type = "ordinal")
+life_mds
+#> 
+#> Call:
+#> smacof::mds(delta = life_D, ndim = 2, type = "ordinal")
+#> 
+#> Model: Symmetric SMACOF 
+#> Number of objects: 15 
+#> Stress-1 value: 0.114 
+#> Number of iterations: 34
+```
+
+The Stress-value of .114 indicates good fit in two dimensions. We apply
+the
+[`angularPartition()`](https://rpfister57.github.io/facpart/reference/angularPartition.md)
+function.
+
+``` r
+
+plot(x = life_mds$conf, pch = 19,
+     xlim = c(-1, 1.5), ylim = c(-1, 1), asp = 1)
+text(x = life_mds$conf, labels = life_facets$Area, 
+     cex = 0.7, pos = 4)
+abline(h = 0, lty = 2); abline(v = 0, lty = 2)
+
+life_angular <- angularPartition(crd = life_mds$conf,
+                                 group = life_facets$Area,
+                                 fill = TRUE)
+```
+
+![](FacetedPartitions_files/figure-html/LifeAreasAngular-1.png)
+
+``` r
+
+life_angular$misclass
+#> [1] 0
+```
+
+The separation into eight angular partitions succeeds without error,
+though some items are almost located on the separating lines. With k = 8
+facet elements, the time it takes to find the separating lines is
+noticeable; a system time measurement yields 3.013 seconds on a MacBook
+Pro (M4) machine, and it might take substantially longer on older
+machines.
+
 ## References
 
 Borg, I., & Shye, S. (1995). Facet theory: Form and content. Sage.
+
+Borg, I., & Groenen, P. J. F. (2005) (2nd ed.). Modern multidimensional
+scaling. Theory and applications. New York: Springer.
 
 Canter, D. (Ed.). (1985). Facet theory: Approaches to social research.
 Springer.
@@ -781,6 +1045,9 @@ tests. Intelligence, 15(1), 79–103.
 Guttman, R., & Greenbaum, C. W. (1998). Facet theory: Its development
 and current status. European Psychologist, 3(1), 13–36.
 <https://doi.org/10.1027/1016-9040.3.1.13>
+
+Levy, S. (1976). Use of the mapping sentence for coordinating theory and
+research: A cross-cultural example. Quality and Quantity, 10, 117-125.
 
 Shye, S. (1998). Modern facet theory: Content design and measurement in
 behavioral research. European Journal of Psychological Assessment,

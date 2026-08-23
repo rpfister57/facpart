@@ -2,6 +2,10 @@
 
 ## All functions
 
+- [`BIS1`](https://rpfister57.github.io/facpart/reference/BIS1.md) : BIS
+  Intelligence Data
+- [`Life`](https://rpfister57.github.io/facpart/reference/Life.md) :
+  Life Satisfaction Data
 - [`angularPartition()`](https://rpfister57.github.io/facpart/reference/angularPartition.md)
   : Angular k-way (wedge) partition of a 2D configuration
 - [`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md)
