@@ -94,10 +94,12 @@ radialCircles(
 
 ## Value
 
-If `output = TRUE`, a list with `cx`, `cy` (`numeric[k-1]`), `radii`
-(innermost to outermost), `misclass`, `misclass_points` (data frame with
-columns `x`, `y`, `label` for each misclassified point), `sector`
-(`integer[n]`), and `majority` (`character[k]`).
+If `output = TRUE`, a list with `partition` (`"circle"`), `cx`, `cy`
+(`numeric[k-1]`), `radii` (innermost to outermost), `sector`
+(`integer[n]`), `majority` (`character[k]`), `pcoords` (the input
+`crd`), `pgroup` (`group` coerced to factor), `misclass`, and
+`misclass_points` (data frame with columns `x`, `y`, `label` for each
+misclassified point).
 
 ## Details
 

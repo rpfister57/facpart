@@ -11,7 +11,7 @@ satisfaction, and the corresponding assignments to two facets."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">facpart</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,6 +102,9 @@ and research: A cross-cultural example. Quality and Quantity, 10, 117-125.</p>
 <span class="r-in"><span>  <span class="fu"><a href="angularPartition.html">angularPartition</a></span><span class="op">(</span>crd <span class="op">=</span> <span class="va">life_mds</span><span class="op">$</span><span class="va">conf</span>,</span></span>
 <span class="r-in"><span>                   group <span class="op">=</span> <span class="va">life_facets</span><span class="op">$</span><span class="va">Area</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="Life-1.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $partition</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "angular"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $cuts</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Housing     Savings     UseEduc         Job      Health      Family </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  -2.9599655  -2.0549478  -1.5019697  -0.8945297   0.3848351   1.5490614 </span>
@@ -128,6 +131,30 @@ and research: A cross-cultural example. Quality and Quantity, 10, 117-125.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   -1.5003670    1.5680924   -0.2886923   -2.8570816   -2.4232082    2.0299842 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Marriage       Family  LifeGeneral </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    1.0583625    1.5300305    2.1014788 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $pcoords</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       D1          D2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> City         -0.70907729  0.08762249</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Neighborhood -0.81271058 -0.06556847</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Housing      -0.46280006 -0.05338814</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> LifeUS       -0.77719120  0.36299602</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AmountEduc    0.12971771 -0.72228141</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> UseEduc       0.27034129 -0.83981321</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Job           0.21946133 -0.08024392</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> SpareTime     0.21430732  0.18745716</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Health        1.32529384 -0.33010151</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> StandLiving  -0.11547031 -0.09629352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Savings      -0.07721218 -0.25440723</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Friendships  -0.11986273  0.67483360</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Marriage      0.52949771  0.56118126</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Family        0.23274014  0.46433972</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> LifeGeneral   0.15296502  0.10366715</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $pgroup</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] residence residence residence residence education education work     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] sparetime health    economy   economy   sparetime family    family   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15] general  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Levels: education economy residence sparetime family health work general</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $misclass</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>

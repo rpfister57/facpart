@@ -11,7 +11,7 @@ are searched to minimise empirical misclassification:"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">facpart</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -110,15 +110,18 @@ extra candidate.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>If <code>output = TRUE</code>, a list with:</p><ul><li><p><code>slope</code> — shared slope of the lines (<code>Inf</code> if vertical)</p></li>
+    <p>If <code>output = TRUE</code>, a list with:</p><ul><li><p><code>partition</code> — <code>"axial"</code></p></li>
+<li><p><code>slope</code> — shared slope of the lines (<code>Inf</code> if vertical)</p></li>
 <li><p><code>intercepts</code> — <code>numeric[k-1]</code>, y-intercepts (or x-positions if vertical)</p></li>
 <li><p><code>angle</code> — winning direction in radians</p></li>
 <li><p><code>margin</code> — minimum perpendicular distance from the cut line(s) to the
 nearest point</p></li>
-<li><p><code>misclass</code> — total misclassified points</p></li>
-<li><p><code>misclass_points</code> — data frame (<code>x</code>, <code>y</code>, <code>label</code>) of misclassified points</p></li>
 <li><p><code>sector</code> — <code>integer[n]</code>, sector <code>1..k</code> per point in input order</p></li>
 <li><p><code>majority</code> — <code>character[k]</code>, majority group per sector</p></li>
+<li><p><code>pcoords</code> — the input <code>crd</code></p></li>
+<li><p><code>pgroup</code> — <code>group</code> coerced to factor</p></li>
+<li><p><code>misclass</code> — total misclassified points</p></li>
+<li><p><code>misclass_points</code> — data frame (<code>x</code>, <code>y</code>, <code>label</code>) of misclassified points</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -164,6 +167,9 @@ empirically optimal parallel-line partition.</p></div>
 <span class="r-in"><span><span class="va">grp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="fl">10</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"b"</span>, <span class="fl">10</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"c"</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">axialLines</span><span class="op">(</span><span class="va">crd</span>, <span class="va">grp</span>, fill <span class="op">=</span> <span class="cn">TRUE</span>, add <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="axialLines-1.png" alt="" width="700" height="433"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $partition</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "axial"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $slope</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -4.70463</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -176,6 +182,49 @@ empirically optimal parallel-line partition.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $margin</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.002606886</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $sector</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 1 1 1 2 1 1 1 2 1 1 3 3 2 1 2 2 2 1 2 2 3 3 3 3 3 3 3 3 3 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $majority</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b" "c"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $pcoords</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              [,1]        [,2]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1,] -1.62645381  1.51178117</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [2,] -0.81635668  0.38984324</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [3,] -1.83562861 -0.62124058</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4,]  0.59528080 -2.21469989</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5,] -0.67049223  1.12493092</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6,] -1.82046838 -0.04493361</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7,] -0.51257095 -0.01619026</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8,] -0.26167529  0.94383621</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9,] -0.42421865  0.82122120</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10,] -1.30538839  0.59390132</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11,]  0.91897737  1.35867955</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [12,]  0.78213630 -0.10278773</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13,]  0.07456498  0.38767161</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [14,] -1.98935170 -0.05380504</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15,]  0.61982575 -1.37705956</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16,] -0.05612874 -0.41499456</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [17,] -0.15579551 -0.39428995</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [18,] -1.47075238 -0.05931340</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [19,] -0.47815006  1.10002537</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [20,]  0.41794156  0.76317575</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [21,]  0.83547640  0.39810588</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [22,]  0.74663832 -0.61202639</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [23,]  1.69696338  0.34111969</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [24,]  1.55666320 -1.12936310</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [25,]  0.31124431  1.43302370</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [26,]  0.29250484  1.98039990</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [27,]  1.36458196 -0.36722148</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [28,]  1.76853292 -1.04413463</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [29,]  0.88765379  0.56971963</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [30,]  1.88110773 -0.13505460</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $pgroup</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] a a a a a a a a a a b b b b b b b b b b c c c c c c c c c c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Levels: a b c</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $misclass</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -187,12 +236,6 @@ empirically optimal parallel-line partition.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.7821363 -0.10278773     b</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 -1.9893517 -0.05380504     b</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 -1.4707524 -0.05931340     b</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $sector</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 1 1 1 2 1 1 1 2 1 1 3 3 2 1 2 2 2 1 2 2 3 3 3 3 3 3 3 3 3 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $majority</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b" "c"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

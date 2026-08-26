@@ -26,6 +26,8 @@
   Guttman's weak monotonicity coefficient mu2
 - [`mu2df()`](https://rpfister57.github.io/facpart/reference/mu2df.md) :
   Matrix of mu2 coefficients for a data frame
+- [`plotPartition()`](https://rpfister57.github.io/facpart/reference/plotPartition.md)
+  : Replot a stored partition result
 - [`radialCircle()`](https://rpfister57.github.io/facpart/reference/radialCircle.md)
   : Binary radial partition (one separating circle)
 - [`radialCircles()`](https://rpfister57.github.io/facpart/reference/radialCircles.md)

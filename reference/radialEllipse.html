@@ -29,7 +29,7 @@ seeded from the best cell found."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">facpart</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -138,10 +138,11 @@ zero misclassification. Default <code>7L</code>.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>If <code>output = TRUE</code>, a list with <code>cx</code>, <code>cy</code>, <code>a</code>, <code>b</code>, <code>angle</code>
-(radians), <code>misclass</code> (list with <code>n</code> and <code>indices</code>), <code>misclass_points</code>
-(data frame with columns <code>x</code>, <code>y</code>, <code>label</code> for each misclassified point),
-<code>sector</code>, and <code>majority</code>.</p>
+    <p>If <code>output = TRUE</code>, a list with <code>partition</code> (<code>"ellipse"</code>), <code>cx</code>,
+<code>cy</code>, <code>a</code>, <code>b</code>, <code>angle</code> (radians), <code>sector</code>, <code>majority</code>, <code>pcoords</code> (the
+input <code>crd</code>), <code>pgroup</code> (<code>group</code> coerced to factor), <code>misclass</code> (list
+with <code>n</code> and <code>indices</code>), and <code>misclass_points</code> (data frame with columns
+<code>x</code>, <code>y</code>, <code>label</code> for each misclassified point).</p>
     </div>
 
     <div class="section level2">

@@ -17,7 +17,7 @@ New York: Springer.)"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">facpart</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,14 +124,17 @@ starts don't already reach zero misclassification. Default <code>7L</code>.</p><
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>If <code>output = TRUE</code>, a list with:</p><ul><li><p><code>cuts</code> — <code>numeric[k]</code>, cut angles of rays (in radians).</p></li>
+    <p>If <code>output = TRUE</code>, a list with:</p><ul><li><p><code>partition</code> — <code>"angular"</code></p></li>
+<li><p><code>cuts</code> — <code>numeric[k]</code>, cut angles of rays (in radians).</p></li>
 <li><p><code>margin</code> — minimum distance from any cut ray to nearest point.</p></li>
-<li><p><code>misclass</code> — integer, number of misclassified points.</p></li>
-<li><p><code>misclass_points</code> — data frame (<code>x</code>, <code>y</code>, <code>label</code>) of misclassified points</p></li>
 <li><p><code>sector</code> — <code>integer[n]</code>, assigned sector <code>1..k</code> per point</p></li>
 <li><p><code>majority</code> — <code>character[k]</code>, majority group per sector</p></li>
 <li><p><code>center</code> — <code>c(cx, cy)</code> center coordinates of rays</p></li>
 <li><p><code>pt_angles</code> — angles (in radians) of points from center</p></li>
+<li><p><code>pcoords</code> — the input <code>crd</code></p></li>
+<li><p><code>pgroup</code> — <code>group</code> coerced to factor</p></li>
+<li><p><code>misclass</code> — integer, number of misclassified points.</p></li>
+<li><p><code>misclass_points</code> — data frame (<code>x</code>, <code>y</code>, <code>label</code>) of misclassified points</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

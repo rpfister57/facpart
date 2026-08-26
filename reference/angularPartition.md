@@ -79,14 +79,11 @@ angularPartition(
 
 If `output = TRUE`, a list with:
 
+- `partition` — `"angular"`
+
 - `cuts` — `numeric[k]`, cut angles of rays (in radians).
 
 - `margin` — minimum distance from any cut ray to nearest point.
-
-- `misclass` — integer, number of misclassified points.
-
-- `misclass_points` — data frame (`x`, `y`, `label`) of misclassified
-  points
 
 - `sector` — `integer[n]`, assigned sector `1..k` per point
 
@@ -95,6 +92,15 @@ If `output = TRUE`, a list with:
 - `center` — `c(cx, cy)` center coordinates of rays
 
 - `pt_angles` — angles (in radians) of points from center
+
+- `pcoords` — the input `crd`
+
+- `pgroup` — `group` coerced to factor
+
+- `misclass` — integer, number of misclassified points.
+
+- `misclass_points` — data frame (`x`, `y`, `label`) of misclassified
+  points
 
 ## Details
 

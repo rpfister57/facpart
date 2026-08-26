@@ -67,6 +67,9 @@ text(x = life_mds$conf, labels = life_facets$Area,
   angularPartition(crd = life_mds$conf,
                    group = life_facets$Area)
 
+#> $partition
+#> [1] "angular"
+#> 
 #> $cuts
 #>     Housing     Savings     UseEduc         Job      Health      Family 
 #>  -2.9599655  -2.0549478  -1.5019697  -0.8945297   0.3848351   1.5490614 
@@ -93,6 +96,30 @@ text(x = life_mds$conf, labels = life_facets$Area,
 #>   -1.5003670    1.5680924   -0.2886923   -2.8570816   -2.4232082    2.0299842 
 #>     Marriage       Family  LifeGeneral 
 #>    1.0583625    1.5300305    2.1014788 
+#> 
+#> $pcoords
+#>                       D1          D2
+#> City         -0.70907729  0.08762249
+#> Neighborhood -0.81271058 -0.06556847
+#> Housing      -0.46280006 -0.05338814
+#> LifeUS       -0.77719120  0.36299602
+#> AmountEduc    0.12971771 -0.72228141
+#> UseEduc       0.27034129 -0.83981321
+#> Job           0.21946133 -0.08024392
+#> SpareTime     0.21430732  0.18745716
+#> Health        1.32529384 -0.33010151
+#> StandLiving  -0.11547031 -0.09629352
+#> Savings      -0.07721218 -0.25440723
+#> Friendships  -0.11986273  0.67483360
+#> Marriage      0.52949771  0.56118126
+#> Family        0.23274014  0.46433972
+#> LifeGeneral   0.15296502  0.10366715
+#> 
+#> $pgroup
+#>  [1] residence residence residence residence education education work     
+#>  [8] sparetime health    economy   economy   sparetime family    family   
+#> [15] general  
+#> Levels: education economy residence sparetime family health work general
 #> 
 #> $misclass
 #> [1] 0

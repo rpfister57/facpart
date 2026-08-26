@@ -78,10 +78,11 @@ radialEllipse(
 
 ## Value
 
-If `output = TRUE`, a list with `cx`, `cy`, `a`, `b`, `angle` (radians),
-`misclass` (list with `n` and `indices`), `misclass_points` (data frame
-with columns `x`, `y`, `label` for each misclassified point), `sector`,
-and `majority`.
+If `output = TRUE`, a list with `partition` (`"ellipse"`), `cx`, `cy`,
+`a`, `b`, `angle` (radians), `sector`, `majority`, `pcoords` (the input
+`crd`), `pgroup` (`group` coerced to factor), `misclass` (list with `n`
+and `indices`), and `misclass_points` (data frame with columns `x`, `y`,
+`label` for each misclassified point).
 
 ## Examples
 

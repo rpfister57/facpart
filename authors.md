@@ -10,13 +10,13 @@
 ## Citation
 
 Pfister H (2026). *facpart: Facet Theory Partitioning of 2D
-Configurations*. R package version 0.1.3,
+Configurations*. R package version 0.1.4,
 <https://rpfister57.github.io/facpart/>.
 
     @Manual{,
       title = {facpart: Facet Theory Partitioning of 2D Configurations},
       author = {Hans-Ruediger Pfister},
       year = {2026},
-      note = {R package version 0.1.3},
+      note = {R package version 0.1.4},
       url = {https://rpfister57.github.io/facpart/},
     }
