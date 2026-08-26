@@ -12,11 +12,19 @@ Three types of common partion schemes are supported:
 
 Plus some utilities: `ellipseInConfig()`, `inoutEllipse()`, `mu2()`
 
+This package complements similar software for facet partitioning: The R smacof package (Mair, Groenen, & De Leeuw, 2022) has partition functions based on svm; the stand-alone programs HUDAP for Windows (Amar, 2001; Amar & Toledano, 2001), and FSSA for Windows (https://raz-zeevy.github.io/fssa/#) (https://doritalt80.wixsite.com/ftas/copy-of-join-us) provide the same functionality, though outside the R ecosystem.
+
 
 ## References
 
+Amar, R. (2001). Mathematical formulation of regionality in SSA and POSAC/MPOSAC. In: Elizur, D. (ed.). Facet theory: Integrating theory construction with data analysis. Prague: MATFYZPRESS (pp. 63-74).
+
+Amar, R., & Toledano, S. (2001) (2nd ed.). HUDAP Manual. Jerusalem: The Hebrew University of Jerusalem, Computation Authority.
+
 Guttman, R., & Greenbaum, C. W. (1998). Facet theory: Its development 
    and current status. European Psychologist, 3(1), 13-36.
+
+Mair, P., Groenen, P., & De Leeuw, J. (2022). More on multidimensional scaling and unfolding in R: smacof version 2. *Journal of Statistical Software, 102*(10), 1-47. doi:10.18637/jss.v102.i10
 
 Shye, S. (2014). Faceted Smallest Space Analysis (FSSA). In A. Michalos (Ed.), 
    Encyclopedia of quality of life research (pp. 2129-2133). 
@@ -66,4 +74,4 @@ All other functionality uses base R. The package works well with the `smacof` pa
 
 MIT
 
-see also: rpfister57.github.io/facpart
+see also the article at: rpfister57.github.io/facpart
