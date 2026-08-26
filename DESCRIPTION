@@ -1,6 +1,6 @@
 Package: facpart
 Title: Facet Theory Partitioning of 2D Configurations
-Version: 0.1.3
+Version: 0.1.4
 Date: 2026-08-12
 Authors@R:
     c(person("Hans-Ruediger", "Pfister", email = "rpfister57@gmail.com",
