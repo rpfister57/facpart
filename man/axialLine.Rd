@@ -38,9 +38,11 @@ axialLine(
 \code{plot()} first.}
 }
 \value{
-If \code{output = TRUE}, a list with \code{slope}, \code{intercept}, \code{misclass}
-(integer), \code{misclass_points} (data frame with columns \code{x}, \code{y}, \code{label}
-for each misclassified point), and \code{predicted} (LDA-predicted class factor).
+If \code{output = TRUE}, a list with \code{partition} (\code{"axial"}), \code{slope},
+\code{intercept}, \code{predicted} (LDA-predicted class factor), \code{pcoords} (the
+input \code{crd}), \code{pgroup} (\code{group} coerced to factor), \code{misclass}
+(integer), and \code{misclass_points} (data frame with columns \code{x}, \code{y},
+\code{label} for each misclassified point).
 }
 \description{
 Fits a linear discriminant analysis to two-group 2D data and draws the

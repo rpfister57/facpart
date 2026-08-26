@@ -49,10 +49,11 @@ starts don't already reach zero misclassification. Default \code{7L}.}
 \code{plot()} first.}
 }
 \value{
-If \code{output = TRUE}, a list with \code{center}, \code{radius}, \code{misclass}
-(integer), \code{misclass_points} (data frame with columns \code{x}, \code{y}, \code{label}
-for each misclassified point), \code{sector} (\code{1} inside / \code{2} outside per
-point), and \code{majority} (\code{character[2]}).
+If \code{output = TRUE}, a list with \code{partition} (\code{"circle"}), \code{center},
+\code{radius}, \code{sector} (\code{1} inside / \code{2} outside per point), \code{majority}
+(\code{character[2]}), \code{pcoords} (the input \code{crd}), \code{pgroup} (\code{group} coerced
+to factor), \code{misclass} (integer), and \code{misclass_points} (data frame with
+columns \code{x}, \code{y}, \code{label} for each misclassified point).
 }
 \description{
 Finds the circle minimising misclassification between two groups of 2D

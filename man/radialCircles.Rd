@@ -58,10 +58,12 @@ starts don't already reach zero misclassification, and ignored when
 \code{plot()} first.}
 }
 \value{
-If \code{output = TRUE}, a list with \code{cx}, \code{cy} (\code{numeric[k-1]}),
-\code{radii} (innermost to outermost), \code{misclass}, \code{misclass_points} (data
-frame with columns \code{x}, \code{y}, \code{label} for each misclassified point),
-\code{sector} (\code{integer[n]}), and \code{majority} (\code{character[k]}).
+If \code{output = TRUE}, a list with \code{partition} (\code{"circle"}), \code{cx},
+\code{cy} (\code{numeric[k-1]}), \code{radii} (innermost to outermost), \code{sector}
+(\code{integer[n]}), \code{majority} (\code{character[k]}), \code{pcoords} (the input
+\code{crd}), \code{pgroup} (\code{group} coerced to factor), \code{misclass}, and
+\code{misclass_points} (data frame with columns \code{x}, \code{y}, \code{label} for each
+misclassified point).
 }
 \description{
 Generalises \code{\link[=radialCircle]{radialCircle()}} to \code{k >= 2} groups using \code{k-1} nested

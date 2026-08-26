@@ -383,3 +383,272 @@ highlightMisclass <- function(x,
     graphics::points(x$x, x$y, col = col, pch = pch, cex = cex, lwd = lwd)
     invisible(NULL)
 }
+
+
+#' @noRd
+# Default fill palette when the caller doesn't supply `cols`: the binary
+# c("steelblue", "tomato") pair used by axialLine()/radialCircle()/
+# radialEllipse(), or hcl.colors(k, "Pastel 1") used by axialLines()/
+# radialCircles()/radialEllipses()/angularPartition() for k > 2. Shared so
+# plotPartition() reproduces whichever palette the originating call would
+# have used by default.
+.default_fill_cols <- function(k) {
+    if (k == 2L) c("steelblue", "tomato") else hcl.colors(k, palette = "Pastel 1")
+}
+
+
+#' @noRd
+# Redraw the k-1 nested circles of a radialCircle()/radialCircles() result.
+# radialCircle() (binary) stores a single `center`/`radius` pair rather than
+# the `cx`/`cy`/`radii` vectors radialCircles() stores; both are normalised
+# here to vectors of length k - 1 before drawing. Fill logic mirrors
+# radialCircles()'s own (radial-circle.R): even-odd polypath rings from the
+# outside in, with the innermost disc drawn directly.
+.plot_circle_partition <- function(Pout, fill, cols, col, lwd, lty) {
+    if (!is.null(Pout$radii)) {
+        cx_vec <- Pout$cx; cy_vec <- Pout$cy; radii_vec <- Pout$radii
+    } else {
+        cx_vec <- Pout$center[1]; cy_vec <- Pout$center[2]; radii_vec <- Pout$radius
+    }
+    n <- length(radii_vec)
+    k <- n + 1L
+
+    if (fill) {
+        if (is.null(cols)) cols <- .default_fill_cols(k)
+        usr    <- par("usr")
+        n_c    <- 200L
+        rect_x <- c(usr[1], usr[2], usr[2], usr[1])
+        rect_y <- c(usr[3], usr[3], usr[4], usr[4])
+
+        outer_c <- .circle_pts(cx_vec[n], cy_vec[n], radii_vec[n], n_c)
+        polypath(x = c(rect_x, NA, outer_c[, 1]), y = c(rect_y, NA, outer_c[, 2]),
+                 rule = "evenodd", col = adjustcolor(cols[k], alpha.f = 0.15), border = NA)
+
+        if (n >= 2L) {
+            for (s in n:2L) {
+                outer_c <- .circle_pts(cx_vec[s],      cy_vec[s],      radii_vec[s],      n_c)
+                inner_c <- .circle_pts(cx_vec[s - 1L], cy_vec[s - 1L], radii_vec[s - 1L], n_c)
+                polypath(x = c(outer_c[, 1], NA, inner_c[, 1]),
+                         y = c(outer_c[, 2], NA, inner_c[, 2]),
+                         rule = "evenodd", col = adjustcolor(cols[s], alpha.f = 0.15), border = NA)
+            }
+        }
+
+        draw.circle(cx_vec[1L], cy_vec[1L], radii_vec[1L],
+                    col = adjustcolor(cols[1L], alpha.f = 0.15), border = NA)
+    }
+
+    for (s in seq_len(n))
+        draw.circle(cx_vec[s], cy_vec[s], radii_vec[s], border = col, lwd = lwd, lty = lty)
+}
+
+
+#' @noRd
+# Redraw the k-1 nested ellipses of a radialEllipse()/radialEllipses()
+# result. Both functions already share the same field names (`cx`, `cy`,
+# `a`, `b`, `angle`) -- scalars for radialEllipse(), length-(k-1) vectors for
+# radialEllipses() -- so no per-caller branching is needed here, unlike the
+# circle case above. Fill logic mirrors radialEllipses()'s own
+# (radial-ellipse.R).
+.plot_ellipse_partition <- function(Pout, fill, cols, col, lwd, lty) {
+    cx_vec    <- Pout$cx
+    cy_vec    <- Pout$cy
+    a_vec     <- Pout$a
+    b_vec     <- Pout$b
+    angle_vec <- Pout$angle
+    n <- length(cx_vec)
+    k <- n + 1L
+
+    if (fill) {
+        if (is.null(cols)) cols <- .default_fill_cols(k)
+        usr    <- par("usr")
+        rect_x <- c(usr[1], usr[2], usr[2], usr[1])
+        rect_y <- c(usr[3], usr[3], usr[4], usr[4])
+
+        outer_bnd <- .ellipse_pts(cx_vec[n], cy_vec[n], a_vec[n], b_vec[n], angle_vec[n])
+        polypath(x = c(rect_x, NA, outer_bnd[, 1]), y = c(rect_y, NA, outer_bnd[, 2]),
+                 rule = "evenodd", col = adjustcolor(cols[k], alpha.f = 0.15), border = NA)
+
+        if (n >= 2L) {
+            for (s in n:2L) {
+                outer_bnd <- .ellipse_pts(cx_vec[s], cy_vec[s], a_vec[s], b_vec[s], angle_vec[s])
+                inner_bnd <- .ellipse_pts(cx_vec[s - 1L], cy_vec[s - 1L],
+                                          a_vec[s - 1L], b_vec[s - 1L], angle_vec[s - 1L])
+                polypath(x = c(outer_bnd[, 1], NA, inner_bnd[, 1]),
+                         y = c(outer_bnd[, 2], NA, inner_bnd[, 2]),
+                         rule = "evenodd", col = adjustcolor(cols[s], alpha.f = 0.15), border = NA)
+            }
+        }
+
+        draw.ellipse(cx_vec[1L], cy_vec[1L], a = a_vec[1L], b = b_vec[1L],
+                     angle = angle_vec[1L] * 180 / pi,
+                     col = adjustcolor(cols[1L], alpha.f = 0.15), border = NA)
+    }
+
+    for (s in seq_len(n))
+        draw.ellipse(cx_vec[s], cy_vec[s], a = a_vec[s], b = b_vec[s],
+                     angle = angle_vec[s] * 180 / pi, border = col, lwd = lwd, lty = lty)
+}
+
+
+#' @noRd
+# Redraw the k-1 parallel separator(s) of an axialLine()/axialLines() result.
+# axialLine() (binary LDA) stores a single `intercept`; axialLines() stores
+# `intercepts` (length k - 1) plus the exact search `angle`. Both need the
+# projection direction `w` that `intercepts` was expressed in: axialLines()'s
+# `angle` reconstructs it exactly, but axialLine() has no such field, so its
+# `w` is rebuilt from `slope` up to an orientation choice -- that choice only
+# relabels which end of the split gets cols[1] in the fill below, it never
+# changes the drawn line itself (`abline()` uses `slope`/`intercept` directly).
+.plot_axial_partition <- function(Pout, fill, cols, col, lwd, lty) {
+    slope      <- Pout$slope
+    vertical   <- is.infinite(slope)
+    intercepts <- if (!is.null(Pout$intercepts)) Pout$intercepts else Pout$intercept
+    n <- length(intercepts)
+    k <- n + 1L
+
+    if (!is.null(Pout$angle)) {
+        w <- c(cos(Pout$angle), sin(Pout$angle))
+    } else if (vertical) {
+        w <- c(1, 0)
+    } else {
+        w2 <- 1 / sqrt(1 + slope^2)
+        w  <- c(-slope * w2, w2)
+    }
+    cuts <- if (vertical) intercepts * w[1] else intercepts * w[2]
+
+    if (fill) {
+        if (is.null(cols)) cols <- .default_fill_cols(k)
+        usr    <- par("usr")
+        rect_x <- c(usr[1], usr[2], usr[2], usr[1])
+        rect_y <- c(usr[3], usr[3], usr[4], usr[4])
+
+        cuts_sorted <- sort(cuts)
+        cuts_ext    <- c(-Inf, cuts_sorted, Inf)
+
+        for (s in seq_len(k)) {
+            lo   <- cuts_ext[s]
+            hi   <- cuts_ext[s + 1L]
+            poly <- list(x = rect_x, y = rect_y)
+            if (is.finite(hi)) poly <- .clip_halfplane(poly$x, poly$y, w, hi, keep_le = TRUE)
+            if (is.finite(lo)) poly <- .clip_halfplane(poly$x, poly$y, w, lo, keep_le = FALSE)
+            if (length(poly$x) >= 3L)
+                polygon(poly$x, poly$y, col = adjustcolor(cols[s], alpha.f = 0.15), border = NA)
+        }
+    }
+
+    for (ic in intercepts) {
+        if (vertical) abline(v = ic, col = col, lwd = lwd, lty = lty)
+        else          abline(a = ic, b = slope, col = col, lwd = lwd, lty = lty)
+    }
+}
+
+
+#' @noRd
+# Redraw the k rays of an angularPartition() result. Mirrors
+# angularPartition()'s own drawing code (angular.R): a pie-slice polygon per
+# wedge for the fill, relying on default plot-region clipping, then the cut
+# rays themselves.
+.plot_angular_partition <- function(Pout, fill, cols, col, lwd, lty) {
+    cx <- Pout$center[1]; cy <- Pout$center[2]
+    k  <- length(Pout$cuts)
+    sc <- sort(Pout$cuts %% (2 * pi))
+
+    usr     <- par("usr")
+    ray_len <- 2 * sqrt((usr[2] - usr[1])^2 + (usr[4] - usr[3])^2)
+
+    if (fill) {
+        if (is.null(cols)) cols <- hcl.colors(k, palette = "Pastel 1")
+
+        wedge_starts <- sc
+        wedge_ends   <- c(sc[-1L], sc[1L] + 2 * pi)
+        n_arc        <- 100L
+
+        for (r in seq_len(k)) {
+            arc_ang <- seq(wedge_starts[r], wedge_ends[r], length.out = n_arc)
+            polygon(c(cx, cx + ray_len * cos(arc_ang)),
+                    c(cy, cy + ray_len * sin(arc_ang)),
+                    col = adjustcolor(cols[r], alpha.f = 0.15), border = NA)
+        }
+    }
+
+    for (ang in Pout$cuts)
+        segments(cx, cy, cx + ray_len * cos(ang), cy + ray_len * sin(ang),
+                 col = col, lwd = lwd, lty = lty)
+}
+
+
+#' Replot a stored partition result
+#'
+#' Redraws the configuration and partitions from the output list returned by
+#' [axialLine()], [axialLines()], [radialCircle()], [radialCircles()],
+#' [radialEllipse()], [radialEllipses()] or [angularPartition()]. It is a 
+#' simple replot of the stored partition regions with no recomputation.
+#'
+#' @param Pout A result list from one of the partition functions above (must
+#'   have a `partition` field naming a known family 
+#'   ("axial", "angular", "circle", "ellipse"), plus `pcoords`/`pgroup`).
+#' @param fill If `TRUE`, shade the regions between boundaries (default
+#'   `FALSE`).
+#' @param cols Fill colours; auto-generated if `NULL` -- `c("steelblue",
+#'   "tomato")` for a 2-region partition, `hcl.colors(k, "Pastel 1")`
+#'   otherwise, matching the palette the originating partition function would
+#'   have used by default. A char vector with k valid colors can be supplied.
+#' @param col Boundary line/ray colour; if `NULL` (default), `"darkorange"`
+#'   for `partition == "angular"` and `"purple"` otherwise, matching the
+#'   originating functions' own defaults.
+#' @param lwd Line width (default `2`).
+#' @param lty Line type (default `1`).
+#' @param highlight If `TRUE`, overlay a marker on every misclassified point
+#'   via [highlightMisclass()] (default `FALSE`).
+#' @param add If `FALSE` (default), start a fresh plot of `Pout$pcoords` with
+#'   group labels before drawing the boundaries; if `TRUE`, draw only the
+#'   boundaries (and optional fill/highlight) on the already-active plot.
+#'
+#' @return `invisible(NULL)`, called for its side effect of drawing on the
+#'   active plot.
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(1)
+#' crd <- rbind(cbind(rnorm(15, -1), rnorm(15)), cbind(rnorm(15, 1), rnorm(15)))
+#' grp <- factor(c(rep("a", 15), rep("b", 15)))
+#' res <- radialCircles(crd, grp, output = TRUE, add = FALSE)
+#' plotPartition(res, fill = TRUE, highlight = TRUE)
+#' }
+#'
+#' @export
+plotPartition <- function(Pout,
+                           fill      = FALSE,
+                           cols      = NULL,
+                           col       = NULL,
+                           lwd       = 2,
+                           lty       = 1,
+                           highlight = FALSE,
+                           add       = FALSE) {
+
+    partitions_set <- c("axial", "angular", "circle", "ellipse")
+    if (!is.list(Pout) || is.null(Pout$partition) ||
+        !(Pout$partition %in% partitions_set) ||
+        is.null(Pout$pcoords) || is.null(Pout$pgroup))
+        stop("Not a valid partition object")
+
+    pp <- Pout$partition
+
+    if (is.null(col)) col <- if (pp == "angular") "darkorange" else "purple"
+
+    if (!add) {
+        plot(Pout$pcoords, las = 1, asp = 1)
+        graphics::text(Pout$pcoords, labels = Pout$pgroup, cex = 0.7, pos = 4)
+    }
+
+    switch(pp,
+           axial   = .plot_axial_partition(Pout, fill, cols, col, lwd, lty),
+           circle  = .plot_circle_partition(Pout, fill, cols, col, lwd, lty),
+           ellipse = .plot_ellipse_partition(Pout, fill, cols, col, lwd, lty),
+           angular = .plot_angular_partition(Pout, fill, cols, col, lwd, lty))
+
+    if (highlight) highlightMisclass(Pout)
+
+    invisible(NULL)
+}

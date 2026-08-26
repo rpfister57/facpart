@@ -43,10 +43,11 @@ zero misclassification. Default \code{7L}.}
 \code{plot()} first.}
 }
 \value{
-If \code{output = TRUE}, a list with \code{cx}, \code{cy}, \code{a}, \code{b}, \code{angle}
-(radians), \code{misclass} (list with \code{n} and \code{indices}), \code{misclass_points}
-(data frame with columns \code{x}, \code{y}, \code{label} for each misclassified point),
-\code{sector}, and \code{majority}.
+If \code{output = TRUE}, a list with \code{partition} (\code{"ellipse"}), \code{cx},
+\code{cy}, \code{a}, \code{b}, \code{angle} (radians), \code{sector}, \code{majority}, \code{pcoords} (the
+input \code{crd}), \code{pgroup} (\code{group} coerced to factor), \code{misclass} (list
+with \code{n} and \code{indices}), and \code{misclass_points} (data frame with columns
+\code{x}, \code{y}, \code{label} for each misclassified point).
 }
 \description{
 Finds the ellipse minimising misclassification between two groups of 2D

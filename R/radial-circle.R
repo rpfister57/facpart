@@ -361,10 +361,11 @@
 #' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
 #'   `plot()` first.
 #'
-#' @return If `output = TRUE`, a list with `center`, `radius`, `misclass`
-#'   (integer), `misclass_points` (data frame with columns `x`, `y`, `label`
-#'   for each misclassified point), `sector` (`1` inside / `2` outside per
-#'   point), and `majority` (`character[2]`).
+#' @return If `output = TRUE`, a list with `partition` (`"circle"`), `center`,
+#'   `radius`, `sector` (`1` inside / `2` outside per point), `majority`
+#'   (`character[2]`), `pcoords` (the input `crd`), `pgroup` (`group` coerced
+#'   to factor), `misclass` (integer), and `misclass_points` (data frame with
+#'   columns `x`, `y`, `label` for each misclassified point).
 #'
 #' @examples
 #' set.seed(1)
@@ -519,12 +520,15 @@ radialCircle <- function(crd,
     if (!output) return(invisible(NULL))
 
     list(
+        partition       = "circle",
         center          = c(cx, cy),
         radius          = radius,
-        misclass        = length(misclass_idx),
-        misclass_points = misclass_points,
         sector          = sector,
-        majority        = majority
+        majority        = majority,
+        pcoords         = crd,
+        pgroup          = group,
+        misclass        = length(misclass_idx),
+        misclass_points = misclass_points
     )
 }
 
@@ -593,10 +597,12 @@ radialCircle <- function(crd,
 #' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
 #'   `plot()` first.
 #'
-#' @return If `output = TRUE`, a list with `cx`, `cy` (`numeric[k-1]`),
-#'   `radii` (innermost to outermost), `misclass`, `misclass_points` (data
-#'   frame with columns `x`, `y`, `label` for each misclassified point),
-#'   `sector` (`integer[n]`), and `majority` (`character[k]`).
+#' @return If `output = TRUE`, a list with `partition` (`"circle"`), `cx`,
+#'   `cy` (`numeric[k-1]`), `radii` (innermost to outermost), `sector`
+#'   (`integer[n]`), `majority` (`character[k]`), `pcoords` (the input
+#'   `crd`), `pgroup` (`group` coerced to factor), `misclass`, and
+#'   `misclass_points` (data frame with columns `x`, `y`, `label` for each
+#'   misclassified point).
 #'
 #' @examples
 #' \dontrun{
@@ -832,12 +838,15 @@ radialCircles <- function(crd,
     if (!output) return(invisible(NULL))
 
     list(
+        partition       = "circle",
         cx              = cx_vec,
         cy              = cy_vec,
         radii           = radii_vec,
-        misclass        = length(misclass_idx),
-        misclass_points = misclass_points,
         sector          = sector,
-        majority        = majority
+        majority        = majority,
+        pcoords         = crd,
+        pgroup          = group,
+        misclass        = length(misclass_idx),
+        misclass_points = misclass_points
     )
 }

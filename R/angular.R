@@ -250,14 +250,17 @@
 #' @param add If `TRUE` (default), add to existing plot, else plot configuration.
 #'
 #' @return If `output = TRUE`, a list with:
+#'   - `partition` — `"angular"`
 #'   - `cuts` — `numeric[k]`, cut angles of rays (in radians).
 #'   - `margin` — minimum distance from any cut ray to nearest point.
-#'   - `misclass` — integer, number of misclassified points.
-#'   - `misclass_points` — data frame (`x`, `y`, `label`) of misclassified points
 #'   - `sector` — `integer[n]`, assigned sector `1..k` per point
 #'   - `majority` — `character[k]`, majority group per sector
 #'   - `center` — `c(cx, cy)` center coordinates of rays
 #'   - `pt_angles` — angles (in radians) of points from center
+#'   - `pcoords` — the input `crd`
+#'   - `pgroup` — `group` coerced to factor
+#'   - `misclass` — integer, number of misclassified points.
+#'   - `misclass_points` — data frame (`x`, `y`, `label`) of misclassified points
 #'
 #' @examples
 #' \dontrun{
@@ -487,12 +490,15 @@ angularPartition <- function(crd,
 
     if (!output) return(invisible(NULL))
     else return(list(
+        partition       = "angular",
         cuts            = best_cuts,
         margin          = best_margin,
         sector          = sector,
         majority        = majority,
         center          = c(cx, cy),
         pt_angles       = pt_angles,
+        pcoords         = crd,
+        pgroup          = group,
         misclass        = length(misclass_idx),
         misclass_points = misclass_points))
 

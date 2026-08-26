@@ -40,9 +40,11 @@
 #' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
 #'   `plot()` first.
 #'
-#' @return If `output = TRUE`, a list with `slope`, `intercept`, `misclass`
-#'   (integer), `misclass_points` (data frame with columns `x`, `y`, `label`
-#'   for each misclassified point), and `predicted` (LDA-predicted class factor).
+#' @return If `output = TRUE`, a list with `partition` (`"axial"`), `slope`,
+#'   `intercept`, `predicted` (LDA-predicted class factor), `pcoords` (the
+#'   input `crd`), `pgroup` (`group` coerced to factor), `misclass`
+#'   (integer), and `misclass_points` (data frame with columns `x`, `y`,
+#'   `label` for each misclassified point).
 #'
 #' @seealso [axialLines()] for the empirically-optimal parallel-line
 #'   partition over both angle and cut position (any `k >= 2`).
@@ -159,11 +161,14 @@ axialLine <- function(crd,
     )
 
     list(
+        partition       = "axial",
         slope           = slope,
         intercept       = intercept,
+        predicted       = predicted,
+        pcoords         = crd,
+        pgroup          = group,
         misclass        = misclass,
-        misclass_points = misclass_points,
-        predicted       = predicted
+        misclass_points = misclass_points
     )
 }
 
@@ -222,15 +227,18 @@ axialLine <- function(crd,
 #'   empirically optimal parallel-line partition.
 #'
 #' @return If `output = TRUE`, a list with:
+#'   - `partition` — `"axial"`
 #'   - `slope` — shared slope of the lines (`Inf` if vertical)
 #'   - `intercepts` — `numeric[k-1]`, y-intercepts (or x-positions if vertical)
 #'   - `angle` — winning direction in radians
 #'   - `margin` — minimum perpendicular distance from the cut line(s) to the
 #'     nearest point
-#'   - `misclass` — total misclassified points
-#'   - `misclass_points` — data frame (`x`, `y`, `label`) of misclassified points
 #'   - `sector` — `integer[n]`, sector `1..k` per point in input order
 #'   - `majority` — `character[k]`, majority group per sector
+#'   - `pcoords` — the input `crd`
+#'   - `pgroup` — `group` coerced to factor
+#'   - `misclass` — total misclassified points
+#'   - `misclass_points` — data frame (`x`, `y`, `label`) of misclassified points
 #'
 #' @examples
 #' set.seed(1)
@@ -446,14 +454,17 @@ axialLines <- function(crd,
     if (!output) return(invisible(NULL))
 
     list(
+        partition       = "axial",
         slope           = slope,
         intercepts      = intercepts,
         angle           = best_theta,
         margin          = best_margin,
-        misclass        = length(misclass_idx),
-        misclass_points = misclass_points,
         sector          = sector,
-        majority        = majority
+        majority        = majority,
+        pcoords         = crd,
+        pgroup          = group,
+        misclass        = length(misclass_idx),
+        misclass_points = misclass_points
     )
 }
 

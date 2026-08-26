@@ -1,5 +1,5 @@
 # ===================================================================
-# ==== Functions for Radial (Elliptic) Partitions ====
+# ==== Functions for Radial Elliptic Partitions ====
 # ===================================================================
 
 
@@ -7,6 +7,7 @@
 
 #' @noRd
 .ellipse_pts <- function(cx, cy, a, b, angle_rad, n = 200L) {
+    # compute n coordinates for ellipse cx,cy,a,b,angle_rad
     theta   <- seq(0, 2 * pi, length.out = n + 1L)[-1L]
     cos_a   <- cos(angle_rad)
     sin_a   <- sin(angle_rad)
@@ -19,6 +20,7 @@
 
 #' @noRd
 .in_ellipse <- function(coords, cx, cy, a, b, angle_rad) {
+    # check if coords are inside ellipse: TRUE/FALSE
     cos_a <- cos(angle_rad)
     sin_a <- sin(angle_rad)
     dx    <- coords[, 1] - cx
@@ -30,7 +32,8 @@
 
 
 #' @noRd
-.eval_ellipse <- function(params, coords, inner_flag, prev_bnd = NULL,
+.eval_ellipse <- function(params, coords, 
+                          inner_flag, prev_bnd = NULL,
                           penalty = 1e6) {
     cx    <- params[1]
     cy    <- params[2]
@@ -86,7 +89,8 @@
 
 
 #' @noRd
-.optimize_ellipse <- function(coords, inner_flag, prev = NULL, starts,
+.optimize_ellipse <- function(coords, inner_flag, 
+                              prev = NULL, starts,
                               n_grid = 7L) {
     x_range   <- diff(range(coords[, 1]))
     y_range   <- diff(range(coords[, 2]))
@@ -96,7 +100,8 @@
     parscale  <- c(x_range, y_range, max_range, max_range, pi)
 
     prev_bnd <- if (!is.null(prev))
-        .ellipse_pts(prev$cx, prev$cy, prev$a, prev$b, prev$angle, n = 200L)
+        .ellipse_pts(prev$cx, prev$cy, prev$a, prev$b, prev$angle, 
+                     n = 200L)
     else
         NULL
 
@@ -218,10 +223,11 @@
 #' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
 #'   `plot()` first.
 #'
-#' @return If `output = TRUE`, a list with `cx`, `cy`, `a`, `b`, `angle`
-#'   (radians), `misclass` (list with `n` and `indices`), `misclass_points`
-#'   (data frame with columns `x`, `y`, `label` for each misclassified point),
-#'   `sector`, and `majority`.
+#' @return If `output = TRUE`, a list with `partition` (`"ellipse"`), `cx`,
+#'   `cy`, `a`, `b`, `angle` (radians), `sector`, `majority`, `pcoords` (the
+#'   input `crd`), `pgroup` (`group` coerced to factor), `misclass` (list
+#'   with `n` and `indices`), and `misclass_points` (data frame with columns
+#'   `x`, `y`, `label` for each misclassified point).
 #'
 #' @examples
 #' \dontrun{
@@ -314,15 +320,18 @@ radialEllipse <- function(crd,
     if (!output) return(invisible(NULL))
 
     list(
+        partition       = "ellipse",
         cx              = ell$cx,
         cy              = ell$cy,
         a               = ell$a,
         b               = ell$b,
         angle           = ell$angle,
-        misclass        = misclass,
-        misclass_points = misclass_points,
         sector          = sector,
-        majority        = majority
+        majority        = majority,
+        pcoords         = crd,
+        pgroup          = group,
+        misclass        = misclass,
+        misclass_points = misclass_points
     )
 }
 
@@ -378,10 +387,11 @@ radialEllipse <- function(crd,
 #' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
 #'   `plot()` first.
 #'
-#' @return If `output = TRUE`, a list with vectors `cx`, `cy`, `a`, `b`,
-#'   `angle` (radians), `misclass` (list with `n` and `indices`),
-#'   `misclass_points` (data frame with columns `x`, `y`, `label` for each
-#'   misclassified point), `sector`, and `majority`.
+#' @return If `output = TRUE`, a list with `partition` (`"ellipse"`), vectors
+#'   `cx`, `cy`, `a`, `b`, `angle` (radians), `sector`, `majority`, `pcoords`
+#'   (the input `crd`), `pgroup` (`group` coerced to factor), `misclass`
+#'   (list with `n` and `indices`), and `misclass_points` (data frame with
+#'   columns `x`, `y`, `label` for each misclassified point).
 #'
 #' @examples
 #' \dontrun{
@@ -581,7 +591,8 @@ radialEllipses <- function(crd,
     assignment      <- .assign_groups(count_mat, levels(group))
     majority        <- levels(group)[assignment]
     misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
-    misclass        <- list(n = length(misclass_idx), indices = misclass_idx)
+    misclass        <- list(n = length(misclass_idx), 
+                            indices = misclass_idx)
     misclass_points <- data.frame(
         x     = coords[misclass_idx, 1],
         y     = coords[misclass_idx, 2],
@@ -589,7 +600,7 @@ radialEllipses <- function(crd,
     )
 
     if (!add) {
-        plot(coords, asp = 1)
+        plot(coords, las = 1, asp = 1)
         graphics::text(coords, labels = group, cex = 0.7, pos = 4)
     }
 
@@ -606,13 +617,15 @@ radialEllipses <- function(crd,
             x    = c(rect_x, NA, outer_bnd[, 1]),
             y    = c(rect_y, NA, outer_bnd[, 2]),
             rule = "evenodd",
-            col  = adjustcolor(cols[k], alpha.f = 0.15), border = NA
+            col  = adjustcolor(cols[k], alpha.f = 0.15), 
+            border = NA
         )
 
         if (k >= 3L) {
             for (s in (k - 1L):2L) {
                 outer_bnd <- .ellipse_pts(cx_vec[s], cy_vec[s],
-                                           a_vec[s], b_vec[s], angle_vec[s])
+                                          a_vec[s], b_vec[s], 
+                                          angle_vec[s])
                 inner_bnd <- .ellipse_pts(cx_vec[s - 1L], cy_vec[s - 1L],
                                            a_vec[s - 1L], b_vec[s - 1L],
                                            angle_vec[s - 1L])
@@ -620,19 +633,23 @@ radialEllipses <- function(crd,
                     x    = c(outer_bnd[, 1], NA, inner_bnd[, 1]),
                     y    = c(outer_bnd[, 2], NA, inner_bnd[, 2]),
                     rule = "evenodd",
-                    col  = adjustcolor(cols[s], alpha.f = 0.15), border = NA
+                    col  = adjustcolor(cols[s], alpha.f = 0.15), 
+                    border = NA
                 )
             }
         }
 
-        draw.ellipse(cx_vec[1L], cy_vec[1L], a = a_vec[1L], b = b_vec[1L],
+        draw.ellipse(cx_vec[1L], cy_vec[1L], 
+                     a = a_vec[1L], b = b_vec[1L],
                      angle = angle_vec[1L] * 180 / pi,
-                     col = adjustcolor(cols[1L], alpha.f = 0.15), border = NA)
+                     col = adjustcolor(cols[1L], alpha.f = 0.15), 
+                     border = NA)
     }
 
     # ---- Draw k-1 ellipses ----
     for (s in seq_len(k - 1L)) {
-        draw.ellipse(cx_vec[s], cy_vec[s], a = a_vec[s], b = b_vec[s],
+        draw.ellipse(cx_vec[s], cy_vec[s], 
+                     a = a_vec[s], b = b_vec[s],
                      angle = angle_vec[s] * 180 / pi,
                      border = col, lwd = lwd, lty = lty)
     }
@@ -640,14 +657,17 @@ radialEllipses <- function(crd,
     if (!output) return(invisible(NULL))
 
     list(
+        partition       = "ellipse",
         cx              = cx_vec,
         cy              = cy_vec,
         a               = a_vec,
         b               = b_vec,
         angle           = angle_vec,
-        misclass        = misclass,
-        misclass_points = misclass_points,
         sector          = sector,
-        majority        = majority
+        majority        = majority,
+        pcoords         = crd,
+        pgroup          = group,
+        misclass        = misclass,
+        misclass_points = misclass_points
     )
 }

@@ -44,15 +44,18 @@ extra candidate.}
 \value{
 If \code{output = TRUE}, a list with:
 \itemize{
+\item \code{partition} — \code{"axial"}
 \item \code{slope} — shared slope of the lines (\code{Inf} if vertical)
 \item \code{intercepts} — \code{numeric[k-1]}, y-intercepts (or x-positions if vertical)
 \item \code{angle} — winning direction in radians
 \item \code{margin} — minimum perpendicular distance from the cut line(s) to the
 nearest point
-\item \code{misclass} — total misclassified points
-\item \code{misclass_points} — data frame (\code{x}, \code{y}, \code{label}) of misclassified points
 \item \code{sector} — \code{integer[n]}, sector \verb{1..k} per point in input order
 \item \code{majority} — \code{character[k]}, majority group per sector
+\item \code{pcoords} — the input \code{crd}
+\item \code{pgroup} — \code{group} coerced to factor
+\item \code{misclass} — total misclassified points
+\item \code{misclass_points} — data frame (\code{x}, \code{y}, \code{label}) of misclassified points
 }
 }
 \description{

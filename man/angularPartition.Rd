@@ -47,14 +47,17 @@ starts don't already reach zero misclassification. Default \code{7L}.}
 \value{
 If \code{output = TRUE}, a list with:
 \itemize{
+\item \code{partition} — \code{"angular"}
 \item \code{cuts} — \code{numeric[k]}, cut angles of rays (in radians).
 \item \code{margin} — minimum distance from any cut ray to nearest point.
-\item \code{misclass} — integer, number of misclassified points.
-\item \code{misclass_points} — data frame (\code{x}, \code{y}, \code{label}) of misclassified points
 \item \code{sector} — \code{integer[n]}, assigned sector \verb{1..k} per point
 \item \code{majority} — \code{character[k]}, majority group per sector
 \item \code{center} — \code{c(cx, cy)} center coordinates of rays
 \item \code{pt_angles} — angles (in radians) of points from center
+\item \code{pcoords} — the input \code{crd}
+\item \code{pgroup} — \code{group} coerced to factor
+\item \code{misclass} — integer, number of misclassified points.
+\item \code{misclass_points} — data frame (\code{x}, \code{y}, \code{label}) of misclassified points
 }
 }
 \description{
