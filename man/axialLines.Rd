@@ -2,7 +2,7 @@
 % Please edit documentation in R/axial.R
 \name{axialLines}
 \alias{axialLines}
-\title{Multi-group parallel-line partition (angle + cuts searched)}
+\title{Axial partitions for k >= 2 groups}
 \usage{
 axialLines(
   crd,
@@ -60,39 +60,21 @@ nearest point
 }
 \description{
 Partitions a 2D configuration into \code{k >= 2} groups using \code{k-1} parallel
-separating lines. Both the slopes of the lines and their positions
-are searched to minimise empirical misclassification:
+separating lines. Both the slopes (angles) of the lines and their positions
+(cuts) are searched to minimise empirical misclassification.
 }
 \details{
-\itemize{
-\item \strong{Angle}: grid of \code{n_angles} equally-spaced angles in \verb{[0, pi)},
-augmented by LDA's LD1 direction. For each angle \code{theta}, points are
-projected onto \verb{(cos theta, sin theta)}.
-\item \strong{Cuts}: for each angle, exact brute-force enumeration over all
-\code{C(n-1, k-1)} ways to split the sorted projections into \code{k} segments.
-}
-
-Each candidate is scored by its exact \strong{bijection-constrained}
-misclassification: the best total correct over all \verb{k!} ways of matching
-the \code{k} segments to the \code{k} groups, each group used exactly once. This is
-the same criterion \code{sector}/\code{majority} are derived from, so the search
-minimises exactly the quantity reported as \code{misclass}. Every segment is
-non-empty, so a group whose region would be empty is not considered.
-
-The \verb{(angle, cuts)} combination with lowest total misclassification wins.
+A brute-force search over a grid of \code{n_angles} and all \code{C(n-1, k-1)}
+cuts of n points into k groups finds the \verb{(angle, cuts)} combination
+with lowest total misclassification.
 Tie-breaker: among configurations with the same misclass count, the one
 with the largest minimum margin (perpendicular distance from a cut line
-to the nearest point) is preferred — keeps cut lines visually away from
-the data points.
+to the nearest point) is preferred.
 
-For \code{k = 2}, \code{axialLines()} can differ from \code{\link[=axialLine]{axialLine()}}:
-the latter places the cut at the midpoint of class means on the LD1
-projection (classical Bayes rule under normality), while \code{axialLines()}
-searches the full \verb{(angle, cut)} space for the empirical optimum.
+For \code{k = 2}, \code{axialLines()} can differ from \code{\link[=axialLine]{axialLine()}}.
 
-Vertical-line guard: when the winning direction has \verb{w[2] ~= 0}, the
-separators are vertical. \code{slope} is returned as \code{Inf} and \code{intercepts}
-carry the x-positions of the lines.
+Vertical-line guard: when the separators are vertical, \code{slope}
+is returned as \code{Inf} and \code{intercepts} carry the x-positions of the lines.
 }
 \examples{
 set.seed(1)
@@ -104,8 +86,5 @@ axialLines(crd, grp, fill = TRUE, add = FALSE)
 
 }
 \seealso{
-\code{\link[=axialLine]{axialLine()}} for the classical LDA Bayes-rule boundary
-(closed-form, binary only) if k=2. Use \code{\link[=axialLine]{axialLine()}} when you want the
-statistical LDA classifier; use \code{axialLines()} when you want the
-empirically optimal parallel-line partition.
+\code{\link[=axialLine]{axialLine()}} for the classical LDA boundary if k=2.
 }

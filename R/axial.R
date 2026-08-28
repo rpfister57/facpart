@@ -3,30 +3,27 @@
 # ===================================================================
 
 
-#' Binary LDA separating line for a 2D point configuration
+#' Axial partition for exactly 2 groups using binary LDA
 #'
 #' Fits a linear discriminant analysis to two-group 2D data and draws the
 #' classical LDA boundary — perpendicular to LD1 through the midpoint of the
-#' class means — on the current plot.
+#' class means — on the current plot (default).
 #'
 #' When LD1 is along the x-axis (`abs(w[2]) < 1e-10`) the separator is
 #' vertical: `slope` is returned as `Inf` and `intercept` carries the
 #' x-position of the line.
 #'
-#' **Not a special case of [axialLines()].** `axialLine()` returns the
-#' classical LDA Bayes-rule boundary (closed-form: LD1 direction, midpoint
-#' of class means as cut) — optimal under multivariate-normal classes with
-#' equal covariances, and the standard reference object in psychometric /
-#' Facet Theory pipelines. The return value includes `predicted`, the LDA
+#' `axialLine()` returns the classical LDA boundary
+#' (closed-form: LD1 direction, midpoint of class means as cut) using
+#' `lda()` from the MASS package, optimal under multivariate-normal condition with
+#' equal covariances. The return value includes `predicted`, the LDA
 #' class assignment per point.
 #'
 #' [axialLines()] with `k = 2`, in contrast, searches the full
-#' `(angle, cut)` space for the empirical minimum-misclass parallel line.
-#' Its direction need not be LD1 and its cut need not match the midpoint of
-#' means; it can overfit the training sample when classes are non-Gaussian
-#' or have unequal covariances. Use it when you want the empirically best
-#' linear separator; use `axialLine()` when you want the classical LDA
-#' classifier.
+#' space for the axial partitions with minimal misclassifications;
+#' it may differ from `axialLine()`.
+#' Use it when you want the empirically best linear separator; 
+#' use `axialLine()` when you want the classical LDA classifier.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns (x, y).
 #' @param group Factor, character, or integer vector with exactly 2 levels.
@@ -104,7 +101,7 @@ axialLine <- function(crd,
     }
 
     if (!add) {
-        plot(coords, asp = 1)
+        plot(coords, las = 1, asp = 1)
         graphics::text(coords, labels = group, cex = 0.7, pos = 4)
     }
 
@@ -173,39 +170,23 @@ axialLine <- function(crd,
 }
 
 
-#' Multi-group parallel-line partition (angle + cuts searched)
+#' Axial partitions for k >= 2 groups
 #'
 #' Partitions a 2D configuration into `k >= 2` groups using `k-1` parallel
-#' separating lines. Both the slopes of the lines and their positions
-#' are searched to minimise empirical misclassification:
+#' separating lines. Both the slopes (angles) of the lines and their positions
+#' (cuts) are searched to minimise empirical misclassification.
 #'
-#' - **Angle**: grid of `n_angles` equally-spaced angles in `[0, pi)`,
-#'   augmented by LDA's LD1 direction. For each angle `theta`, points are
-#'   projected onto `(cos theta, sin theta)`.
-#' - **Cuts**: for each angle, exact brute-force enumeration over all
-#'   `C(n-1, k-1)` ways to split the sorted projections into `k` segments.
-#'
-#' Each candidate is scored by its exact **bijection-constrained**
-#' misclassification: the best total correct over all `k!` ways of matching
-#' the `k` segments to the `k` groups, each group used exactly once. This is
-#' the same criterion `sector`/`majority` are derived from, so the search
-#' minimises exactly the quantity reported as `misclass`. Every segment is
-#' non-empty, so a group whose region would be empty is not considered.
-#'
-#' The `(angle, cuts)` combination with lowest total misclassification wins.
+#' A brute-force search over a grid of `n_angles` and all `C(n-1, k-1)`
+#' cuts of n points into k groups finds the `(angle, cuts)` combination 
+#' with lowest total misclassification.
 #' Tie-breaker: among configurations with the same misclass count, the one
 #' with the largest minimum margin (perpendicular distance from a cut line
-#' to the nearest point) is preferred — keeps cut lines visually away from
-#' the data points.
+#' to the nearest point) is preferred.
 #'
-#' For `k = 2`, `axialLines()` can differ from [axialLine()]:
-#' the latter places the cut at the midpoint of class means on the LD1
-#' projection (classical Bayes rule under normality), while `axialLines()`
-#' searches the full `(angle, cut)` space for the empirical optimum.
+#' For `k = 2`, `axialLines()` can differ from [axialLine()].
 #'
-#' Vertical-line guard: when the winning direction has `w[2] ~= 0`, the
-#' separators are vertical. `slope` is returned as `Inf` and `intercepts`
-#' carry the x-positions of the lines.
+#' Vertical-line guard: when the separators are vertical, `slope` 
+#' is returned as `Inf` and `intercepts` carry the x-positions of the lines.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
 #' @param group Factor, character, or integer vector with `k >= 2` levels.
@@ -221,10 +202,7 @@ axialLine <- function(crd,
 #' @param add If `TRUE` (default), add to existing plot; if `FALSE`, call
 #'   `plot()` first.
 #'
-#' @seealso [axialLine()] for the classical LDA Bayes-rule boundary
-#'   (closed-form, binary only) if k=2. Use [axialLine()] when you want the
-#'   statistical LDA classifier; use `axialLines()` when you want the
-#'   empirically optimal parallel-line partition.
+#' @seealso [axialLine()] for the classical LDA boundary if k=2.
 #'
 #' @return If `output = TRUE`, a list with:
 #'   - `partition` — `"axial"`

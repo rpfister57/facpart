@@ -343,6 +343,70 @@
 }
 
 
+#' Project a point (x, y) onto a line (a, b)
+#' 
+#' On an existing plot including a line with a = intercept and b = slope,
+#' a point with coordinates (x, y) is projected. Optionally, the line
+#' as well as the projection arrow and the distance from intercept to
+#' the projected point are drawn.
+#' 
+#' @param Pxy A vector c(x,y) with coordinates of a point.
+#' @param Lab A vector c(a,b) with intercept (a) and slope (b) of a line.
+#' @param add Logical: Should the projection be drawn (default = FALSE).
+#' @param d0 Logical: Should the distance line from a to 
+#'     projection be drawn (default = FALSE).
+#' @param color Character - a color name
+#' @param addLine Logical: Should the line be drawn.
+#' 
+#' @return A list with the coordinates of the projected point, and 
+#'    the distance vector of the projected point.
+#'    
+#' @examples
+#' \dontrun{
+#' plot(-2:2, -2:2, type = "n", asp = 1)
+#' abline(a = 0, b = 1)
+#' aPoint <- matrix(c(-1.5, 1), nrow = 1, byrow = TRUE)
+#' points(aPoint, pch = 19)
+#' projectP2L(Pxy = aPoint, Lab = c(0, 1), add = TRUE)
+#' }
+#' 
+#' @export
+projectP2L <- function(Pxy, Lab, 
+                       add = FALSE, 
+                       d0 = FALSE,
+                       color = "blue",
+                       addLine = FALSE){
+    x0 <- Pxy[1]
+    y0 <- Pxy[2]
+    a <- Lab[1]
+    b <- Lab[2]
+    
+    xL <- (x0 + b * (y0 - a)) / (1 + b^2)
+    yL <- a + b*xL
+    Pproj <- c(xL, yL)
+    names(Pproj) <- c("x", "y")
+    
+    if (addLine) graphics::abline(a, b)
+    
+    if (add) {
+        graphics::points(x0, y0, col = color)
+        graphics::points(xL, yL, col = color, pch = 19)
+        graphics::arrows(x0, y0, xL, yL, col = color,
+               length = 0.1, angle = 20)
+    }
+    
+    # convert slope b to theta angle
+    theta <- atan(b)
+    w_t <- c(cos(theta), sin(theta))
+    td <- Pxy %*% w_t
+    dist0 <- sign(td) * sqrt(sum(Pproj^2))
+    if (d0) graphics::arrows(0, a, xL, yL, 
+                   length = 0.1, angle = 20, lwd = 2, col = color)
+    
+    return(list(projection = Pproj,
+                distance = dist0))
+}
+
 
 #' Highlight misclassified points on the active plot
 #'

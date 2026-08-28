@@ -2,7 +2,7 @@
 % Please edit documentation in R/axial.R
 \name{axialLine}
 \alias{axialLine}
-\title{Binary LDA separating line for a 2D point configuration}
+\title{Axial partition for exactly 2 groups using binary LDA}
 \usage{
 axialLine(
   crd,
@@ -47,27 +47,24 @@ input \code{crd}), \code{pgroup} (\code{group} coerced to factor), \code{misclas
 \description{
 Fits a linear discriminant analysis to two-group 2D data and draws the
 classical LDA boundary — perpendicular to LD1 through the midpoint of the
-class means — on the current plot.
+class means — on the current plot (default).
 }
 \details{
 When LD1 is along the x-axis (\code{abs(w[2]) < 1e-10}) the separator is
 vertical: \code{slope} is returned as \code{Inf} and \code{intercept} carries the
 x-position of the line.
 
-\strong{Not a special case of \code{\link[=axialLines]{axialLines()}}.} \code{axialLine()} returns the
-classical LDA Bayes-rule boundary (closed-form: LD1 direction, midpoint
-of class means as cut) — optimal under multivariate-normal classes with
-equal covariances, and the standard reference object in psychometric /
-Facet Theory pipelines. The return value includes \code{predicted}, the LDA
+\code{axialLine()} returns the classical LDA boundary
+(closed-form: LD1 direction, midpoint of class means as cut) using
+\code{lda()} from the MASS package, optimal under multivariate-normal condition with
+equal covariances. The return value includes \code{predicted}, the LDA
 class assignment per point.
 
 \code{\link[=axialLines]{axialLines()}} with \code{k = 2}, in contrast, searches the full
-\verb{(angle, cut)} space for the empirical minimum-misclass parallel line.
-Its direction need not be LD1 and its cut need not match the midpoint of
-means; it can overfit the training sample when classes are non-Gaussian
-or have unequal covariances. Use it when you want the empirically best
-linear separator; use \code{axialLine()} when you want the classical LDA
-classifier.
+space for the axial partitions with minimal misclassifications;
+it may differ from \code{axialLine()}.
+Use it when you want the empirically best linear separator;
+use \code{axialLine()} when you want the classical LDA classifier.
 }
 \examples{
 set.seed(1)
