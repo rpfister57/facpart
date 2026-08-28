@@ -116,9 +116,9 @@ see also the article at: rpfister57.github.io/facpart
 - [`angularPartition()`](https://rpfister57.github.io/facpart/reference/angularPartition.md)
   : Angular k-way (wedge) partition of a 2D configuration
 - [`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md)
-  : Binary LDA separating line for a 2D point configuration
+  : Axial partition for exactly 2 groups using binary LDA
 - [`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md)
-  : Multi-group parallel-line partition (angle + cuts searched)
+  : Axial partitions for k \>= 2 groups
 - [`ellipseInConfig()`](https://rpfister57.github.io/facpart/reference/ellipseInConfig.md)
   : Fit and draw an ellipse around a 2D configuration
 - [`gutt91`](https://rpfister57.github.io/facpart/reference/gutt91.md) :
@@ -135,6 +135,8 @@ see also the article at: rpfister57.github.io/facpart
   Matrix of mu2 coefficients for a data frame
 - [`plotPartition()`](https://rpfister57.github.io/facpart/reference/plotPartition.md)
   : Replot a stored partition result
+- [`projectP2L()`](https://rpfister57.github.io/facpart/reference/projectP2L.md)
+  : Project a point (x, y) onto a line (a, b)
 - [`radialCircle()`](https://rpfister57.github.io/facpart/reference/radialCircle.md)
   : Binary radial partition (one separating circle)
 - [`radialCircles()`](https://rpfister57.github.io/facpart/reference/radialCircles.md)

@@ -1,8 +1,8 @@
-# Multi-group parallel-line partition (angle + cuts searched)
+# Axial partitions for k \>= 2 groups
 
 Partitions a 2D configuration into `k >= 2` groups using `k-1` parallel
-separating lines. Both the slopes of the lines and their positions are
-searched to minimise empirical misclassification:
+separating lines. Both the slopes (angles) of the lines and their
+positions (cuts) are searched to minimise empirical misclassification.
 
 ## Usage
 
@@ -96,45 +96,23 @@ If `output = TRUE`, a list with:
 
 ## Details
 
-- **Angle**: grid of `n_angles` equally-spaced angles in `[0, pi)`,
-  augmented by LDA's LD1 direction. For each angle `theta`, points are
-  projected onto `(cos theta, sin theta)`.
-
-- **Cuts**: for each angle, exact brute-force enumeration over all
-  `C(n-1, k-1)` ways to split the sorted projections into `k` segments.
-
-Each candidate is scored by its exact **bijection-constrained**
-misclassification: the best total correct over all `k!` ways of matching
-the `k` segments to the `k` groups, each group used exactly once. This
-is the same criterion `sector`/`majority` are derived from, so the
-search minimises exactly the quantity reported as `misclass`. Every
-segment is non-empty, so a group whose region would be empty is not
-considered.
-
-The `(angle, cuts)` combination with lowest total misclassification
-wins. Tie-breaker: among configurations with the same misclass count,
-the one with the largest minimum margin (perpendicular distance from a
-cut line to the nearest point) is preferred — keeps cut lines visually
-away from the data points.
+A brute-force search over a grid of `n_angles` and all `C(n-1, k-1)`
+cuts of n points into k groups finds the `(angle, cuts)` combination
+with lowest total misclassification. Tie-breaker: among configurations
+with the same misclass count, the one with the largest minimum margin
+(perpendicular distance from a cut line to the nearest point) is
+preferred.
 
 For `k = 2`, `axialLines()` can differ from
-[`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md):
-the latter places the cut at the midpoint of class means on the LD1
-projection (classical Bayes rule under normality), while `axialLines()`
-searches the full `(angle, cut)` space for the empirical optimum.
+[`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md).
 
-Vertical-line guard: when the winning direction has `w[2] ~= 0`, the
-separators are vertical. `slope` is returned as `Inf` and `intercepts`
-carry the x-positions of the lines.
+Vertical-line guard: when the separators are vertical, `slope` is
+returned as `Inf` and `intercepts` carry the x-positions of the lines.
 
 ## See also
 
 [`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md)
-for the classical LDA Bayes-rule boundary (closed-form, binary only) if
-k=2. Use
-[`axialLine()`](https://rpfister57.github.io/facpart/reference/axialLine.md)
-when you want the statistical LDA classifier; use `axialLines()` when
-you want the empirically optimal parallel-line partition.
+for the classical LDA boundary if k=2.
 
 ## Examples
 

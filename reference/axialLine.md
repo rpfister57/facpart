@@ -1,8 +1,8 @@
-# Binary LDA separating line for a 2D point configuration
+# Axial partition for exactly 2 groups using binary LDA
 
 Fits a linear discriminant analysis to two-group 2D data and draws the
 classical LDA boundary — perpendicular to LD1 through the midpoint of
-the class means — on the current plot.
+the class means — on the current plot (default).
 
 ## Usage
 
@@ -74,21 +74,17 @@ When LD1 is along the x-axis (`abs(w[2]) < 1e-10`) the separator is
 vertical: `slope` is returned as `Inf` and `intercept` carries the
 x-position of the line.
 
-**Not a special case of
-[`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md).**
-`axialLine()` returns the classical LDA Bayes-rule boundary
-(closed-form: LD1 direction, midpoint of class means as cut) — optimal
-under multivariate-normal classes with equal covariances, and the
-standard reference object in psychometric / Facet Theory pipelines. The
-return value includes `predicted`, the LDA class assignment per point.
+`axialLine()` returns the classical LDA boundary (closed-form: LD1
+direction, midpoint of class means as cut) using `lda()` from the MASS
+package, optimal under multivariate-normal condition with equal
+covariances. The return value includes `predicted`, the LDA class
+assignment per point.
 
 [`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md)
-with `k = 2`, in contrast, searches the full `(angle, cut)` space for
-the empirical minimum-misclass parallel line. Its direction need not be
-LD1 and its cut need not match the midpoint of means; it can overfit the
-training sample when classes are non-Gaussian or have unequal
-covariances. Use it when you want the empirically best linear separator;
-use `axialLine()` when you want the classical LDA classifier.
+with `k = 2`, in contrast, searches the full space for the axial
+partitions with minimal misclassifications; it may differ from
+`axialLine()`. Use it when you want the empirically best linear
+separator; use `axialLine()` when you want the classical LDA classifier.
 
 ## See also
 
