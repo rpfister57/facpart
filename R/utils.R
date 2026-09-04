@@ -143,9 +143,9 @@
 # rather than to all M.
 .bij_best <- function(cum, lo_idx, hi_idx, k, M) {
 
-    # Count of group `g` in segment `s`, over the candidates in `sel`
-    # (an index vector into 1..M, or NULL for all M).
-    seg_cnt <- function(s, g, sel) {
+    # In segment 's' count of group 'g', over the candidates in `sel`
+    # sel: an index vector into 1..M, or NULL for all M
+    seg_cnt <- function(s, g, sel = NULL) {
         ia <- lo_idx[[s]]; ib <- hi_idx[[s]]
         if (!is.null(sel)) {
             if (length(ia) > 1L) ia <- ia[sel]
