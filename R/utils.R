@@ -325,21 +325,55 @@
 }
 
 
-#' @noRd
-# Draw a line from x,y with a given angle (in radians).
-# Default is from center (0,0)
-.draw_angle_line <- function(x = 0, y = 0, angle, 
-                            length = 1, ppoint = FALSE, ...) {
-    # x, y: start coordinates
-    # angle: in radians
-    # Compute endpoint
-    x_end <- x + length * cos(angle)
-    y_end <- y + length * sin(angle)
-    
-    # Draw the line
+#' Draw a line of given angle and length from a starting point
+#'
+#' On the currently active plot, draws a straight line starting at
+#' `(x, y)` running in the direction `angle` (in **radians**, counter-clockwise
+#' from the positive x-axis) with length `len`. Optionally marks the
+#' endpoint with a point. Useful for sketching cut rays of an angular
+#' partition (see [angularPartition()]) or any other direction indicator.
+#'
+#' @param x,y Coordinates of the starting point (default `0`, `0`).
+#' @param angle Direction of the line in radians.
+#' @param len Length of the line (default `1`).
+#' @param ppoint Logical: Should the endpoint be marked with a filled
+#'   point (default `FALSE`).
+#' @param ... Further graphical parameters passed to
+#'   [graphics::segments()], e.g. `col`, `lwd`, `lty`.
+#'
+#' @return `invisible(NULL)`, called for its side effect of drawing on the
+#'   active plot.
+#'
+#' @examples
+#' \dontrun{
+#' plot(-2:2, -2:2, type = "n", asp = 1)
+#' drawAngleLine(angle = pi / 4, len = 2, ppoint = TRUE, col = "blue")
+#' drawAngleLine(x = -1, y = -1, angle = 0, len = 1.5, lty = 2)
+#' }
+#'
+#' @export
+drawAngleLine <- function(x = 0, y = 0, angle,
+                          len = 1, ppoint = FALSE, ...) {
+    if (!is.numeric(x) || !is.numeric(y) || length(x) != 1L ||
+        length(y) != 1L) {
+        stop("x and y must each be a single number!")
+    }
+    if (missing(angle) || !is.numeric(angle) || length(angle) != 1L) {
+        stop("angle must be a single number (in radians)!")
+    }
+    if (!is.numeric(len) || length(len) != 1L) {
+        stop("len must be a single number!")
+    }
+
+    # endpoint at distance len in direction angle
+    x_end <- x + len * cos(angle)
+    y_end <- y + len * sin(angle)
+
     segments(x, y, x_end, y_end, ...)
-    
+
     if (ppoint) points(x_end, y_end, pch = 19)
+
+    return(invisible(NULL))
 }
 
 

@@ -3,6 +3,7 @@
 export(angularPartition)
 export(axialLine)
 export(axialLines)
+export(drawAngleLine)
 export(ellipseInConfig)
 export(highlightMisclass)
 export(inoutEllipse)
