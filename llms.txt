@@ -119,6 +119,8 @@ see also the article at: rpfister57.github.io/facpart
   : Axial partition for exactly 2 groups using binary LDA
 - [`axialLines()`](https://rpfister57.github.io/facpart/reference/axialLines.md)
   : Axial partitions for k \>= 2 groups
+- [`drawAngleLine()`](https://rpfister57.github.io/facpart/reference/drawAngleLine.md)
+  : Draw a line of given angle and length from a starting point
 - [`ellipseInConfig()`](https://rpfister57.github.io/facpart/reference/ellipseInConfig.md)
   : Fit and draw an ellipse around a 2D configuration
 - [`gutt91`](https://rpfister57.github.io/facpart/reference/gutt91.md) :
