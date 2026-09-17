@@ -54,6 +54,7 @@ Authors:
 
 Other contributors:
 \itemize{
+  \item Gisela Boehm \email{gisela.boehm@uib.no} (\href{https://orcid.org/0000-0002-5324-6990}{ORCID}) [contributor]
   \item Claude Code AI [contributor]
 }
 

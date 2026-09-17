@@ -10,7 +10,7 @@
     # given two angles a < b, find the middle one
     # e.g.: two radians a < b, delta is the diff b - a
     # returns the radiant of the line bisecting b - a
-    # delta (also if cycled around 2pi):
+    # = delta (also if cycled around 2pi):
     delta <- (b - a) %% (2 * pi)
     return(atan2(sin(a + delta / 2),
                  cos(a + delta / 2)) )
@@ -85,7 +85,7 @@
 
     # Counts of group `g` on arc `s`, as a vector over the candidates in
     # `sel` (an index vector into 1..M, or NULL for all M).
-    arc_cnt <- function(s, g, sel) {
+    arc_cnt <- function(s, g, sel = NULL) {
         if (s < k) {
             ia <- end_idx[[s]]; ib <- end_idx[[s + 1L]]
             if (!is.null(sel)) { ia <- ia[sel]; ib <- ib[sel] }
@@ -304,7 +304,7 @@ angularPartition <- function(crd,
     if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
 
     
-    # ---- Basic parameters ----
+    # ---- Basic constants ----
     
     n_pts   <- nrow(coords)
     grp_int <- as.integer(group)
@@ -313,6 +313,7 @@ angularPartition <- function(crd,
     # choose k of the n gaps between all points. 
     # Each angular k-partition corresponds to exactly
     # one such choice (see .angular_search).
+    
     combos <- combn(n_pts, k)
     
 
@@ -350,7 +351,7 @@ angularPartition <- function(crd,
         
 
         # function to optimize: n of misclassification from .angular_search()
-        # parameter to optimize: p = center coordinates
+        # parameter to optimize: p = center coordinates cx, cy
         fnToOpt <- function(p) {
             .angular_search(coords, grp_int, p[1], p[2],
                             k, n_pts, combos, full = FALSE)$misclass
@@ -416,6 +417,7 @@ angularPartition <- function(crd,
         cy <- cy_best
     }
     
+    # ---- if center is provided, starts right here... ----
     res         <- .angular_search(coords, grp_int,
                                    cx = cx, cy = cy,
                                    k, n_pts, combos, full = TRUE)

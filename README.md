@@ -2,7 +2,7 @@
 
 ## Overview
 
-facpart is a package with functions build on Facet Theory. It helps to partition 2-dimensional point configurations (such as multidimensional-scaling output) according to typical facet theoretical partition patterns.
+*facpart* is a package with functions build on Facet Theory. It helps to partition 2-dimensional point configurations (such as multidimensional-scaling output) according to typical facet theoretical partition patterns.
 
 Three types of common partion schemes are supported:
 
@@ -19,20 +19,15 @@ This package complements similar software for facet partitioning: The R smacof p
 
 Amar, R. (2001). Mathematical formulation of regionality in SSA and POSAC/MPOSAC. In: Elizur, D. (ed.). Facet theory: Integrating theory construction with data analysis. Prague: MATFYZPRESS (pp. 63-74).
 
-Amar, R., & Toledano, S. (2001) (2nd ed.). HUDAP Manual. Jerusalem: The Hebrew University of Jerusalem, Computation Authority.
+Amar, R., & Toledano, S. (2001) (2nd ed.). HUDAP Manual. Jerusalem: The Hebrew University of    Jerusalem, Computation Authority.
 
-Guttman, R., & Greenbaum, C. W. (1998). Facet theory: Its development 
-   and current status. European Psychologist, 3(1), 13-36.
+Guttman, R., & Greenbaum, C. W. (1998). Facet theory: Its development and current status. European Psychologist, 3(1), 13-36.
 
-Mair, P., Groenen, P., & De Leeuw, J. (2022). More on multidimensional scaling and unfolding in R: smacof version 2. *Journal of Statistical Software, 102*(10), 1-47. doi:10.18637/jss.v102.i10
+Mair, P., Groenen, P., & De Leeuw, J. (2022). More on multidimensional scaling and unfolding    in R: smacof version 2. *Journal of Statistical Software, 102*(10), 1-47. doi:10.18637/jss.v102.i10
 
-Shye, S. (2014). Faceted Smallest Space Analysis (FSSA). In A. Michalos (Ed.), 
-   Encyclopedia of quality of life research (pp. 2129-2133). 
-   New York: Springer.
+Shye, S. (2014). Faceted Smallest Space Analysis (FSSA). In A. Michalos (Ed.),  Encyclopedia of quality of life research (pp. 2129-2133). New York: Springer.
 
-Shye, S. (2015). New directions in facet theory. In S. Shye, 
-   E. Solomon, & I. Borg (Eds.), 15th International Facet Theory 
-   Conference (pp. 147-158). New York City: Fordham University.
+Shye, S. (2015). New directions in facet theory. In S. Shye, E. Solomon, & I. Borg (Eds.), 15th International Facet Theory Conference (pp. 147-158). New York City: Fordham University.
 
 
 ## Installation
@@ -69,6 +64,11 @@ res2$misclass
 - `plotrix` — `draw.circle()`, `draw.ellipse()`
 
 All other functionality uses base R. The package works well with the `smacof` package for multidimensional scaling.
+
+## Authors
+Main author: Hans-Rüdiger Pfister (rpfister57@gmail.com)
+Contributor: Gisela Böhm (gisela.boehm@uib.no)
+Contributor: Claude Code AI
 
 ## License
 
