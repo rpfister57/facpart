@@ -55,3 +55,5 @@ Authors:
 Other contributors:
 
 - Claude Code AI \[contributor\]
+
+- Gisela Böhm <gisela.boehm@uib.no> \[contributor\]

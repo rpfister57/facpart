@@ -7,6 +7,8 @@
 
 - **Claude Code AI**. Contributor.
 
+- **Gisela Böhm**. Contributor.
+
 ## Citation
 
 Pfister H (2026). *facpart: Facet Theory Partitioning of 2D
