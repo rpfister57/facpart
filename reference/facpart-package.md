@@ -54,6 +54,7 @@ Authors:
 
 Other contributors:
 
-- Claude Code AI \[contributor\]
+- Gisela Boehm <gisela.boehm@uib.no>
+  ([ORCID](https://orcid.org/0000-0002-5324-6990)) \[contributor\]
 
-- Gisela Böhm <gisela.boehm@uib.no> \[contributor\]
+- Claude Code AI \[contributor\]

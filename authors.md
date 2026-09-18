@@ -5,9 +5,10 @@
 - **Hans-Ruediger Pfister**. Author, maintainer, copyright holder.
   [](https://orcid.org/0000-0002-3802-4222)
 
-- **Claude Code AI**. Contributor.
+- **Gisela Boehm**. Contributor.
+  [](https://orcid.org/0000-0002-5324-6990)
 
-- **Gisela Böhm**. Contributor.
+- **Claude Code AI**. Contributor.
 
 ## Citation
 

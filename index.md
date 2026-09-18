@@ -2,7 +2,7 @@
 
 ## Overview
 
-facpart is a package with functions build on Facet Theory. It helps to
+*facpart* is a package with functions build on Facet Theory. It helps to
 partition 2-dimensional point configurations (such as
 multidimensional-scaling output) according to typical facet theoretical
 partition patterns.
@@ -98,6 +98,11 @@ res2$misclass
 
 All other functionality uses base R. The package works well with the
 `smacof` package for multidimensional scaling.
+
+## Authors
+
+Main author: Hans-Rüdiger Pfister (<rpfister57@gmail.com>) Contributor:
+Gisela Böhm (<gisela.boehm@uib.no>) Contributor: Claude Code AI
 
 ## License
 
