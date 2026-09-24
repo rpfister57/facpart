@@ -8,6 +8,7 @@
 #' @noRd
 .circle_pts <- function(cx, cy, r, n = 200L) {
     # draw points of a circle
+    # with center cx, cy, and radius r
     theta <- seq(0, 2 * pi, length.out = n + 1L)[-1L]
     cbind(cx + r * cos(theta), cy + r * sin(theta))
 }
@@ -97,7 +98,8 @@
         opt <- optim(par = .snap_zero(s0, parscale),
                      fn = eval_ctr,
                      method = meth,
-                     control = list(reltol = 1e-8, maxit = 2000,
+                     control = list(reltol = 1e-8, 
+                                    maxit = 2000,
                                     parscale = parscale))
         if (is.null(best) || opt$value < best$value) best <- opt
         if (best$value == 0) break          # zero misclass is optimal
@@ -108,7 +110,10 @@
     # provable optimum; see .grid_seeds() (utils.R) for why two grids are
     # scanned rather than one.
     if (best$value > 0) {
-        for (p in .grid_seeds(eval_ctr, range(pcoords[, 1]), range(pcoords[, 2]), n_grid)) {
+        for (p in .grid_seeds(eval_ctr, 
+                              range(pcoords[, 1]), 
+                              range(pcoords[, 2]), 
+                              n_grid)) {
             opt <- optim(par = .snap_zero(p, parscale),
                          fn = eval_ctr,
                          method = meth,
@@ -222,6 +227,21 @@
     max_correct <- bb$max_correct
     at          <- bb$at
     mrg_mat <- matrix(cp$margin[pidx[, at, drop = FALSE]], nrow = k - 1L)
+
+    # An empty *interior* region (two adjacent cuts sharing the same
+    # position) isn't caught by cp$margin's own zeroing, which only covers
+    # the boundary positions 0 and n. Zero both cuts bounding any such tie
+    # here too, so every empty region -- boundary or interior -- costs its
+    # candidate the margin tie-break, not just a lucky subset of them.
+    # Without this, an interior tie can inherit the large, perfectly real
+    # margin of the shared position's own gap and beat a genuinely
+    # non-degenerate candidate it has no business beating.
+    if (k >= 3L) {
+        pos_at <- pos[, at, drop = FALSE]
+        dup    <- pos_at[-1L, , drop = FALSE] == pos_at[-(k - 1L), , drop = FALSE]
+        mrg_mat[-1L, ][dup]       <- 0
+        mrg_mat[-(k - 1L), ][dup] <- 0
+    }
     mrg_at  <- if (k == 2L) mrg_mat[1L, ] else apply(mrg_mat, 2L, min)
 
     # which.max returns the first maximum and `at` is increasing, so the
@@ -323,8 +343,12 @@
 #' Binary radial partition (one separating circle)
 #'
 #' Finds the circle minimising misclassification between two groups of 2D
-#' points. The center is found by multi-start Nelder-Mead (starts: data
-#' centroid plus each group's centroid) unless `cx` and `cy` are supplied.
+#' points. The center can be provided (fixed), or searched if cx and cy
+#' are not given.
+#' 
+#' **Searching optimal center.** The center is found by multi-start 
+#' Nelder-Mead (starts: data centroid plus each group's centroid) 
+#' unless `cx` and `cy` are supplied.
 #' Because the inner search is piecewise-constant, Nelder-Mead can stall on
 #' a flat plateau around any of those starts; if none reaches zero
 #' misclassification, a coarse `n_grid` x `n_grid` scan of the bounding

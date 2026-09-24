@@ -67,8 +67,12 @@ All other functionality uses base R. The package works well with the `smacof` pa
 
 ## Authors
 Main author: Hans-Rüdiger Pfister (rpfister57@gmail.com)
+
 Contributor: Gisela Böhm (gisela.boehm@uib.no)
+
 Contributor: Claude Code AI
+
+
 
 ## License
 
