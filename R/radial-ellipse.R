@@ -32,9 +32,19 @@
 
 
 #' @noRd
-.eval_ellipse <- function(params, coords, 
+.eval_ellipse <- function(params, coords,
                           inner_flag, prev_bnd = NULL,
-                          penalty = 1e6) {
+                          penalty = 1e6,
+                          prev_in = NULL, min_out = 1L,
+                          weight = 0, track = NULL) {
+    # prev_in flags the points inside the previous ellipses. No region may
+    # be empty, so an ellipse is feasible only if it adds at least one point
+    # to them and leaves at least min_out points outside for the regions
+    # still to come. `short` counts the missing points; the value returned
+    # is misclass + weight * short. When `track` (an environment) is given,
+    # the best feasible ellipse evaluated so far is recorded in it, so a
+    # search can walk through infeasible territory and still return the
+    # best feasible point it visited (see .optimize_ellipse()).
     cx    <- params[1]
     cy    <- params[2]
     a     <- abs(params[3])
@@ -57,7 +67,18 @@
     u      <-  cos_a * dx + sin_a * dy
     v      <- -sin_a * dx + cos_a * dy
     inside <- (u / a)^2 + (v / b)^2 <= 1
-    sum(inner_flag & !inside) + sum(!inner_flag & inside)
+
+    new_pts <- if (is.null(prev_in)) inside  else inside  & !prev_in
+    out_pts <- if (is.null(prev_in)) !inside else !inside & !prev_in
+    short   <- max(0L, 1L - sum(new_pts)) + max(0L, min_out - sum(out_pts))
+    err     <- sum(inner_flag & !inside) + sum(!inner_flag & inside)
+
+    if (!is.null(track) && short == 0L && err < track$value) {
+        track$value <- err
+        track$par   <- params
+    }
+
+    err + weight * short
 }
 
 
@@ -89,9 +110,10 @@
 
 
 #' @noRd
-.optimize_ellipse <- function(coords, inner_flag, 
+.optimize_ellipse <- function(coords, inner_flag,
                               prev = NULL, starts,
-                              n_grid = 7L) {
+                              n_grid = 7L,
+                              prev_in = NULL, min_out = 1L) {
     x_range   <- diff(range(coords[, 1]))
     y_range   <- diff(range(coords[, 2]))
     if (x_range == 0) x_range <- 1
@@ -113,51 +135,81 @@
     # .snap_zero(), utils.R). Confirmed on real MDS data: one group's own
     # covariance-based init landed inside such a plateau and stalled
     # several misclassifications above the true optimum.
-    best <- NULL
-    for (init in starts) {
-        init[1:2] <- .snap_zero(init[1:2], parscale[1:2])
-        opt <- optim(
-            par        = init,
-            fn         = .eval_ellipse,
-            coords     = coords,
-            inner_flag = inner_flag,
-            prev_bnd   = prev_bnd,
-            method     = "Nelder-Mead",
-            control    = list(reltol = 1e-8, maxit = 5000,
-                              parscale = parscale)
-        )
-        if (is.null(best) || opt$value < best$value) best <- opt
-        if (best$value == 0) break          # zero misclass is optimal
-    }
+    n_pts <- nrow(coords)
+    track <- new.env(parent = emptyenv())
+    track$value <- Inf
+    track$par   <- NULL
 
-    # ---- Coarse grid fallback (center only) ----
-    # A full 5D grid is infeasible, so this relocates just (cx, cy):
-    # holding (a, b, angle) at whatever the starts above already found,
-    # scan for a better center, then re-optimise all 5 parameters together
-    # from there. Only pay for it when the starts didn't already reach the
-    # provable optimum; see .grid_seeds() (utils.R) for why two grids
-    # (plain bounding box, and one padded by half the data range) are
-    # scanned rather than one.
-    if (best$value > 0) {
-        shape    <- best$par[3:5]
-        eval_ctr <- function(ctr) {
-            .eval_ellipse(c(ctr[1], ctr[2], shape),
-                         coords, inner_flag, prev_bnd)
-        }
-        for (p in .grid_seeds(eval_ctr, range(coords[, 1]), range(coords[, 2]), n_grid)) {
-            opt <- optim(
-                par        = c(.snap_zero(p, parscale[1:2]), shape),
+    search <- function(weight) {
+        run <- function(par) {
+            optim(
+                par        = par,
                 fn         = .eval_ellipse,
                 coords     = coords,
                 inner_flag = inner_flag,
                 prev_bnd   = prev_bnd,
+                prev_in    = prev_in,
+                min_out    = min_out,
+                weight     = weight,
+                track      = track,
                 method     = "Nelder-Mead",
                 control    = list(reltol = 1e-8, maxit = 5000,
                                   parscale = parscale)
             )
-            if (opt$value < best$value) best <- opt
-            if (best$value == 0) break      # zero misclass is optimal
         }
+
+        best <- NULL
+        for (init in starts) {
+            init[1:2] <- .snap_zero(init[1:2], parscale[1:2])
+            opt <- run(init)
+            if (is.null(best) || opt$value < best$value) best <- opt
+            if (best$value == 0) break          # zero misclass is optimal
+        }
+
+        # ---- Coarse grid fallback (center only) ----
+        # A full 5D grid is infeasible, so this relocates just (cx, cy):
+        # holding (a, b, angle) at whatever the starts above already found,
+        # scan for a better center, then re-optimise all 5 parameters
+        # together from there. Only pay for it when the starts didn't
+        # already reach the provable optimum; see .grid_seeds() (utils.R)
+        # for why two grids (plain bounding box, and one padded by half the
+        # data range) are scanned rather than one.
+        if (best$value > 0) {
+            shape    <- best$par[3:5]
+            eval_ctr <- function(ctr) {
+                .eval_ellipse(c(ctr[1], ctr[2], shape),
+                              coords, inner_flag, prev_bnd,
+                              prev_in = prev_in, min_out = min_out,
+                              weight = weight)
+            }
+            for (p in .grid_seeds(eval_ctr, range(coords[, 1]), range(coords[, 2]), n_grid)) {
+                opt <- run(c(.snap_zero(p, parscale[1:2]), shape))
+                if (opt$value < best$value) best <- opt
+                if (best$value == 0) break      # zero misclass is optimal
+            }
+        }
+        best
+    }
+
+    # No region may be empty. Search the plain misclassification landscape
+    # first: penalising infeasible ellipses from the start would reshape it
+    # around starts that enclose every point (the covariance start often
+    # does) and measurably steer Nelder-Mead away from feasible optima the
+    # plain search finds. If the plain optimum is feasible, take it as is;
+    # otherwise take the best feasible ellipse the search visited, and only
+    # if it visited none, search again with violations penalised by (n + 1)
+    # per missing point -- worse than any feasible fit (misclass <= n), yet
+    # graded so the search is pushed towards feasibility.
+    best <- search(weight = 0)
+    if (.eval_ellipse(best$par, coords, inner_flag, prev_bnd,
+                      prev_in = prev_in, min_out = min_out,
+                      weight = n_pts + 1L) > n_pts) {
+        if (is.null(track$par)) search(weight = n_pts + 1L)
+        if (is.null(track$par))
+            return(list(cx = NA_real_, cy = NA_real_, a = NA_real_,
+                        b = NA_real_, angle = NA_real_,
+                        misclass = n_pts + 1L))
+        best <- list(par = track$par, value = track$value)
     }
 
     p <- best$par
@@ -207,6 +259,9 @@
 #' shape and orientation fixed) over the bounding box, padded by half the
 #' data range on each side, and one more full 5-parameter Nelder-Mead run is
 #' seeded from the best cell found.
+#'
+#' Both regions must be non-empty: an ellipse containing no point or every
+#' point is never returned, even where it would misclassify fewer points.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
 #' @param group Factor with exactly 2 levels.
@@ -260,8 +315,9 @@ radialEllipse <- function(crd,
     if (dim(crd)[2] != 2)           stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
 
-    group <- as.factor(group)
+    group <- droplevels(as.factor(group))
     if (nlevels(group) != 2) stop("group must have exactly 2 levels!")
+    if (nrow(crd) < 2L)      stop("Number of points must be >= number of groups!")
 
     coords  <- as.matrix(crd)
     grp_int <- as.integer(group)
@@ -270,6 +326,8 @@ radialEllipse <- function(crd,
     res    <- .elliptic_cuts_2(coords, grp_int, n_grid = n_grid)
     ell    <- res$ellipse
     sector <- res$sector
+    if (any(tabulate(sector, nbins = 2L) == 0L))
+        stop("No partition without empty regions was found!")
 
     # ---- Majority labels and misclassification ----
     count_mat <- matrix(0L, nrow = 2L, ncol = 2L)
@@ -363,6 +421,13 @@ radialEllipse <- function(crd,
 #' fallback relocates its center before one more full refit (ignored in
 #' the fixed-`ellipse` mode, which has no Nelder-Mead step).
 #'
+#' **Every region is non-empty:** each ellipse must add at least one point
+#' to the ones inside it and leave points outside for the remaining regions.
+#' A partition leaving a group without a region is never returned, even
+#' where it would misclassify fewer points; if none is found, the function
+#' stops. A supplied `ellipse` must therefore contain at least one point and
+#' leave at least `k - 1` outside.
+#'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
 #' @param group Factor with `k >= 2` levels. **Factor level order does not
 #'   matter**: the inside-to-outside nesting order is found from the data, so
@@ -440,9 +505,10 @@ radialEllipses <- function(crd,
         }
     }
 
-    group <- as.factor(group)
+    group <- droplevels(as.factor(group))
     k     <- nlevels(group)
-    if (k < 2L) stop("group must have at least 2 levels!")
+    if (k < 2L)        stop("group must have at least 2 levels!")
+    if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
 
     coords  <- as.matrix(crd)
     grp_int <- as.integer(group)
@@ -477,6 +543,12 @@ radialEllipses <- function(crd,
         crit_t   <- sqrt((u / a_fix)^2 + (v / b_fix)^2)
         ord      <- order(crit_t)
         t_sorted <- crit_t[ord]
+
+        # The supplied ellipse is region 1 as given, so it alone decides
+        # whether that region and the room left for the others are non-empty.
+        if (sum(crit_t <= 1) < 1L || sum(crit_t > 1) < k - 1L)
+            stop("ellipse must contain at least 1 point and leave at least ",
+                 "k - 1 points outside!")
     }
 
     # Fit all k-1 ellipses for one candidate nesting order (innermost group
@@ -491,6 +563,8 @@ radialEllipses <- function(crd,
 
         out <- vector("list", k - 1L)
 
+        # Returns NULL when some ellipse has no fit that keeps every region
+        # non-empty, i.e. this nesting order is infeasible.
         if (fixed_shape) {
             # Innermost ellipse: exactly as supplied (t_1 = 1)
             out[[1]] <- list(cx = cx_fix, cy = cy_fix,
@@ -503,7 +577,10 @@ radialEllipses <- function(crd,
                 prev_t <- 1
                 for (s in 2L:(k - 1L)) {
                     res <- .best_radius(t_sorted, (rk <= s)[ord],
-                                        r_min = prev_t)
+                                        r_min   = prev_t,
+                                        n_prev  = sum(t_sorted <= prev_t),
+                                        min_out = k - s)
+                    if (is.na(res$r)) return(NULL)
                     t_s <- res$r
                     out[[s]] <- list(cx = cx_fix, cy = cy_fix,
                                      a = a_fix * t_s,
@@ -514,7 +591,8 @@ radialEllipses <- function(crd,
             }
         } else {
             # Independent-ellipse branch (original behaviour).
-            prev <- NULL
+            prev    <- NULL
+            prev_in <- rep(FALSE, n_pts)
             for (s in seq_len(k - 1L)) {
                 inner_flag <- rk <= s
                 starts     <- list(.init_ellipse_params(coords, inner_flag))
@@ -526,9 +604,14 @@ radialEllipses <- function(crd,
                 }
                 ell      <- .optimize_ellipse(coords, inner_flag,
                                               prev = prev, starts = starts,
-                                              n_grid = n_grid)
+                                              n_grid = n_grid,
+                                              prev_in = prev_in,
+                                              min_out = k - s)
+                if (ell$misclass > n_pts) return(NULL)
                 out[[s]] <- ell
                 prev     <- ell
+                prev_in  <- prev_in | .in_ellipse(coords, ell$cx, ell$cy,
+                                                  ell$a, ell$b, ell$angle)
             }
         }
 
@@ -566,11 +649,15 @@ radialEllipses <- function(crd,
     best <- NULL
     for (nest_ord in cands) {
         ell <- fit_one(nest_ord)
+        if (is.null(ell)) next
         sec <- sector_of(ell)
+        if (any(tabulate(sec, nbins = k) == 0L)) next
         err <- .partition_err(sec, grp_int, k)
         if (is.null(best) || err < best$err)
             best <- list(ell = ell, sector = sec, err = err)
     }
+    if (is.null(best))
+        stop("No partition without empty regions was found!")
 
     ellipses <- best$ell
     sector   <- best$sector

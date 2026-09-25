@@ -72,8 +72,9 @@ axialLine <- function(crd,
     if (nrow(crd) != length(group))  stop("nrow(crd) must equal length(group)!")
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
     
-    group <- as.factor(group)
+    group <- droplevels(as.factor(group))
     if (nlevels(group) != 2) stop("group must have exactly 2 levels!")
+    if (nrow(crd) < 2L)      stop("Number of points must be >= number of groups!")
 
     coords  <- as.matrix(crd)
     levels_ <- levels(group)
@@ -247,9 +248,10 @@ axialLines <- function(crd,
     if (n_angles < 1L)         stop("n_angles must be >= 1!")
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
     
-    group <- as.factor(group)
+    group <- droplevels(as.factor(group))
     k     <- nlevels(group)
-    if (k < 2) stop("group must have at least 2 levels!")
+    if (k < 2)         stop("group must have at least 2 levels!")
+    if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
 
     # ---- define constants ----
     coords  <- as.matrix(crd)

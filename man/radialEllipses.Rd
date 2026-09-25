@@ -86,6 +86,13 @@ piecewise-constant and can stall on a flat plateau around either start;
 when that happens for a given ellipse, a coarse \code{n_grid} x \code{n_grid}
 fallback relocates its center before one more full refit (ignored in
 the fixed-\code{ellipse} mode, which has no Nelder-Mead step).
+
+\strong{Every region is non-empty:} each ellipse must add at least one point
+to the ones inside it and leave points outside for the remaining regions.
+A partition leaving a group without a region is never returned, even
+where it would misclassify fewer points; if none is found, the function
+stops. A supplied \code{ellipse} must therefore contain at least one point and
+leave at least \code{k - 1} outside.
 }
 \examples{
 \dontrun{

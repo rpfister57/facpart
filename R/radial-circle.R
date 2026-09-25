@@ -15,13 +15,23 @@
 
 
 #' @noRd
-.best_radius <- function(s_dist, s_flag, r_min = 0) {
-    n        <- length(s_dist)
+.best_radius <- function(s_dist, s_flag, r_min = 0, n_prev = 0L, min_out = 1L) {
+    # One circle of a sequential nested fit: the best split "points 1..i
+    # inside" of the distance-sorted points, scored inner vs outer. No
+    # region may be empty, so the split must add at least one point to the
+    # n_prev points already inside the previous circle (all of which lie
+    # within r_min, hence among 1..i) and leave at least min_out points
+    # outside for the regions still to come. When no split qualifies,
+    # r = NA and misclass = n + 1, worse than any feasible split.
+    n <- length(s_dist)
+    if (n < 2L) return(list(r = NA_real_, misclass = n + 1L))
+
     cs_not   <- cumsum(!s_flag)
     total_in <- sum(s_flag)
     cs_in    <- cumsum(s_flag)
     r_cands  <- (s_dist[-n] + s_dist[-1L]) / 2
     errs     <- cs_not[-n] + (total_in - cs_in[-n])
+    i_split  <- seq_len(n - 1L)
 
     # A split at index i (points 1..i inside) is realised by any radius in
     # [max(s_dist[i], r_min), s_dist[i+1]) -- note the inside test is
@@ -30,37 +40,16 @@
     # that are still reachable at r = r_min. A split with
     # s_dist[i] == s_dist[i+1] is not realisable at all (no radius separates
     # coincident distances), so it must not be scored.
-    sp_ok    <- s_dist[-n] < s_dist[-1L] & s_dist[-1L] > r_min
-    r_try    <- pmax(r_cands, r_min)
-    best_err <- 2L * n
-    best_r   <- NA_real_
+    sp_ok <- s_dist[-n] < s_dist[-1L] & s_dist[-1L] > r_min &
+             i_split > n_prev & n - i_split >= min_out
+    if (!any(sp_ok)) return(list(r = NA_real_, misclass = n + 1L))
 
-    if (any(sp_ok)) {
-        idx      <- which(sp_ok)
-        best_i   <- idx[which.min(errs[idx])]
-        best_err <- errs[best_i]
-        best_r   <- r_try[best_i]
-    }
-
-    r_all_in   <- max(s_dist) * 1.05 + 1e-6
-    if (r_all_in < r_min) r_all_in <- r_min * 1.05 + 1e-6
-    err_all_in <- sum(!s_flag)
-    if (err_all_in < best_err || is.na(best_r)) {
-        best_err <- err_all_in
-        best_r   <- r_all_in
-    }
-
-    if (r_min < s_dist[1L]) {
-        err_all_out <- sum(s_flag)
-        if (err_all_out < best_err) {
-            best_err <- err_all_out
-            best_r   <- (r_min + s_dist[1L]) / 2
-        }
-    }
+    idx    <- which(sp_ok)
+    best_i <- idx[which.min(errs[idx])]
 
     return(list(
-        r = best_r,
-        misclass = best_err))
+        r = max(r_cands[best_i], r_min),
+        misclass = errs[best_i]))
 }
 
 
@@ -70,8 +59,13 @@
                              prev_cx, prev_cy, prev_r,
                              starts,
                              meth = "Nelder-Mead",
-                             n_grid = 7L) {
+                             n_grid = 7L,
+                             min_out = 1L) {
     has_prev <- !is.null(prev_r)
+    # Points inside the previous circle; nesting puts them all inside this one.
+    n_prev   <- if (has_prev)
+        sum(sqrt((pcoords[, 1] - prev_cx)^2 + (pcoords[, 2] - prev_cy)^2) <= prev_r)
+    else 0L
 
     parscale <- c(diff(range(pcoords[, 1])), diff(range(pcoords[, 2])))
     parscale[parscale == 0] <- 1
@@ -82,7 +76,7 @@
         rmin <- if (has_prev) sqrt((cx_ - prev_cx)^2 + (cy_ - prev_cy)^2) + prev_r else 0
         ord  <- order(d)
         return(
-            .best_radius(d[ord], inner_flag[ord], rmin)$misclass)
+            .best_radius(d[ord], inner_flag[ord], rmin, n_prev, min_out)$misclass)
     }
 
     # multi-start: keep the optim() result with lowest misclassification.
@@ -128,7 +122,7 @@
     d_opt  <- sqrt((pcoords[, 1] - cx_opt)^2 + (pcoords[, 2] - cy_opt)^2)
     r_min  <- if (has_prev) sqrt((cx_opt - prev_cx)^2 + (cy_opt - prev_cy)^2) + prev_r else 0
     ord    <- order(d_opt)
-    res    <- .best_radius(d_opt[ord], inner_flag[ord], r_min)
+    res    <- .best_radius(d_opt[ord], inner_flag[ord], r_min, n_prev, min_out)
 
     return(list(
         cx = cx_opt,
@@ -143,36 +137,18 @@
     # Realisable cut positions along the distance-sorted sequence, with the
     # radius and margin realising each. Position p means "the p nearest
     # points are inside", realised by any radius in [s_dist[p], s_dist[p+1])
-    # -- the inside test is `dist <= r`. So:
-    #   p = 0 (nothing inside) needs r < s_dist[1], possible only when
-    #     s_dist[1] > 0;
-    #   0 < p < n needs s_dist[p] < s_dist[p+1] -- no radius separates
-    #     coincident distances, so such a p is NOT realisable;
-    #   p = n (everything inside) always is.
-    # The margin is the half-gap the boundary sits in, and is 0 for p = 0
-    # and p = n: those boundaries separate no points, so on a tie the
-    # margin tie-break prefers a partition whose every circle really does
-    # split the configuration.
-    n   <- length(s_dist)
-    pos <- integer(0); rad <- numeric(0); mrg <- numeric(0)
-    if (s_dist[1L] > 0) {
-        pos <- 0L
-        rad <- s_dist[1L] / 2
-        mrg <- 0
-    }
-    if (n >= 2L) {
-        ok <- which(s_dist[-n] < s_dist[-1L])
-        if (length(ok) > 0L) {
-            pos <- c(pos, ok)
-            rad <- c(rad, (s_dist[ok] + s_dist[ok + 1L]) / 2)
-            mrg <- c(mrg, (s_dist[ok + 1L] - s_dist[ok]) / 2)
-        }
-    }
-    pos <- c(pos, n)
-    rad <- c(rad, s_dist[n] * 1.05 + 1e-6)
-    mrg <- c(mrg, 0)
+    # -- the inside test is `dist <= r`. Only 0 < p < n is offered: p = 0
+    # (nothing inside) and p = n (everything inside) would leave a region
+    # empty, which is never allowed. An interior p also needs
+    # s_dist[p] < s_dist[p+1] -- no radius separates coincident distances,
+    # so such a p is NOT realisable. The margin is the half-gap the
+    # boundary sits in.
+    n  <- length(s_dist)
+    ok <- if (n >= 2L) which(s_dist[-n] < s_dist[-1L]) else integer(0)
 
-    return(list(pos = pos, radius = rad, margin = mrg))
+    return(list(pos    = ok,
+                radius = (s_dist[ok] + s_dist[ok + 1L]) / 2,
+                margin = (s_dist[ok + 1L] - s_dist[ok]) / 2))
 }
 
 
@@ -180,12 +156,14 @@
 .radial_search <- function(s_dist, s_grp, k, full = TRUE) {
     # Given points already sorted by distance from the center, find the best
     # nested k-partition of the distance axis by brute force. A candidate is
-    # a choice of k-1 cut positions p_1 <= ... <= p_{k-1} out of the
-    # realisable positions from .cut_radii(); region s spans sorted
-    # positions p_{s-1}+1 .. p_s (p_0 = 0, p_k = n). Repeats are allowed, so
-    # a region may be empty -- when the data have no radial structure an
-    # empty region really is the optimum, and forbidding it would make the
-    # reported misclass worse than the criterion's true minimum.
+    # a choice of k-1 cut positions p_1 < ... < p_{k-1} out of the
+    # realisable interior positions from .cut_radii(); region s spans sorted
+    # positions p_{s-1}+1 .. p_s (p_0 = 0, p_k = n). The cuts are strictly
+    # increasing and never 0 or n, so every region is non-empty: a partition
+    # that leaves a group without a region is not a valid regional
+    # hypothesis, even where it would lower the misclassification. With
+    # fewer than k-1 realisable positions (too many tied distances) there is
+    # no such partition: misclass is n + 1 when full = FALSE, else an error.
     #
     # Candidates are scored by .bij_best() (utils.R): the exact
     # bijection-constrained misclassification, i.e. the best total correct
@@ -197,10 +175,13 @@
     cp    <- .cut_radii(s_dist)
     m     <- length(cp$pos)
 
-    # Non-decreasing (k-1)-tuples of cut positions = combinations with
-    # repetition: take the strictly increasing (k-1)-subsets of
-    # 1..(m + k - 2) and shift row i down by i - 1.
-    pidx <- combn(m + k - 2L, k - 1L) - (0L:(k - 2L))
+    if (m < k - 1L) {
+        if (!full) return(list(misclass = n_pts + 1L))
+        stop("No partition without empty regions exists at this center!")
+    }
+
+    # Strictly increasing (k-1)-tuples of indices into the m cut positions.
+    pidx <- combn(m, k - 1L)
     M    <- ncol(pidx)
     pos  <- matrix(cp$pos[pidx], nrow = k - 1L)
 
@@ -227,21 +208,6 @@
     max_correct <- bb$max_correct
     at          <- bb$at
     mrg_mat <- matrix(cp$margin[pidx[, at, drop = FALSE]], nrow = k - 1L)
-
-    # An empty *interior* region (two adjacent cuts sharing the same
-    # position) isn't caught by cp$margin's own zeroing, which only covers
-    # the boundary positions 0 and n. Zero both cuts bounding any such tie
-    # here too, so every empty region -- boundary or interior -- costs its
-    # candidate the margin tie-break, not just a lucky subset of them.
-    # Without this, an interior tie can inherit the large, perfectly real
-    # margin of the shared position's own gap and beat a genuinely
-    # non-degenerate candidate it has no business beating.
-    if (k >= 3L) {
-        pos_at <- pos[, at, drop = FALSE]
-        dup    <- pos_at[-1L, , drop = FALSE] == pos_at[-(k - 1L), , drop = FALSE]
-        mrg_mat[-1L, ][dup]       <- 0
-        mrg_mat[-(k - 1L), ][dup] <- 0
-    }
     mrg_at  <- if (k == 2L) mrg_mat[1L, ] else apply(mrg_mat, 2L, min)
 
     # which.max returns the first maximum and `at` is increasing, so the
@@ -292,8 +258,9 @@
     # the final k-region partition. Each sweep rescans one radius over all
     # realisable values -- honouring the nesting constraint on both sides,
     # since circle s must contain circle s-1 and fit inside circle s+1 --
-    # and keeps a change only when the total strictly improves. The error is
-    # a bounded integer that never increases, so this terminates.
+    # and keeps a change only when it leaves every region non-empty and the
+    # total strictly improves. The error is a bounded integer that never
+    # increases, so this terminates.
     n_pts <- nrow(pcoords)
     d_mat <- vapply(seq_len(k - 1L),
                     function(s) sqrt((pcoords[, 1] - cx_vec[s])^2 +
@@ -312,6 +279,7 @@
     }
 
     cur <- .partition_err(sector_at(radii), grp_int, k)
+    if (any(tabulate(sector_at(radii), nbins = k) == 0L)) cur <- n_pts + 1L
 
     repeat {
         improved <- FALSE
@@ -325,7 +293,9 @@
             for (r_try in cand[[s]][cand[[s]] >= lo & cand[[s]] <= hi]) {
                 rr    <- radii
                 rr[s] <- r_try
-                err   <- .partition_err(sector_at(rr), grp_int, k)
+                sec   <- sector_at(rr)
+                if (any(tabulate(sec, nbins = k) == 0L)) next   # empty region
+                err   <- .partition_err(sec, grp_int, k)
                 if (err < cur) {
                     cur      <- err
                     radii    <- rr
@@ -363,11 +333,11 @@
 #' used to derive `sector`/`majority` below, so the search targets exactly
 #' the quantity reported as `misclass`, and neither group is assumed to be
 #' the inner one. Radii that separate coincident distances are skipped as
-#' unrealisable. The scan also considers the degenerate radii that leave one
-#' region empty; when the configuration has no radial structure these can be
-#' the true minimum, so they are allowed, but on a tie a circle that really
-#' does split the points is preferred. `radialCircles()` with `k = 2` and the
-#' same center returns the same circle.
+#' unrealisable. Both regions must be non-empty, so a circle containing no
+#' point or every point is never returned, even where it would misclassify
+#' fewer points; if no such circle exists at a supplied center (all points
+#' equidistant from it), the function stops. `radialCircles()` with `k = 2`
+#' and the same center returns the same circle.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
 #' @param group Factor with exactly 2 levels.
@@ -424,8 +394,9 @@ radialCircle <- function(crd,
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
     if (!(.method %in% c("Nelder-Mead", "SANN"))) stop("Method not available!")
 
-    group <- as.factor(group)
+    group <- droplevels(as.factor(group))
     if (nlevels(group) != 2) stop("group must have exactly 2 levels!")
+    if (nrow(crd) < 2L)      stop("Number of points must be >= number of groups!")
 
     pcoords  <- as.matrix(crd)
     grp_int <- as.integer(group)
@@ -578,10 +549,12 @@ radialCircle <- function(crd,
 #' `k!` ways of matching the `k` regions to the `k` groups, each group used
 #' once. This is the same criterion `sector`/`majority` are derived from, so
 #' the search targets exactly the quantity reported as `misclass`. Radii that
-#' would separate coincident distances are skipped as unrealisable, and radii
-#' leaving a region empty are allowed — on data with no radial structure such
-#' a partition can be the true minimum — but a partition whose every circle
-#' actually splits the points wins any tie.
+#' would separate coincident distances are skipped as unrealisable. **Every
+#' region is non-empty:** each circle must add at least one point to the one
+#' inside it and leave points outside for the remaining regions. A partition
+#' leaving a group without a region is never returned, even where it would
+#' misclassify fewer points; if none exists (e.g. too many points tied in
+#' distance from a supplied center), the function stops.
 #'
 #' **Optimality.** Concentric (`cx` and `cy` supplied): all `k-1` radii are
 #' searched *jointly* over every realisable combination, so the result is
@@ -665,9 +638,10 @@ radialCircles <- function(crd,
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
     if (!(.method %in% c("Nelder-Mead", "SANN"))) stop("Method not available!")
 
-    group <- as.factor(group)
+    group <- droplevels(as.factor(group))
     k     <- nlevels(group)
-    if (k < 2L) stop("group must have at least 2 levels!")
+    if (k < 2L)        stop("group must have at least 2 levels!")
+    if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
 
     pcoords  <- as.matrix(crd)
     grp_int <- as.integer(group)
@@ -694,13 +668,13 @@ radialCircles <- function(crd,
         d_sorted <- d[ord]
 
         # The joint search builds (k-1) x M integer index matrices, so its
-        # cost grows as choose(m + k - 2, k - 1); past a few tens of
+        # cost grows as choose(m, k - 1); past a few tens of
         # millions of cells that is gigabytes. Beyond the cap, fall back to
         # the same sequential fit plus radius refinement the
         # independent-centers branch uses -- locally, not globally, optimal,
         # so say so rather than silently returning a weaker answer.
         m_pos <- length(.cut_radii(d_sorted)$pos)
-        if (choose(m_pos + k - 2L, k - 1L) * (k - 1L) <= 3e7) {
+        if (choose(m_pos, k - 1L) * (k - 1L) <= 3e7) {
             res <- .radial_search(d_sorted, grp_int[ord], k)
             for (s in seq_len(k - 1L))
                 circles[[s]] <- list(cx = cx, cy = cy, r = res$radii[s])
@@ -731,10 +705,15 @@ radialCircles <- function(crd,
             out     <- vector("list", k - 1L)
             prev_cx <- NULL; prev_cy <- NULL; prev_r <- NULL
 
+            # Returns NULL when some circle has no split that keeps every
+            # region non-empty, i.e. this nesting order is infeasible.
             if (fixed_center) {
                 for (s in seq_len(k - 1L)) {
                     r_min    <- if (is.null(prev_r)) 0 else prev_r
-                    res      <- .best_radius(d_sorted, (rk <= s)[ord], r_min)
+                    res      <- .best_radius(d_sorted, (rk <= s)[ord], r_min,
+                                             n_prev  = sum(d_sorted <= r_min),
+                                             min_out = k - s)
+                    if (is.na(res$r)) return(NULL)
                     out[[s]] <- list(cx = cx, cy = cy, r = res$r)
                     prev_r   <- res$r
                 }
@@ -753,7 +732,9 @@ radialCircles <- function(crd,
                                                  prev_cx, prev_cy, prev_r,
                                                  starts,
                                                  meth = .method,
-                                                 n_grid = n_grid)
+                                                 n_grid = n_grid,
+                                                 min_out = k - s)
+                    if (is.na(circ$r)) return(NULL)
                     out[[s]] <- circ
                     prev_cx  <- circ$cx; prev_cy <- circ$cy; prev_r <- circ$r
                 }
@@ -777,17 +758,21 @@ radialCircles <- function(crd,
         best <- NULL
         for (nest_ord in cands) {
             cc  <- fit_one(nest_ord)
+            if (is.null(cc)) next
             cxv <- vapply(cc, function(z) z$cx, numeric(1))
             cyv <- vapply(cc, function(z) z$cy, numeric(1))
             # The sequential fit scores each circle in isolation, which is not
             # the quantity reported below, so refine before scoring.
             rv  <- .refine_radii(pcoords, grp_int, cxv, cyv,
                                  vapply(cc, function(z) z$r, numeric(1)), k)
-            err <- .partition_err(
-                .nested_sector(pcoords, cxv, cyv, rv, k), grp_int, k)
+            sec <- .nested_sector(pcoords, cxv, cyv, rv, k)
+            if (any(tabulate(sec, nbins = k) == 0L)) next
+            err <- .partition_err(sec, grp_int, k)
             if (is.null(best) || err < best$err)
                 best <- list(cx = cxv, cy = cyv, r = rv, err = err)
         }
+        if (is.null(best))
+            stop("No partition without empty regions was found!")
 
         for (s in seq_len(k - 1L))
             circles[[s]] <- list(cx = best$cx[s], cy = best$cy[s], r = best$r[s])

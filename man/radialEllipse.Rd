@@ -63,6 +63,10 @@ shape and orientation fixed) over the bounding box, padded by half the
 data range on each side, and one more full 5-parameter Nelder-Mead run is
 seeded from the best cell found.
 }
+\details{
+Both regions must be non-empty: an ellipse containing no point or every
+point is never returned, even where it would misclassify fewer points.
+}
 \examples{
 \dontrun{
 set.seed(1)
