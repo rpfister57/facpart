@@ -101,8 +101,11 @@ All other functionality uses base R. The package works well with the
 
 ## Authors
 
-Main author: Hans-Rüdiger Pfister (<rpfister57@gmail.com>) Contributor:
-Gisela Böhm (<gisela.boehm@uib.no>) Contributor: Claude Code AI
+Main author: Hans-Rüdiger Pfister (<rpfister57@gmail.com>)
+
+Contributor: Gisela Böhm (<gisela.boehm@uib.no>)
+
+Contributor: Claude Code AI
 
 ## License
 

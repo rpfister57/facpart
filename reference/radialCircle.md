@@ -1,14 +1,8 @@
 # Binary radial partition (one separating circle)
 
 Finds the circle minimising misclassification between two groups of 2D
-points. The center is found by multi-start Nelder-Mead (starts: data
-centroid plus each group's centroid) unless `cx` and `cy` are supplied.
-Because the inner search is piecewise-constant, Nelder-Mead can stall on
-a flat plateau around any of those starts; if none reaches zero
-misclassification, a coarse `n_grid` x `n_grid` scan of the bounding
-box, padded by half the data range on each side (the best center is not
-always inside the convex hull of the points), locates a cell in a better
-region and one more Nelder-Mead run is seeded there.
+points. The center can be provided (fixed), or searched if cx and cy are
+not given.
 
 ## Usage
 
@@ -92,6 +86,16 @@ to factor), `misclass` (integer), and `misclass_points` (data frame with
 columns `x`, `y`, `label` for each misclassified point).
 
 ## Details
+
+**Searching optimal center.** The center is found by multi-start
+Nelder-Mead (starts: data centroid plus each group's centroid) unless
+`cx` and `cy` are supplied. Because the inner search is
+piecewise-constant, Nelder-Mead can stall on a flat plateau around any
+of those starts; if none reaches zero misclassification, a coarse
+`n_grid` x `n_grid` scan of the bounding box, padded by half the data
+range on each side (the best center is not always inside the convex hull
+of the points), locates a cell in a better region and one more
+Nelder-Mead run is seeded there.
 
 **Search at fixed center.** Points are sorted by distance from the
 center and every realisable radius is scanned: the inside/outside split
