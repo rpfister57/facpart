@@ -144,6 +144,11 @@ input <code>crd</code>), <code>pgroup</code> (<code>group</code> coerced to fact
 with <code>n</code> and <code>indices</code>), and <code>misclass_points</code> (data frame with columns
 <code>x</code>, <code>y</code>, <code>label</code> for each misclassified point).</p>
     </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Both regions must be non-empty: an ellipse containing no point or every
+point is never returned, even where it would misclassify fewer points.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

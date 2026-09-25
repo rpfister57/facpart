@@ -114,6 +114,13 @@ around either start; when that happens for a given ellipse, a coarse
 refit (ignored in the fixed-`ellipse` mode, which has no Nelder-Mead
 step).
 
+**Every region is non-empty:** each ellipse must add at least one point
+to the ones inside it and leave points outside for the remaining
+regions. A partition leaving a group without a region is never returned,
+even where it would misclassify fewer points; if none is found, the
+function stops. A supplied `ellipse` must therefore contain at least one
+point and leave at least `k - 1` outside.
+
 ## Examples
 
 ``` r

@@ -161,10 +161,12 @@ bijection-constrained misclassification: the best total correct over all
 <code>k!</code> ways of matching the <code>k</code> regions to the <code>k</code> groups, each group used
 once. This is the same criterion <code>sector</code>/<code>majority</code> are derived from, so
 the search targets exactly the quantity reported as <code>misclass</code>. Radii that
-would separate coincident distances are skipped as unrealisable, and radii
-leaving a region empty are allowed — on data with no radial structure such
-a partition can be the true minimum — but a partition whose every circle
-actually splits the points wins any tie.</p>
+would separate coincident distances are skipped as unrealisable. <strong>Every
+region is non-empty:</strong> each circle must add at least one point to the one
+inside it and leave points outside for the remaining regions. A partition
+leaving a group without a region is never returned, even where it would
+misclassify fewer points; if none exists (e.g. too many points tied in
+distance from a supplied center), the function stops.</p>
 <p><strong>Optimality.</strong> Concentric (<code>cx</code> and <code>cy</code> supplied): all <code>k-1</code> radii are
 searched <em>jointly</em> over every realisable combination, so the result is
 globally optimal for that center. If the number of combinations is too

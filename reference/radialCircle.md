@@ -104,10 +104,10 @@ better of the two ways to match the two regions to the two groups) — the
 same criterion used to derive `sector`/`majority` below, so the search
 targets exactly the quantity reported as `misclass`, and neither group
 is assumed to be the inner one. Radii that separate coincident distances
-are skipped as unrealisable. The scan also considers the degenerate
-radii that leave one region empty; when the configuration has no radial
-structure these can be the true minimum, so they are allowed, but on a
-tie a circle that really does split the points is preferred.
+are skipped as unrealisable. Both regions must be non-empty, so a circle
+containing no point or every point is never returned, even where it
+would misclassify fewer points; if no such circle exists at a supplied
+center (all points equidistant from it), the function stops.
 [`radialCircles()`](https://rpfister57.github.io/facpart/reference/radialCircles.md)
 with `k = 2` and the same center returns the same circle.
 

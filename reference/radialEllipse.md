@@ -84,6 +84,11 @@ If `output = TRUE`, a list with `partition` (`"ellipse"`), `cx`, `cy`,
 and `indices`), and `misclass_points` (data frame with columns `x`, `y`,
 `label` for each misclassified point).
 
+## Details
+
+Both regions must be non-empty: an ellipse containing no point or every
+point is never returned, even where it would misclassify fewer points.
+
 ## Examples
 
 ``` r
