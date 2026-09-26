@@ -54,29 +54,29 @@
 
 
 #' @noRd
-.optimize_circle <- function(pcoords,
+.optimize_circle <- function(coords,
                              inner_flag,
                              prev_cx, prev_cy, prev_r,
                              starts,
-                             meth = "Nelder-Mead",
+                             method = "Nelder-Mead",
                              n_grid = 7L,
                              min_out = 1L) {
     has_prev <- !is.null(prev_r)
     # Points inside the previous circle; nesting puts them all inside this one.
     n_prev   <- if (has_prev)
-        sum(sqrt((pcoords[, 1] - prev_cx)^2 + (pcoords[, 2] - prev_cy)^2) <= prev_r)
+        sum(sqrt((coords[, 1] - prev_cx)^2 + (coords[, 2] - prev_cy)^2) <= prev_r)
     else 0L
 
-    parscale <- c(diff(range(pcoords[, 1])), diff(range(pcoords[, 2])))
+    parscale <- c(diff(range(coords[, 1])), diff(range(coords[, 2])))
     parscale[parscale == 0] <- 1
 
     eval_ctr <- function(ctr) {
         cx_  <- ctr[1]; cy_  <- ctr[2]
-        d    <- sqrt((pcoords[, 1] - cx_)^2 + (pcoords[, 2] - cy_)^2)
-        rmin <- if (has_prev) sqrt((cx_ - prev_cx)^2 + (cy_ - prev_cy)^2) + prev_r else 0
-        ord  <- order(d)
+        pt_dist <- sqrt((coords[, 1] - cx_)^2 + (coords[, 2] - cy_)^2)
+        rmin    <- if (has_prev) sqrt((cx_ - prev_cx)^2 + (cy_ - prev_cy)^2) + prev_r else 0
+        ord     <- order(pt_dist)
         return(
-            .best_radius(d[ord], inner_flag[ord], rmin, n_prev, min_out)$misclass)
+            .best_radius(pt_dist[ord], inner_flag[ord], rmin, n_prev, min_out)$misclass)
     }
 
     # multi-start: keep the optim() result with lowest misclassification.
@@ -91,7 +91,7 @@
     for (s0 in starts) {
         opt <- optim(par = .snap_zero(s0, parscale),
                      fn = eval_ctr,
-                     method = meth,
+                     method = method,
                      control = list(reltol = 1e-8, 
                                     maxit = 2000,
                                     parscale = parscale))
@@ -105,12 +105,12 @@
     # scanned rather than one.
     if (best$value > 0) {
         for (p in .grid_seeds(eval_ctr, 
-                              range(pcoords[, 1]), 
-                              range(pcoords[, 2]), 
+                              range(coords[, 1]), 
+                              range(coords[, 2]), 
                               n_grid)) {
             opt <- optim(par = .snap_zero(p, parscale),
                          fn = eval_ctr,
-                         method = meth,
+                         method = method,
                          control = list(reltol = 1e-8, maxit = 2000,
                                         parscale = parscale))
             if (opt$value < best$value) best <- opt
@@ -118,15 +118,15 @@
         }
     }
 
-    cx_opt <- best$par[1]; cy_opt <- best$par[2]
-    d_opt  <- sqrt((pcoords[, 1] - cx_opt)^2 + (pcoords[, 2] - cy_opt)^2)
-    r_min  <- if (has_prev) sqrt((cx_opt - prev_cx)^2 + (cy_opt - prev_cy)^2) + prev_r else 0
-    ord    <- order(d_opt)
-    res    <- .best_radius(d_opt[ord], inner_flag[ord], r_min, n_prev, min_out)
+    best_cx <- best$par[1]; best_cy <- best$par[2]
+    pt_dist <- sqrt((coords[, 1] - best_cx)^2 + (coords[, 2] - best_cy)^2)
+    r_min   <- if (has_prev) sqrt((best_cx - prev_cx)^2 + (best_cy - prev_cy)^2) + prev_r else 0
+    ord     <- order(pt_dist)
+    res     <- .best_radius(pt_dist[ord], inner_flag[ord], r_min, n_prev, min_out)
 
     return(list(
-        cx = cx_opt,
-        cy = cy_opt,
+        cx = best_cx,
+        cy = best_cy,
         r = res$r,
         misclass = res$misclass))
 }
@@ -173,17 +173,17 @@
     # reported as `misclass`.
     n_pts <- length(s_dist)
     cp    <- .cut_radii(s_dist)
-    m     <- length(cp$pos)
+    m_pos <- length(cp$pos)
 
-    if (m < k - 1L) {
+    if (m_pos < k - 1L) {
         if (!full) return(list(misclass = n_pts + 1L))
         stop("No partition without empty regions exists at this center!")
     }
 
-    # Strictly increasing (k-1)-tuples of indices into the m cut positions.
-    pidx <- combn(m, k - 1L)
-    M    <- ncol(pidx)
-    pos  <- matrix(cp$pos[pidx], nrow = k - 1L)
+    # Strictly increasing (k-1)-tuples of indices into the m_pos cut positions.
+    cut_idx <- combn(m_pos, k - 1L)
+    M       <- ncol(cut_idx)
+    cut_mat <- matrix(cp$pos[cut_idx], nrow = k - 1L)
 
     # cum[i + 1, g] = number of group-g points among sorted points 1..i, so
     # the count of group g on positions a+1..b is cum[b + 1, g] - cum[a + 1, g].
@@ -196,8 +196,8 @@
     lo_idx <- vector("list", k)
     hi_idx <- vector("list", k)
     for (s in seq_len(k)) {
-        lo_idx[[s]] <- if (s == 1L) 1L         else pos[s - 1L, ] + 1L
-        hi_idx[[s]] <- if (s == k)  n_pts + 1L else pos[s, ]      + 1L
+        lo_idx[[s]] <- if (s == 1L) 1L         else cut_mat[s - 1L, ] + 1L
+        hi_idx[[s]] <- if (s == k)  n_pts + 1L else cut_mat[s, ]      + 1L
     }
 
     bb <- .bij_best(cum, lo_idx, hi_idx, k, M)
@@ -207,29 +207,29 @@
     # ---- Margin tie-break among the co-minimal candidates ----
     max_correct <- bb$max_correct
     at          <- bb$at
-    mrg_mat <- matrix(cp$margin[pidx[, at, drop = FALSE]], nrow = k - 1L)
+    mrg_mat <- matrix(cp$margin[cut_idx[, at, drop = FALSE]], nrow = k - 1L)
     mrg_at  <- if (k == 2L) mrg_mat[1L, ] else apply(mrg_mat, 2L, min)
 
     # which.max returns the first maximum and `at` is increasing, so the
     # earliest candidate in scan order wins ties, matching the convention in
     # axialLines() and .angular_search().
-    w <- which.max(mrg_at)
-    j <- at[w]
+    w_at <- which.max(mrg_at)
+    j    <- at[w_at]
 
     return(list(misclass = n_pts - max_correct,
-                margin   = mrg_at[w],
-                pos      = pos[, j],
-                radii    = cp$radius[pidx[, j]]))
+                margin   = mrg_at[w_at],
+                cut_pos  = cut_mat[, j],
+                radii    = cp$radius[cut_idx[, j]]))
 }
 
 
 #' @noRd
-.nested_sector <- function(pcoords, cx_vec, cy_vec, radii, k) {
+.nested_sector <- function(coords, cx_vec, cy_vec, radii, k) {
     # Region of each point: the innermost circle containing it, else k.
-    sector <- rep(k, nrow(pcoords))
+    sector <- rep(k, nrow(coords))
     for (s in (k - 1L):1L) {
-        d_s <- sqrt((pcoords[, 1] - cx_vec[s])^2 + (pcoords[, 2] - cy_vec[s])^2)
-        sector[d_s <= radii[s]] <- s
+        pt_dist <- sqrt((coords[, 1] - cx_vec[s])^2 + (coords[, 2] - cy_vec[s])^2)
+        sector[pt_dist <= radii[s]] <- s
     }
     return(sector)
 }
@@ -250,7 +250,7 @@
 
 
 #' @noRd
-.refine_radii <- function(pcoords, grp_int, cx_vec, cy_vec, radii, k) {
+.refine_radii <- function(coords, grp_int, cx_vec, cy_vec, radii, k) {
     # Coordinate descent on the radii against the *reported* objective.
     # The sequential fit scores each circle in isolation (groups 1..s inside
     # vs s+1..k outside), which is not the quantity radialCircles() reports,
@@ -261,10 +261,10 @@
     # and keeps a change only when it leaves every region non-empty and the
     # total strictly improves. The error is a bounded integer that never
     # increases, so this terminates.
-    n_pts <- nrow(pcoords)
+    n_pts <- nrow(coords)
     d_mat <- vapply(seq_len(k - 1L),
-                    function(s) sqrt((pcoords[, 1] - cx_vec[s])^2 +
-                                     (pcoords[, 2] - cy_vec[s])^2),
+                    function(s) sqrt((coords[, 1] - cx_vec[s])^2 +
+                                     (coords[, 2] - cy_vec[s])^2),
                     numeric(n_pts))
     cand <- lapply(seq_len(k - 1L),
                    function(s) .cut_radii(sort(d_mat[, s]))$radius)
@@ -398,8 +398,9 @@ radialCircle <- function(crd,
     if (nlevels(group) != 2) stop("group must have exactly 2 levels!")
     if (nrow(crd) < 2L)      stop("Number of points must be >= number of groups!")
 
-    pcoords  <- as.matrix(crd)
+    coords  <- as.matrix(crd)
     grp_int <- as.integer(group)
+    lev     <- levels(group)
 
     # ---- Optimise center if not given ----
     # Multi-start: try overall centroid + each group's centroid. The
@@ -408,28 +409,28 @@ radialCircle <- function(crd,
     
     if (is.null(cx) || is.null(cy)) {
         # parscale sizes the simplex to the data range:
-        parscale <- c(diff(range(pcoords[, 1])), diff(range(pcoords[, 2])))
+        parscale <- c(diff(range(coords[, 1])), diff(range(coords[, 2])))
         parscale[parscale == 0] <- 1
 
         # start centers (overall, group means of the 2 groups):
         starts <- list(
-            c(mean(pcoords[, 1]),              mean(pcoords[, 2])),
-            c(mean(pcoords[grp_int == 1L, 1]), mean(pcoords[grp_int == 1L, 2])),
-            c(mean(pcoords[grp_int == 2L, 1]), mean(pcoords[grp_int == 2L, 2]))
+            c(mean(coords[, 1]),              mean(coords[, 2])),
+            c(mean(coords[grp_int == 1L, 1]), mean(coords[grp_int == 1L, 2])),
+            c(mean(coords[grp_int == 2L, 1]), mean(coords[grp_int == 2L, 2]))
         )
 
         # define function to optimize: fewest misclassified points
-        fnToOpt <- function(p) {
-            d <- sqrt((pcoords[, 1] - p[1])^2 + (pcoords[, 2] - p[2])^2)
-            o <- order(d)
-            .radial_search(d[o], grp_int[o], 2L, full = FALSE)$misclass}
+        eval_ctr <- function(ctr) {
+            pt_dist <- sqrt((coords[, 1] - ctr[1])^2 + (coords[, 2] - ctr[2])^2)
+            ord     <- order(pt_dist)
+            .radial_search(pt_dist[ord], grp_int[ord], 2L, full = FALSE)$misclass}
 
         # loop over start values, find best center coordinates cx,cy:
         best <- NULL
         for (s0 in starts) {
             opt <- optim(
                 par     = .snap_zero(s0, parscale),
-                fn      = fnToOpt,
+                fn      = eval_ctr,
                 method  = .method,
                 control = list(reltol = 1e-8, maxit = 2000,
                                parscale = parscale)
@@ -444,10 +445,10 @@ radialCircle <- function(crd,
         # (plain bounding box, and one padded by half the data range) are
         # scanned rather than one.
         if (best$value > 0) {
-            for (p in .grid_seeds(fnToOpt, range(pcoords[, 1]), range(pcoords[, 2]), n_grid)) {
+            for (p in .grid_seeds(eval_ctr, range(coords[, 1]), range(coords[, 2]), n_grid)) {
                 opt <- optim(
                     par     = .snap_zero(p, parscale),
-                    fn      = fnToOpt,
+                    fn      = eval_ctr,
                     method  = .method,
                     control = list(reltol = 1e-8, maxit = 2000,
                                    parscale = parscale)
@@ -462,11 +463,11 @@ radialCircle <- function(crd,
     }
 
     # ---- Radius and sectors at chosen center ----
-    dists  <- sqrt((pcoords[, 1] - cx)^2 + (pcoords[, 2] - cy)^2)
-    ord    <- order(dists)
-    res    <- .radial_search(dists[ord], grp_int[ord], 2L)
-    radius <- res$radii[1L]
-    sector <- ifelse(dists <= radius, 1L, 2L)
+    pt_dist <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)
+    ord     <- order(pt_dist)
+    res     <- .radial_search(pt_dist[ord], grp_int[ord], 2L)
+    radius  <- res$radii[1L]
+    sector  <- ifelse(pt_dist <= radius, 1L, 2L)
 
     # ---- Unique group assignment ----
     count_mat <- matrix(0L, nrow = 2L, ncol = 2L)
@@ -475,12 +476,12 @@ radialCircle <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = 2L)
     }
-    assignment <- .assign_groups(count_mat, levels(group))
-    majority   <- levels(group)[assignment]
+    assignment <- .assign_groups(count_mat, lev)
+    majority   <- lev[assignment]
 
     if (!add) {
-        plot(pcoords, asp = 1)
-        graphics::text(pcoords, labels = group, cex = 0.7, pos = 4)
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
     }
 
     # ---- Optional fill ----
@@ -507,8 +508,8 @@ radialCircle <- function(crd,
 
     misclass_idx    <- which(as.character(group) != majority[sector])
     misclass_points <- data.frame(
-        x     = pcoords[misclass_idx, 1],
-        y     = pcoords[misclass_idx, 2],
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
         label = group[misclass_idx]
     )
 
@@ -643,9 +644,10 @@ radialCircles <- function(crd,
     if (k < 2L)        stop("group must have at least 2 levels!")
     if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
 
-    pcoords  <- as.matrix(crd)
+    coords  <- as.matrix(crd)
     grp_int <- as.integer(group)
-    n_pts   <- nrow(pcoords)
+    lev     <- levels(group)
+    n_pts   <- nrow(coords)
 
     if (is.null(cols)) cols <- hcl.colors(k, palette = "Pastel 1")
 
@@ -663,9 +665,9 @@ radialCircles <- function(crd,
         # radii are searched *jointly* over every realisable combination of
         # cut positions, scored by the bijection-constrained criterion the
         # function reports -- so this branch is exactly optimal, not greedy.
-        d        <- sqrt((pcoords[, 1] - cx)^2 + (pcoords[, 2] - cy)^2)
-        ord      <- order(d)
-        d_sorted <- d[ord]
+        pt_dist <- sqrt((coords[, 1] - cx)^2 + (coords[, 2] - cy)^2)
+        ord     <- order(pt_dist)
+        s_dist  <- pt_dist[ord]
 
         # The joint search builds (k-1) x M integer index matrices, so its
         # cost grows as choose(m, k - 1); past a few tens of
@@ -673,9 +675,9 @@ radialCircles <- function(crd,
         # the same sequential fit plus radius refinement the
         # independent-centers branch uses -- locally, not globally, optimal,
         # so say so rather than silently returning a weaker answer.
-        m_pos <- length(.cut_radii(d_sorted)$pos)
+        m_pos <- length(.cut_radii(s_dist)$pos)
         if (choose(m_pos, k - 1L) * (k - 1L) <= 3e7) {
-            res <- .radial_search(d_sorted, grp_int[ord], k)
+            res <- .radial_search(s_dist, grp_int[ord], k)
             for (s in seq_len(k - 1L))
                 circles[[s]] <- list(cx = cx, cy = cy, r = res$radii[s])
             exact_fit <- TRUE
@@ -710,28 +712,28 @@ radialCircles <- function(crd,
             if (fixed_center) {
                 for (s in seq_len(k - 1L)) {
                     r_min    <- if (is.null(prev_r)) 0 else prev_r
-                    res      <- .best_radius(d_sorted, (rk <= s)[ord], r_min,
-                                             n_prev  = sum(d_sorted <= r_min),
+                    res      <- .best_radius(s_dist, (rk <= s)[ord], r_min,
+                                             n_prev  = sum(s_dist <= r_min),
                                              min_out = k - s)
                     if (is.na(res$r)) return(NULL)
                     out[[s]] <- list(cx = cx, cy = cy, r = res$r)
                     prev_r   <- res$r
                 }
             } else {
-                overall_ctr <- c(mean(pcoords[, 1]), mean(pcoords[, 2]))
+                overall_ctr <- c(mean(coords[, 1]), mean(coords[, 2]))
                 for (s in seq_len(k - 1L)) {
                     inner_flag <- rk <= s
-                    inner_ctr  <- c(mean(pcoords[inner_flag, 1]),
-                                    mean(pcoords[inner_flag, 2]))
+                    inner_ctr  <- c(mean(coords[inner_flag, 1]),
+                                    mean(coords[inner_flag, 2]))
 
                     starts <- list(inner_ctr, overall_ctr)
                     if (!is.null(prev_cx))
                         starts <- c(starts, list(c(prev_cx, prev_cy)))
 
-                    circ     <- .optimize_circle(pcoords, inner_flag,
+                    circ     <- .optimize_circle(coords, inner_flag,
                                                  prev_cx, prev_cy, prev_r,
                                                  starts,
-                                                 meth = .method,
+                                                 method = .method,
                                                  n_grid = n_grid,
                                                  min_out = k - s)
                     if (is.na(circ$r)) return(NULL)
@@ -743,7 +745,7 @@ radialCircles <- function(crd,
             out
         }
 
-        cands <- .nesting_orders(pcoords, group)
+        cands <- .nesting_orders(coords, group)
         if (!isTRUE(attr(cands, "exhaustive")))
             warning("too many group orderings to search exhaustively (k = ", k,
                     "); using the nesting order implied by mean distance from ",
@@ -763,9 +765,9 @@ radialCircles <- function(crd,
             cyv <- vapply(cc, function(z) z$cy, numeric(1))
             # The sequential fit scores each circle in isolation, which is not
             # the quantity reported below, so refine before scoring.
-            rv  <- .refine_radii(pcoords, grp_int, cxv, cyv,
+            rv  <- .refine_radii(coords, grp_int, cxv, cyv,
                                  vapply(cc, function(z) z$r, numeric(1)), k)
-            sec <- .nested_sector(pcoords, cxv, cyv, rv, k)
+            sec <- .nested_sector(coords, cxv, cyv, rv, k)
             if (any(tabulate(sec, nbins = k) == 0L)) next
             err <- .partition_err(sec, grp_int, k)
             if (is.null(best) || err < best$err)
@@ -783,7 +785,7 @@ radialCircles <- function(crd,
     radii_vec <- vapply(circles, function(cc) cc$r,  numeric(1))
 
     # ---- Sector assignment ----
-    sector <- .nested_sector(pcoords, cx_vec, cy_vec, radii_vec, k)
+    sector <- .nested_sector(coords, cx_vec, cy_vec, radii_vec, k)
 
     # ---- Unique group assignment ----
     count_mat <- matrix(0L, nrow = k, ncol = k)
@@ -792,12 +794,12 @@ radialCircles <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
-    assignment <- .assign_groups(count_mat, levels(group))
-    majority   <- levels(group)[assignment]
+    assignment <- .assign_groups(count_mat, lev)
+    majority   <- lev[assignment]
 
     if (!add) {
-        plot(pcoords, asp = 1)
-        graphics::text(pcoords, labels = group, cex = 0.7, pos = 4)
+        plot(coords, asp = 1)
+        graphics::text(coords, labels = group, cex = 0.7, pos = 4)
     }
 
     # ---- Optional fill ----
@@ -839,8 +841,8 @@ radialCircles <- function(crd,
 
     misclass_idx    <- which(as.character(group) != majority[sector])
     misclass_points <- data.frame(
-        x     = pcoords[misclass_idx, 1],
-        y     = pcoords[misclass_idx, 2],
+        x     = coords[misclass_idx, 1],
+        y     = coords[misclass_idx, 2],
         label = group[misclass_idx]
     )
 

@@ -159,9 +159,9 @@
         }
 
         best <- NULL
-        for (init in starts) {
-            init[1:2] <- .snap_zero(init[1:2], parscale[1:2])
-            opt <- run(init)
+        for (s0 in starts) {
+            s0[1:2] <- .snap_zero(s0[1:2], parscale[1:2])
+            opt <- run(s0)
             if (is.null(best) || opt$value < best$value) best <- opt
             if (best$value == 0) break          # zero misclass is optimal
         }
@@ -223,15 +223,15 @@
 
 
 #' @noRd
-.elliptic_cuts_2 <- function(coords, grp_int, n_grid = 7L) {
+.fit_ellipse_2 <- function(coords, grp_int, n_grid = 7L) {
     best_res <- NULL
     best_mc  <- .Machine$integer.max
 
     for (which_inner in 1L:2L) {
         inner_flag <- grp_int == which_inner
-        init       <- .init_ellipse_params(coords, inner_flag)
+        s0         <- .init_ellipse_params(coords, inner_flag)
         res        <- .optimize_ellipse(coords, inner_flag,
-                                        prev = NULL, starts = list(init),
+                                        prev = NULL, starts = list(s0),
                                         n_grid = n_grid)
         if (res$misclass < best_mc) {
             best_mc  <- res$misclass
@@ -321,9 +321,10 @@ radialEllipse <- function(crd,
 
     coords  <- as.matrix(crd)
     grp_int <- as.integer(group)
+    lev     <- levels(group)
 
     # ---- Optimise ellipse ----
-    res    <- .elliptic_cuts_2(coords, grp_int, n_grid = n_grid)
+    res    <- .fit_ellipse_2(coords, grp_int, n_grid = n_grid)
     ell    <- res$ellipse
     sector <- res$sector
     if (any(tabulate(sector, nbins = 2L) == 0L))
@@ -336,9 +337,9 @@ radialEllipse <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = 2L)
     }
-    assignment      <- .assign_groups(count_mat, levels(group))
-    majority        <- levels(group)[assignment]
-    misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
+    assignment      <- .assign_groups(count_mat, lev)
+    majority        <- lev[assignment]
+    misclass_idx    <- which(lev[grp_int] != majority[sector])
     misclass        <- list(n = length(misclass_idx), indices = misclass_idx)
     misclass_points <- data.frame(
         x     = coords[misclass_idx, 1],
@@ -512,6 +513,7 @@ radialEllipses <- function(crd,
 
     coords  <- as.matrix(crd)
     grp_int <- as.integer(group)
+    lev     <- levels(group)
     n_pts   <- nrow(coords)
 
     if (is.null(cols)) cols <- hcl.colors(k, palette = "Pastel 1")
@@ -542,7 +544,7 @@ radialEllipses <- function(crd,
         v        <- -sin_a * dx + cos_a * dy
         crit_t   <- sqrt((u / a_fix)^2 + (v / b_fix)^2)
         ord      <- order(crit_t)
-        t_sorted <- crit_t[ord]
+        s_scale  <- crit_t[ord]
 
         # The supplied ellipse is region 1 as given, so it alone decides
         # whether that region and the room left for the others are non-empty.
@@ -576,9 +578,9 @@ radialEllipses <- function(crd,
             if (k >= 3L) {
                 prev_t <- 1
                 for (s in 2L:(k - 1L)) {
-                    res <- .best_radius(t_sorted, (rk <= s)[ord],
+                    res <- .best_radius(s_scale, (rk <= s)[ord],
                                         r_min   = prev_t,
-                                        n_prev  = sum(t_sorted <= prev_t),
+                                        n_prev  = sum(s_scale <= prev_t),
                                         min_out = k - s)
                     if (is.na(res$r)) return(NULL)
                     t_s <- res$r
@@ -619,7 +621,7 @@ radialEllipses <- function(crd,
     }
 
     # Region of each point: the innermost ellipse containing it, else k.
-    sector_of <- function(ell) {
+    sector_at <- function(ell) {
         sec <- rep(k, n_pts)
         if (fixed_shape) {
             t_vec <- vapply(ell, function(e) e$a, numeric(1)) / a_fix
@@ -650,7 +652,7 @@ radialEllipses <- function(crd,
     for (nest_ord in cands) {
         ell <- fit_one(nest_ord)
         if (is.null(ell)) next
-        sec <- sector_of(ell)
+        sec <- sector_at(ell)
         if (any(tabulate(sec, nbins = k) == 0L)) next
         err <- .partition_err(sec, grp_int, k)
         if (is.null(best) || err < best$err)
@@ -675,9 +677,9 @@ radialEllipses <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
-    assignment      <- .assign_groups(count_mat, levels(group))
-    majority        <- levels(group)[assignment]
-    misclass_idx    <- which(levels(group)[grp_int] != majority[sector])
+    assignment      <- .assign_groups(count_mat, lev)
+    majority        <- lev[assignment]
+    misclass_idx    <- which(lev[grp_int] != majority[sector])
     misclass        <- list(n = length(misclass_idx), 
                             indices = misclass_idx)
     misclass_points <- data.frame(

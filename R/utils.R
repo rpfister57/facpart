@@ -106,20 +106,20 @@
 
 #' @noRd
 # Exact bijection-constrained best-correct classification over M candidate
-# segmentations of a sorted point sequence.
+# partitions of a sorted point sequence.
 #
 # cum[i + 1, g] = number of group-g points among sorted points 1..i, so the
-# count of group g in a segment spanning sorted positions a+1..b is
+# count of group g in a region spanning sorted positions a+1..b is
 # cum[b + 1, g] - cum[a + 1, g]. lo_idx[[s]] / hi_idx[[s]] supply those two
-# row indices for segment s, either as a length-M vector or as a scalar when
+# row indices for region s, either as a length-M vector or as a scalar when
 # the bound is the same for every candidate (which keeps the big vectors down
-# to one per segment side).
+# to one per region side).
 #
-# The score of a candidate is the best total correct over all k! segment-to-
+# The score of a candidate is the best total correct over all k! region-to-
 # group assignments with each group used exactly once -- the criterion
 # .assign_groups() applies downstream, so a search built on this minimises
 # exactly the misclassification its caller goes on to report. Scoring each
-# segment by its own local majority instead lets two segments claim the same
+# region by its own local majority instead lets two regions claim the same
 # group, and so minimises a total that no bijection can achieve; that was a
 # real bug in axialLines(), radialCircle() and angularPartition(). Do not
 # reintroduce it.
@@ -127,8 +127,8 @@
 # Scoring is a two-stage bound-and-prune, because the k! scan is the
 # expensive part:
 #   Stage 1 (all M, cheap) -- `ub`, the *unconstrained* best-correct, where
-#     every segment independently keeps its own local-majority group. Any
-#     bijection is one particular per-segment choice, so exact <= ub for
+#     every region independently keeps its own local-majority group. Any
+#     bijection is one particular per-region choice, so exact <= ub for
 #     every candidate: a valid upper bound, at k * (2k - 1) vector ops
 #     against k! * (k + 1) for the exact scan.
 #   Stage 2 (survivors only) -- walk a threshold down from max(ub), scanning
@@ -143,9 +143,9 @@
 # rather than to all M.
 .bij_best <- function(cum, lo_idx, hi_idx, k, M) {
 
-    # In segment 's' count of group 'g', over the candidates in `sel`
+    # Count of group `g` in region `s`, over the candidates in `sel`
     # sel: an index vector into 1..M, or NULL for all M
-    seg_cnt <- function(s, g, sel = NULL) {
+    region_cnt <- function(s, g, sel = NULL) {
         ia <- lo_idx[[s]]; ib <- hi_idx[[s]]
         if (!is.null(sel)) {
             if (length(ia) > 1L) ia <- ia[sel]
@@ -157,9 +157,9 @@
     # ---- Stage 1: cheap unconstrained upper bound for all M candidates ----
     ub <- 0L
     for (s in seq_len(k)) {
-        r_max <- seg_cnt(s, 1L, NULL)
-        for (g in 2L:k) r_max <- pmax(r_max, seg_cnt(s, g, NULL))
-        ub <- ub + r_max
+        region_max <- region_cnt(s, 1L, NULL)
+        for (g in 2L:k) region_max <- pmax(region_max, region_cnt(s, g, NULL))
+        ub <- ub + region_max
     }
 
     # ---- Stage 2: exact bijection-constrained score, on survivors only ----
@@ -169,7 +169,7 @@
         cn <- vector("list", k)
         for (s in seq_len(k)) {
             cs <- vector("list", k)
-            for (g in seq_len(k)) cs[[g]] <- seg_cnt(s, g, sel)
+            for (g in seq_len(k)) cs[[g]] <- region_cnt(s, g, sel)
             cn[[s]] <- cs
         }
         best <- rep(0L, if (is.null(sel)) M else length(sel))
@@ -221,7 +221,7 @@
 
 
 #' @noRd
-# Coarse fallback seeds for a 2D center search: fnToOpt() is assumed
+# Coarse fallback seeds for a 2D center search: eval_ctr() is assumed
 # piecewise-constant (an integer misclassification count), so a local,
 # gradient-free optim() run can stall on a flat plateau around any start
 # without ever finding a genuinely better region. Confirmed on real MDS data
@@ -238,7 +238,7 @@
 # radialEllipse()/radialEllipses(); callers trigger this only when their
 # heuristic starts didn't already reach the provable optimum (misclass = 0),
 # since it costs 2 * n_grid^2 extra evaluations of the cheap inner search.
-.grid_seeds <- function(fnToOpt, rng_x, rng_y, n_grid, pad_frac = 0.5) {
+.grid_seeds <- function(eval_ctr, rng_x, rng_y, n_grid, pad_frac = 0.5) {
     pad_x <- diff(rng_x); if (pad_x == 0) pad_x <- 1
     pad_y <- diff(rng_y); if (pad_y == 0) pad_y <- 1
     pad_x <- pad_x * pad_frac
@@ -256,7 +256,7 @@
         best_p   <- NULL
         for (gx0 in grd$gx) {
             for (gy0 in grd$gy) {
-                v <- fnToOpt(c(gx0, gy0))
+                v <- eval_ctr(c(gx0, gy0))
                 if (v < best_val) {
                     best_val <- v
                     best_p   <- c(gx0, gy0)
@@ -291,13 +291,13 @@
 #     tuple of level names they induce rather than by level index.
 # When k! exceeds `max_perm` only the data-derived order is returned and
 # attr(, "exhaustive") is FALSE, so the caller can say so.
-.nesting_orders <- function(pcoords, group, max_perm = 120L) {
+.nesting_orders <- function(coords, group, max_perm = 120L) {
     lev <- levels(group)
     k   <- length(lev)
 
-    ctr   <- c(mean(pcoords[, 1]), mean(pcoords[, 2]))
-    dist_ <- sqrt((pcoords[, 1] - ctr[1])^2 + (pcoords[, 2] - ctr[2])^2)
-    mdist <- tapply(dist_, group, mean)
+    ctr     <- c(mean(coords[, 1]), mean(coords[, 2]))
+    pt_dist <- sqrt((coords[, 1] - ctr[1])^2 + (coords[, 2] - ctr[2])^2)
+    mdist   <- tapply(pt_dist, group, mean)
     # an empty level tells us nothing about its radius; park it outermost
     mdist[is.na(mdist)] <- Inf
     # order on (mean distance, level name) so ties never fall back to the

@@ -21,14 +21,14 @@
 .angular_search <- function(coords,
                             grp_int,
                             cx, cy,
-                            k, n_pts, combos,
+                            k, n_pts, cut_mat,
                             full = TRUE) {
     # Given center cx, cy: find the best angular k-partition by brute force.
     # A candidate partition is a choice of `k` cut-gaps out of the `n` gaps
-    # between angle-sorted points; `combos` supplies these as `combn(n, k)`,
-    # M = ncol(combos) candidates in total. The misclassification of a
+    # between angle-sorted points; `cut_mat` supplies these as `combn(n, k)`,
+    # M = ncol(cut_mat) candidates in total. The misclassification of a
     # candidate is the bijection-constrained error (best achievable total
-    # correct over all k! arc-to-group assignments, each group used exactly
+    # correct over all k! region-to-group assignments, each group used exactly
     # once) -- the same criterion `.assign_groups()` applies to the final
     # sector/majority mapping in angularPartition(), so the search targets
     # exactly the quantity the function ultimately reports.
@@ -43,8 +43,8 @@
     # assignment scan is the expensive part:
     #
     #   Stage 1 (all M, cheap) -- `ub`, the *unconstrained* best-correct:
-    #     each arc independently keeps its own local-majority group. Since
-    #     any bijection is one particular choice of group per arc,
+    #     each region independently keeps its own local-majority group. Since
+    #     any bijection is one particular choice of group per region,
     #     exact(c) <= ub(c) for every candidate, so `ub` is a valid upper
     #     bound. It costs k * (2k - 1) vector ops versus k! * (k + 1) for
     #     the exact scan (~7x cheaper at k = 4) and needs no M x k matrix.
@@ -69,23 +69,23 @@
 
     # Cumulative per-group counts over the angle-sorted sequence:
     # cum[i + 1, g] = number of group-g points among sorted points 1..i.
-    # The count of group g on an arc a..b is cum[b + 1, g] - cum[a, g].
+    # The count of group g on a region a..b is cum[b + 1, g] - cum[a, g].
     cum <- matrix(0L, nrow = n_pts + 1L, ncol = k)
     # loop over all k columns: cumulate group number
     for (g in seq_len(k)) cum[-1L, g] <- cumsum(s_grp == g)
     total <- cum[n_pts + 1L, ]
 
-    M <- ncol(combos)
+    M <- ncol(cut_mat)
 
-    # Row indices into `cum` for each cut: end_idx[[s]] = combos[s, ] + 1L.
-    # Interior arc s (s < k) spans sorted positions combos[s, ] + 1 ..
-    # combos[s + 1, ]; arc k wraps combos[k, ] + 1 .. n, 1 .. combos[1, ].
+    # Row indices into `cum` for each cut: end_idx[[s]] = cut_mat[s, ] + 1L.
+    # Interior region s (s < k) spans sorted positions cut_mat[s, ] + 1 ..
+    # cut_mat[s + 1, ]; region k wraps cut_mat[k, ] + 1 .. n, 1 .. cut_mat[1, ].
     end_idx <- vector("list", k)
-    for (s in seq_len(k)) end_idx[[s]] <- combos[s, ] + 1L
+    for (s in seq_len(k)) end_idx[[s]] <- cut_mat[s, ] + 1L
 
-    # Counts of group `g` on arc `s`, as a vector over the candidates in
+    # Counts of group `g` in region `s`, as a vector over the candidates in
     # `sel` (an index vector into 1..M, or NULL for all M).
-    arc_cnt <- function(s, g, sel = NULL) {
+    region_cnt <- function(s, g, sel = NULL) {
         if (s < k) {
             ia <- end_idx[[s]]; ib <- end_idx[[s + 1L]]
             if (!is.null(sel)) { ia <- ia[sel]; ib <- ib[sel] }
@@ -100,22 +100,22 @@
     # ---- Stage 1: cheap unconstrained upper bound for all M candidates ----
     ub <- 0L
     for (s in seq_len(k)) {
-        arc_max <- arc_cnt(s, 1L, NULL)
-        for (g in 2L:k) arc_max <- pmax(arc_max, arc_cnt(s, g, NULL))
-        ub <- ub + arc_max
+        region_max <- region_cnt(s, 1L, NULL)
+        for (g in 2L:k) region_max <- pmax(region_max, region_cnt(s, g, NULL))
+        ub <- ub + region_max
     }
 
     # ---- Stage 2: exact bijection-constrained score, on survivors only ----
     perms <- .perms_k(k)
 
-    # Exact best-correct over all k! arc-to-group assignments (each group
+    # Exact best-correct over all k! region-to-group assignments (each group
     # used exactly once) for the candidates in `sel` -- the same criterion
     # .assign_groups() applies to the winning combo downstream.
     exact_correct <- function(sel) {
         cn <- vector("list", k)
         for (s in seq_len(k)) {
             cs <- vector("list", k)
-            for (g in seq_len(k)) cs[[g]] <- arc_cnt(s, g, sel)
+            for (g in seq_len(k)) cs[[g]] <- region_cnt(s, g, sel)
             cn[[s]] <- cs
         }
         best <- rep(0L, length(sel))
@@ -142,10 +142,10 @@
         if (max_correct >= thresh) break
         thresh <- thresh - 1L
     }
-    m <- n_pts - max_correct
+    err <- n_pts - max_correct
 
     if (!full) {
-        return(list(misclass = m, pt_angles = pt_angles))
+        return(list(misclass = err, pt_angles = pt_angles))
     }
 
     # ---- Co-minimal candidates, then the margin tie-break among them ----
@@ -159,29 +159,31 @@
 
     # Margin of a candidate: min over its k gaps of
     # min(r at the gap's two adjacent points) * sin(angular gap / 2).
+    # cut_at is A x k here (one row per co-minimal candidate), i.e. the
+    # transpose of axialLines()'s cut_at, so that mrg_mat's columns are cuts.
     A      <- length(at)
-    g_mat  <- t(combos[, at, drop = FALSE])
-    nx_mat <- g_mat + 1L
-    nx_mat[g_mat == n_pts] <- 1L
+    cut_at <- t(cut_mat[, at, drop = FALSE])
+    nxt_at <- cut_at + 1L
+    nxt_at[cut_at == n_pts] <- 1L
 
-    ang_gap_mat <- (matrix(s_ang[nx_mat], nrow = A) -
-                    matrix(s_ang[g_mat],  nrow = A)) %% (2 * pi)
-    margin_mat  <- pmin(matrix(s_rad[g_mat],  nrow = A),
-                        matrix(s_rad[nx_mat], nrow = A)) * sin(ang_gap_mat / 2)
-    margin_at   <- do.call(pmin, as.data.frame(margin_mat))
+    ang_gap_mat <- (matrix(s_ang[nxt_at], nrow = A) -
+                    matrix(s_ang[cut_at], nrow = A)) %% (2 * pi)
+    mrg_mat     <- pmin(matrix(s_rad[cut_at], nrow = A),
+                        matrix(s_rad[nxt_at], nrow = A)) * sin(ang_gap_mat / 2)
+    mrg_at      <- do.call(pmin, as.data.frame(mrg_mat))
 
     # Ties broken by largest margin. which.max returns the first maximum and
     # `at` is increasing, so the earliest candidate in scan order wins ties,
     # matching axialLines()'s convention.
-    w <- which.max(margin_at)
-    j <- at[w]
+    w_at <- which.max(mrg_at)
+    j    <- at[w_at]
 
     # cut angles placed at the arc midpoint of each chosen gap
-    g  <- combos[, j]
-    nx <- g + 1L; nx[g == n_pts] <- 1L
-    list(misclass  = m,
-         margin    = margin_at[w],
-         cuts      = .arc_mid(s_ang[g], s_ang[nx]),
+    cut_pos <- cut_mat[, j]
+    nxt_pos <- cut_pos + 1L; nxt_pos[cut_pos == n_pts] <- 1L
+    list(misclass  = err,
+         margin    = mrg_at[w_at],
+         cuts      = .arc_mid(s_ang[cut_pos], s_ang[nxt_pos]),
          pt_angles = pt_angles)
 }
 
@@ -298,7 +300,8 @@ angularPartition <- function(crd,
     
     group <- factor(group, exclude = NA)
     coords  <- as.matrix(crd)
-    
+    lev     <- levels(group)
+
     k <- nlevels(group)
     if (k < 2)         stop("group must have at least 2 levels!")
     if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
@@ -314,7 +317,7 @@ angularPartition <- function(crd,
     # Each angular k-partition corresponds to exactly
     # one such choice (see .angular_search).
     
-    combos <- combn(n_pts, k)
+    cut_mat <- combn(n_pts, k)
     
 
     # ---- Center: optimise if cx or cy is NULL, use as given otherwise ----
@@ -352,9 +355,9 @@ angularPartition <- function(crd,
 
         # function to optimize: n of misclassification from .angular_search()
         # parameter to optimize: p = center coordinates cx, cy
-        fnToOpt <- function(p) {
+        eval_ctr <- function(p) {
             .angular_search(coords, grp_int, p[1], p[2],
-                            k, n_pts, combos, full = FALSE)$misclass
+                            k, n_pts, cut_mat, full = FALSE)$misclass
         }
 
         best <- NULL
@@ -364,7 +367,7 @@ angularPartition <- function(crd,
             s0 <- .snap_zero(s0, parscale)
 
             opt <- optim(par     = s0,
-                         fn      = fnToOpt,
+                         fn      = eval_ctr,
                          method  = "Nelder-Mead",
                          control = list(reltol = 1e-8,
                                         maxit = 3000,
@@ -375,7 +378,7 @@ angularPartition <- function(crd,
         }
 
         # ---- Coarse grid fallback ----
-        # fnToOpt() is piecewise-constant, so Nelder-Mead's local,
+        # eval_ctr() is piecewise-constant, so Nelder-Mead's local,
         # gradient-free search can get stuck on a flat plateau around any
         # heuristic start above without ever seeing a better region --
         # even past the exact-zero degeneracy .snap_zero() rules out, its
@@ -394,9 +397,9 @@ angularPartition <- function(crd,
         # radialCircle(s)() and radialEllipse(s)(), which hit the same
         # plateau-stall pathology on their own center searches.
         if (best$value > 0) {
-            for (p in .grid_seeds(fnToOpt, range(coords[, 1]), range(coords[, 2]), n_grid)) {
+            for (p in .grid_seeds(eval_ctr, range(coords[, 1]), range(coords[, 2]), n_grid)) {
                 opt <- optim(par     = .snap_zero(p, parscale),
-                             fn      = fnToOpt,
+                             fn      = eval_ctr,
                              method  = "Nelder-Mead",
                              control = list(reltol = 1e-8,
                                             maxit = 3000,
@@ -407,22 +410,21 @@ angularPartition <- function(crd,
             }
         }
 
-        cx_best <- best$par[1]
-        cy_best <- best$par[2]
+        best_cx <- best$par[1]
+        best_cy <- best$par[2]
     }
 
     # ---- Final search at chosen center ----
     if (is.null(cx) || is.null(cy)) {
-        cx <- cx_best
-        cy <- cy_best
+        cx <- best_cx
+        cy <- best_cy
     }
     
     # ---- if center is provided, starts right here... ----
     res         <- .angular_search(coords, grp_int,
                                    cx = cx, cy = cy,
-                                   k, n_pts, combos, full = TRUE)
+                                   k, n_pts, cut_mat, full = TRUE)
     
-    best_err    <- res$misclass
     best_cuts   <- res$cuts
     best_margin <- res$margin
     pt_angles   <- res$pt_angles
@@ -480,8 +482,8 @@ angularPartition <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
-    assignment <- .assign_groups(count_mat, levels(group))
-    majority   <- levels(group)[assignment]
+    assignment <- .assign_groups(count_mat, lev)
+    majority   <- lev[assignment]
 
     misclass_idx    <- which(as.character(group) != majority[sector])
     misclass_points <- data.frame(

@@ -77,7 +77,6 @@ axialLine <- function(crd,
     if (nrow(crd) < 2L)      stop("Number of points must be >= number of groups!")
 
     coords  <- as.matrix(crd)
-    levels_ <- levels(group)
 
     # ---- Fit LDA ----
     lda_fit <- MASS::lda(coords, grouping = group)
@@ -255,15 +254,15 @@ axialLines <- function(crd,
 
     # ---- define constants ----
     coords  <- as.matrix(crd)
-    levels_ <- levels(group)
+    lev     <- levels(group)
     grp_int <- as.integer(group)
     n_pts   <- nrow(coords)
     
-    # combos: cut-position combinations (independent of angle). Column ci
+    # cut_mat: cut-position combinations (independent of angle). Column ci
     # gives the k - 1 sorted positions after which a cut falls, so all k
-    # segments are non-empty.
-    combos <- combn(n_pts - 1L, k - 1L)
-    M      <- ncol(combos)
+    # regions are non-empty.
+    cut_mat <- combn(n_pts - 1L, k - 1L)
+    M       <- ncol(cut_mat)
     
     # ---- Candidate angles to check (0, pi) ----
     # Grid in [0, pi) plus LDA's LD1 direction as a high-quality seed.
@@ -277,19 +276,19 @@ axialLines <- function(crd,
     # For each angle the points are projected and sorted, then cumulative
     # per-group counts (cum[i + 1, g] = number of group-g points among the
     # first i sorted points) let every candidate partition be scored by
-    # vector arithmetic with no per-cut re-tabulation. A segment spanning
-    # sorted positions a..b has group counts cum[b + 1, ] - cum[a, ], and
+    # vector arithmetic with no per-cut re-tabulation. A region spanning
+    # sorted positions a..b has group counts cum[b + 1, ] - cum[a, ],
     # and all C(n - 1, k - 1) partitions are scored together.
     #
     # The score is the exact *bijection-constrained* misclassification -- the
-    # best total correct over all k! segment-to-group assignments with each
+    # best total correct over all k! region-to-group assignments with each
     # group used exactly once -- computed by .bij_best() (utils.R). That is
     # the same criterion .assign_groups() applies to derive sector/majority
     # below, so the search minimises exactly the quantity reported as
-    # `misclass`. Scoring each segment by its own local majority instead (as
-    # this function used to) lets two segments claim the same group, and so
+    # `misclass`. Scoring each region by its own local majority instead (as
+    # this function used to) lets two regions claim the same group, and so
     # minimises a total no bijection can achieve: the returned lines then need
-    # not minimise the returned number. Do not revert to per-segment maxima.
+    # not minimise the returned number. Do not revert to per-region maxima.
     #
     # Tie-breaker: among configurations with the same misclassification
     # count, prefer the one with the largest minimum margin. A cut after
@@ -304,10 +303,10 @@ axialLines <- function(crd,
     # loop over all thetas (angles):
     for (theta in thetas) {
         # projection on line: d = x cos theta + y sin theta
-        w_t    <- c(cos(theta), sin(theta))
-        proj_   <- as.numeric(coords %*% w_t)
-        ord    <- order(proj_)
-        s_proj <- proj_[ord]
+        w_t     <- c(cos(theta), sin(theta))
+        pt_proj <- as.numeric(coords %*% w_t)
+        ord     <- order(pt_proj)
+        s_proj  <- pt_proj[ord]
         
         # group sequence along the current theta line:
         s_grp  <- grp_int[ord]
@@ -316,23 +315,23 @@ axialLines <- function(crd,
         cum <- matrix(0L, nrow = n_pts + 1L, ncol = k)
         for (g in seq_len(k)) cum[-1L, g] <- cumsum(s_grp == g)
 
-        # Row indices into `cum` bounding segment s, which spans sorted
-        # positions combos[s - 1, ] + 1 .. combos[s, ] (implicit bounds 0 and
+        # Row indices into `cum` bounding region s, which spans sorted
+        # positions cut_mat[s - 1, ] + 1 .. cut_mat[s, ] (implicit bounds 0 and
         # n_pts at the ends); scalars where constant over candidates.
         lo_idx <- vector("list", k)
         hi_idx <- vector("list", k)
         for (s in seq_len(k)) {
-            lo_idx[[s]] <- if (s == 1L) 1L         else combos[s - 1L, ] + 1L
-            hi_idx[[s]] <- if (s == k)  n_pts + 1L else combos[s, ]      + 1L
+            lo_idx[[s]] <- if (s == 1L) 1L         else cut_mat[s - 1L, ] + 1L
+            hi_idx[[s]] <- if (s == k)  n_pts + 1L else cut_mat[s, ]      + 1L
         }
 
-        bb <- .bij_best(cum, lo_idx, hi_idx, k, M)
-        m  <- n_pts - bb$max_correct
-        at <- bb$at
+        bb  <- .bij_best(cum, lo_idx, hi_idx, k, M)
+        err <- n_pts - bb$max_correct
+        at  <- bb$at
 
         # Margins of the co-minimal candidates only, then the tie-break.
-        cp_at   <- combos[, at, drop = FALSE]
-        gap_mat <- matrix(s_proj[cp_at + 1L] - s_proj[cp_at], nrow = k - 1L)
+        cut_at  <- cut_mat[, at, drop = FALSE]
+        gap_mat <- matrix(s_proj[cut_at + 1L] - s_proj[cut_at], nrow = k - 1L)
         mrg_at  <- (if (k == 2L) gap_mat[1L, ] else apply(gap_mat, 2L, min)) / 2
 
         # Best at this angle: lowest err, ties broken by largest margin.
@@ -340,9 +339,9 @@ axialLines <- function(crd,
         # lowest-index (earliest in scan order) candidate wins ties, matching
         # the original loops.
         w_at <- which.max(mrg_at)
-        if (m < best_err || (m == best_err && mrg_at[w_at] > best_margin)) {
-            cut_pos     <- combos[, at[w_at]]
-            best_err    <- m
+        if (err < best_err || (err == best_err && mrg_at[w_at] > best_margin)) {
+            cut_pos     <- cut_mat[, at[w_at]]
+            best_err    <- err
             best_margin <- mrg_at[w_at]
             best_theta  <- theta
             best_cuts   <- (s_proj[cut_pos] + s_proj[cut_pos + 1L]) / 2
@@ -372,8 +371,8 @@ axialLines <- function(crd,
         if (length(pts_r) > 0L)
             count_mat[, r] <- tabulate(pts_r, nbins = k)
     }
-    assignment <- .assign_groups(count_mat, levels_)
-    majority   <- levels_[assignment]
+    assignment <- .assign_groups(count_mat, lev)
+    majority   <- lev[assignment]
 
     if (!add) {
         plot(coords, asp = 1)
