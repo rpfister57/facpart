@@ -378,23 +378,23 @@ drawAngleLine <- function(x = 0, y = 0, angle,
 
 
 #' Project a point (x, y) onto a line (a, b)
-#' 
+#'
 #' On an existing plot including a line with a = intercept and b = slope,
 #' a point with coordinates (x, y) is projected. Optionally, the line
 #' as well as the projection arrow and the distance from intercept to
 #' the projected point are drawn.
-#' 
+#'
 #' @param Pxy A vector c(x,y) with coordinates of a point.
 #' @param Lab A vector c(a,b) with intercept (a) and slope (b) of a line.
 #' @param add Logical: Should the projection be drawn (default = FALSE).
-#' @param d0 Logical: Should the distance line from a to 
+#' @param d0 Logical: Should the distance line from a to
 #'     projection be drawn (default = FALSE).
 #' @param color Character - a color name
 #' @param addLine Logical: Should the line be drawn.
-#' 
-#' @return A list with the coordinates of the projected point, and 
+#'
+#' @return A list with the coordinates of the projected point, and
 #'    the distance vector of the projected point.
-#'    
+#'
 #' @examples
 #' \dontrun{
 #' plot(-2:2, -2:2, type = "n", asp = 1)
@@ -403,10 +403,10 @@ drawAngleLine <- function(x = 0, y = 0, angle,
 #' points(aPoint, pch = 19)
 #' projectP2L(Pxy = aPoint, Lab = c(0, 1), add = TRUE)
 #' }
-#' 
+#'
 #' @export
-projectP2L <- function(Pxy, Lab, 
-                       add = FALSE, 
+projectP2L <- function(Pxy, Lab,
+                       add = FALSE,
                        d0 = FALSE,
                        color = "blue",
                        addLine = FALSE){
@@ -414,29 +414,29 @@ projectP2L <- function(Pxy, Lab,
     y0 <- Pxy[2]
     a <- Lab[1]
     b <- Lab[2]
-    
+
     xL <- (x0 + b * (y0 - a)) / (1 + b^2)
     yL <- a + b*xL
     Pproj <- c(xL, yL)
     names(Pproj) <- c("x", "y")
-    
+
     if (addLine) graphics::abline(a, b)
-    
+
     if (add) {
         graphics::points(x0, y0, col = color)
         graphics::points(xL, yL, col = color, pch = 19)
         graphics::arrows(x0, y0, xL, yL, col = color,
                length = 0.1, angle = 20)
     }
-    
+
     # convert slope b to theta angle
     theta <- atan(b)
     w_t <- c(cos(theta), sin(theta))
     td <- Pxy %*% w_t
     dist0 <- sign(td) * sqrt(sum(Pproj^2))
-    if (d0) graphics::arrows(0, a, xL, yL, 
+    if (d0) graphics::arrows(0, a, xL, yL,
                    length = 0.1, angle = 20, lwd = 2, col = color)
-    
+
     return(list(projection = Pproj,
                 distance = dist0))
 }
@@ -636,8 +636,11 @@ highlightMisclass <- function(x,
     }
 
     for (ic in intercepts) {
-        if (vertical) abline(v = ic, col = col, lwd = lwd, lty = lty)
-        else          abline(a = ic, b = slope, col = col, lwd = lwd, lty = lty)
+        if (vertical) {
+            abline(v = ic, col = col, lwd = lwd, lty = lty)
+        } else {
+            abline(a = ic, b = slope, col = col, lwd = lwd, lty = lty)
+        }
     }
 }
 
@@ -680,11 +683,11 @@ highlightMisclass <- function(x,
 #'
 #' Redraws the configuration and partitions from the output list returned by
 #' [axialLine()], [axialLines()], [radialCircle()], [radialCircles()],
-#' [radialEllipse()], [radialEllipses()] or [angularPartition()]. It is a 
+#' [radialEllipse()], [radialEllipses()] or [angularPartition()]. It is a
 #' simple replot of the stored partition regions with no recomputation.
 #'
 #' @param Pout A result list from one of the partition functions above (must
-#'   have a `partition` field naming a known family 
+#'   have a `partition` field naming a known family
 #'   ("axial", "angular", "circle", "ellipse"), plus `pcoords`/`pgroup`).
 #' @param fill If `TRUE`, shade the regions between boundaries (default
 #'   `FALSE`).

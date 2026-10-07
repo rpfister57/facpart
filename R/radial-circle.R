@@ -15,7 +15,11 @@
 
 
 #' @noRd
-.best_radius <- function(s_dist, s_flag, r_min = 0, n_prev = 0L, min_out = 1L) {
+.best_radius <- function(s_dist,
+                         s_flag,
+                         r_min = 0,
+                         n_prev = 0L,
+                         min_out = 1L) {
     # One circle of a sequential nested fit: the best split "points 1..i
     # inside" of the distance-sorted points, scored inner vs outer. No
     # region may be empty, so the split must add at least one point to the
@@ -63,9 +67,9 @@
                              min_out = 1L) {
     has_prev <- !is.null(prev_r)
     # Points inside the previous circle; nesting puts them all inside this one.
-    n_prev   <- if (has_prev)
-        sum(sqrt((coords[, 1] - prev_cx)^2 + (coords[, 2] - prev_cy)^2) <= prev_r)
-    else 0L
+    n_prev   <- if (has_prev) {sum(sqrt(
+        (coords[, 1] - prev_cx)^2 + (coords[, 2] - prev_cy)^2) <=
+            prev_r)} else 0L
 
     parscale <- c(diff(range(coords[, 1])), diff(range(coords[, 2])))
     parscale[parscale == 0] <- 1
@@ -92,7 +96,7 @@
         opt <- optim(par = .snap_zero(s0, parscale),
                      fn = eval_ctr,
                      method = method,
-                     control = list(reltol = 1e-8, 
+                     control = list(reltol = 1e-8,
                                     maxit = 2000,
                                     parscale = parscale))
         if (is.null(best) || opt$value < best$value) best <- opt
@@ -104,9 +108,9 @@
     # provable optimum; see .grid_seeds() (utils.R) for why two grids are
     # scanned rather than one.
     if (best$value > 0) {
-        for (p in .grid_seeds(eval_ctr, 
-                              range(coords[, 1]), 
-                              range(coords[, 2]), 
+        for (p in .grid_seeds(eval_ctr,
+                              range(coords[, 1]),
+                              range(coords[, 2]),
                               n_grid)) {
             opt <- optim(par = .snap_zero(p, parscale),
                          fn = eval_ctr,
@@ -120,7 +124,8 @@
 
     best_cx <- best$par[1]; best_cy <- best$par[2]
     pt_dist <- sqrt((coords[, 1] - best_cx)^2 + (coords[, 2] - best_cy)^2)
-    r_min   <- if (has_prev) sqrt((best_cx - prev_cx)^2 + (best_cy - prev_cy)^2) + prev_r else 0
+    r_min   <- if (has_prev) {sqrt(
+        (best_cx - prev_cx)^2 + (best_cy - prev_cy)^2) + prev_r} else 0
     ord     <- order(pt_dist)
     res     <- .best_radius(pt_dist[ord], inner_flag[ord], r_min, n_prev, min_out)
 
@@ -153,7 +158,10 @@
 
 
 #' @noRd
-.radial_search <- function(s_dist, s_grp, k, full = TRUE) {
+.radial_search <- function(s_dist,
+                           s_grp,
+                           k,
+                           full = TRUE) {
     # Given points already sorted by distance from the center, find the best
     # nested k-partition of the distance axis by brute force. A candidate is
     # a choice of k-1 cut positions p_1 < ... < p_{k-1} out of the
@@ -208,7 +216,8 @@
     max_correct <- bb$max_correct
     at          <- bb$at
     mrg_mat <- matrix(cp$margin[cut_idx[, at, drop = FALSE]], nrow = k - 1L)
-    mrg_at  <- if (k == 2L) mrg_mat[1L, ] else apply(mrg_mat, 2L, min)
+    mrg_at  <- if (k == 2L)
+        mrg_mat[1L, ] else apply(mrg_mat, 2L, min)
 
     # which.max returns the first maximum and `at` is increasing, so the
     # earliest candidate in scan order wins ties, matching the convention in
@@ -224,7 +233,11 @@
 
 
 #' @noRd
-.nested_sector <- function(coords, cx_vec, cy_vec, radii, k) {
+.nested_sector <- function(coords,
+                           cx_vec,
+                           cy_vec,
+                           radii,
+                           k) {
     # Region of each point: the innermost circle containing it, else k.
     sector <- rep(k, nrow(coords))
     for (s in (k - 1L):1L) {
@@ -315,9 +328,9 @@
 #' Finds the circle minimising misclassification between two groups of 2D
 #' points. The center can be provided (fixed), or searched if cx and cy
 #' are not given.
-#' 
-#' **Searching optimal center.** The center is found by multi-start 
-#' Nelder-Mead (starts: data centroid plus each group's centroid) 
+#'
+#' **Searching optimal center.** The center is found by multi-start
+#' Nelder-Mead (starts: data centroid plus each group's centroid)
 #' unless `cx` and `cy` are supplied.
 #' Because the inner search is piecewise-constant, Nelder-Mead can stall on
 #' a flat plateau around any of those starts; if none reaches zero
@@ -406,7 +419,7 @@ radialCircle <- function(crd,
     # Multi-start: try overall centroid + each group's centroid. The
     # objective (integer misclassification) is a step function, so
     # Nelder-Mead is prone to stalling on plateaus from a single start.
-    
+
     if (is.null(cx) || is.null(cy)) {
         # parscale sizes the simplex to the data range:
         parscale <- c(diff(range(coords[, 1])), diff(range(coords[, 2])))

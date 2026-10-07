@@ -121,11 +121,12 @@
     max_range <- max(x_range, y_range)
     parscale  <- c(x_range, y_range, max_range, max_range, pi)
 
-    prev_bnd <- if (!is.null(prev))
-        .ellipse_pts(prev$cx, prev$cy, prev$a, prev$b, prev$angle, 
+    prev_bnd <- if (!is.null(prev)) {
+        .ellipse_pts(prev$cx, prev$cy, prev$a, prev$b, prev$angle,
                      n = 200L)
-    else
+    } else {
         NULL
+    }
 
     # .eval_ellipse()'s misclass is piecewise-constant, so Nelder-Mead can
     # stall on a flat plateau around any of `starts` -- including a start
@@ -680,7 +681,7 @@ radialEllipses <- function(crd,
     assignment      <- .assign_groups(count_mat, lev)
     majority        <- lev[assignment]
     misclass_idx    <- which(lev[grp_int] != majority[sector])
-    misclass        <- list(n = length(misclass_idx), 
+    misclass        <- list(n = length(misclass_idx),
                             indices = misclass_idx)
     misclass_points <- data.frame(
         x     = coords[misclass_idx, 1],
@@ -706,14 +707,14 @@ radialEllipses <- function(crd,
             x    = c(rect_x, NA, outer_bnd[, 1]),
             y    = c(rect_y, NA, outer_bnd[, 2]),
             rule = "evenodd",
-            col  = adjustcolor(cols[k], alpha.f = 0.15), 
+            col  = adjustcolor(cols[k], alpha.f = 0.15),
             border = NA
         )
 
         if (k >= 3L) {
             for (s in (k - 1L):2L) {
                 outer_bnd <- .ellipse_pts(cx_vec[s], cy_vec[s],
-                                          a_vec[s], b_vec[s], 
+                                          a_vec[s], b_vec[s],
                                           angle_vec[s])
                 inner_bnd <- .ellipse_pts(cx_vec[s - 1L], cy_vec[s - 1L],
                                            a_vec[s - 1L], b_vec[s - 1L],
@@ -722,22 +723,22 @@ radialEllipses <- function(crd,
                     x    = c(outer_bnd[, 1], NA, inner_bnd[, 1]),
                     y    = c(outer_bnd[, 2], NA, inner_bnd[, 2]),
                     rule = "evenodd",
-                    col  = adjustcolor(cols[s], alpha.f = 0.15), 
+                    col  = adjustcolor(cols[s], alpha.f = 0.15),
                     border = NA
                 )
             }
         }
 
-        draw.ellipse(cx_vec[1L], cy_vec[1L], 
+        draw.ellipse(cx_vec[1L], cy_vec[1L],
                      a = a_vec[1L], b = b_vec[1L],
                      angle = angle_vec[1L] * 180 / pi,
-                     col = adjustcolor(cols[1L], alpha.f = 0.15), 
+                     col = adjustcolor(cols[1L], alpha.f = 0.15),
                      border = NA)
     }
 
     # ---- Draw k-1 ellipses ----
     for (s in seq_len(k - 1L)) {
-        draw.ellipse(cx_vec[s], cy_vec[s], 
+        draw.ellipse(cx_vec[s], cy_vec[s],
                      a = a_vec[s], b = b_vec[s],
                      angle = angle_vec[s] * 180 / pi,
                      border = col, lwd = lwd, lty = lty)

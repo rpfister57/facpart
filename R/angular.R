@@ -190,11 +190,11 @@
 
 #' Angular k-way (wedge) partition of a 2D configuration
 #'
-#' Finds `k` rays (straight lines) emanating from a center point that partition 
+#' Finds `k` rays (straight lines) emanating from a center point that partition
 #' a 2D configuration of `n` points into `k` angular sectors, minimising total
 #' misclassification (points whose group differs from the majority group
-#' in their sector), and draws the lines. (see: Shye, S. (2014). Faceted Smallest Space Analysis (FSSA). 
-#' In A. Michalos (Ed.), Encyclopedia of quality of life research (pp. 2129-2133). 
+#' in their sector), and draws the lines. (see: Shye, S. (2014). Faceted Smallest Space Analysis (FSSA).
+#' In A. Michalos (Ed.), Encyclopedia of quality of life research (pp. 2129-2133).
 #' New York: Springer.)
 #'
 #' **Search at fixed center.** Points are sorted by their angle from the
@@ -290,14 +290,14 @@ angularPartition <- function(crd,
                              add = TRUE) {
 
     # ---- Input validation ----
-    
+
     if (!all(is.numeric(as.matrix(crd))))  stop("Coordinate data must be numeric!")
     if (any(is.na(crd)))            stop("No NAs allowed in crd!")
     if (any(is.na(group)))          stop("No NAs allowed in group!")
     if (length(dim(crd)) != 2)      stop("Coordinates must have two dimensions!")
     if (dim(crd)[2] != 2)           stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
-    
+
     group <- factor(group, exclude = NA)
     coords  <- as.matrix(crd)
     lev     <- levels(group)
@@ -306,22 +306,22 @@ angularPartition <- function(crd,
     if (k < 2)         stop("group must have at least 2 levels!")
     if (nrow(crd) < k) stop("Number of points must be >= number of groups!")
 
-    
+
     # ---- Basic constants ----
-    
+
     n_pts   <- nrow(coords)
     grp_int <- as.integer(group)
 
-    # Generate all possible partitions = cut-gap combinations: 
-    # choose k of the n gaps between all points. 
+    # Generate all possible partitions = cut-gap combinations:
+    # choose k of the n gaps between all points.
     # Each angular k-partition corresponds to exactly
     # one such choice (see .angular_search).
-    
+
     cut_mat <- combn(n_pts, k)
-    
+
 
     # ---- Center: optimise if cx or cy is NULL, use as given otherwise ----
-    
+
     # Optimise center
     if (is.null(cx) || is.null(cy)) {
         x_range <- diff(range(coords[, 1]))
@@ -333,7 +333,7 @@ angularPartition <- function(crd,
 
         # start values for center: overall mean, group means, max, min
         starts <- list(c(mean(coords[, 1]), mean(coords[, 2])))
-        
+
         for (g in seq_len(k)) {
             in_g <- which(grp_int == g)
             if (length(in_g) > 0L) {
@@ -342,16 +342,16 @@ angularPartition <- function(crd,
                                    mean(coords[in_g, 2]))))
             }
         }
-        
-        starts <- c(starts, list(c(min(coords[ , 1]), 
+
+        starts <- c(starts, list(c(min(coords[ , 1]),
                                    min(coords[ , 2]))))
-        starts <- c(starts, list(c(max(coords[ , 1]), 
+        starts <- c(starts, list(c(max(coords[ , 1]),
                                    max(coords[ , 2]))))
-        starts <- c(starts, list(c(min(coords[ , 1]), 
+        starts <- c(starts, list(c(min(coords[ , 1]),
                                    max(coords[ , 2]))))
-        starts <- c(starts, list(c(max(coords[ , 1]), 
+        starts <- c(starts, list(c(max(coords[ , 1]),
                                    min(coords[ , 2]))))
-        
+
 
         # function to optimize: n of misclassification from .angular_search()
         # parameter to optimize: p = center coordinates cx, cy
@@ -419,23 +419,23 @@ angularPartition <- function(crd,
         cx <- best_cx
         cy <- best_cy
     }
-    
+
     # ---- if center is provided, starts right here... ----
     res         <- .angular_search(coords, grp_int,
                                    cx = cx, cy = cy,
                                    k, n_pts, cut_mat, full = TRUE)
-    
+
     best_cuts   <- res$cuts
     best_margin <- res$margin
     pt_angles   <- res$pt_angles
-    
-    
+
+
     # ---- Plot points if add = FALSE ----
     if (!add) {
         plot(coords, asp = 1)
         graphics::text(coords, labels = group, cex = 0.7, pos = 4)
     }
-    
+
     # ---- Sorted cut angles: shared by the fill and the sector assignment ----
     sc <- sort(best_cuts %% (2 * pi))
 
@@ -493,7 +493,8 @@ angularPartition <- function(crd,
     )
 
     if (!output) return(invisible(NULL))
-    else return(list(
+
+    return(list(
         partition       = "angular",
         cuts            = best_cuts,
         margin          = best_margin,

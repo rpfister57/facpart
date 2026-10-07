@@ -34,7 +34,7 @@ life_mds <- smacof::mds(delta = lifeD, type = "ordinal")
 life_mds
 plot(x = life_mds$conf, pch = 19,
   xlim = c(-1, 1.5), ylim = c(-1, 1), asp = 1)
-text(x = life_mds$conf, labels = life_facets$Area, 
+text(x = life_mds$conf, labels = life_facets$Area,
   cex = 0.7, pos = 4)
   angularPartition(crd = life_mds$conf,
                    group = life_facets$Area)

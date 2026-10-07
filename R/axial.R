@@ -22,7 +22,7 @@
 #' [axialLines()] with `k = 2`, in contrast, searches the full
 #' space for the axial partitions with minimal misclassifications;
 #' it may differ from `axialLine()`.
-#' Use it when you want the empirically best linear separator; 
+#' Use it when you want the empirically best linear separator;
 #' use `axialLine()` when you want the classical LDA classifier.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns (x, y).
@@ -71,7 +71,7 @@ axialLine <- function(crd,
     if (dim(crd)[2] != 2)            stop("Coordinates must have 2 columns!")
     if (nrow(crd) != length(group))  stop("nrow(crd) must equal length(group)!")
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
-    
+
     group <- droplevels(as.factor(group))
     if (nlevels(group) != 2) stop("group must have exactly 2 levels!")
     if (nrow(crd) < 2L)      stop("Number of points must be >= number of groups!")
@@ -91,7 +91,7 @@ axialLine <- function(crd,
     midpoint <- (mu1 + mu2) / 2
 
     vertical <- abs(w[2]) < 1e-10
-    
+
     if (vertical) {
         slope     <- Inf
         intercept <- midpoint[1]
@@ -177,7 +177,7 @@ axialLine <- function(crd,
 #' (cuts) are searched to minimise empirical misclassification.
 #'
 #' A brute-force search over a grid of `n_angles` and all `C(n-1, k-1)`
-#' cuts of n points into k groups finds the `(angle, cuts)` combination 
+#' cuts of n points into k groups finds the `(angle, cuts)` combination
 #' with lowest total misclassification.
 #' Tie-breaker: among configurations with the same misclass count, the one
 #' with the largest minimum margin (perpendicular distance from a cut line
@@ -185,7 +185,7 @@ axialLine <- function(crd,
 #'
 #' For `k = 2`, `axialLines()` can differ from [axialLine()].
 #'
-#' Vertical-line guard: when the separators are vertical, `slope` 
+#' Vertical-line guard: when the separators are vertical, `slope`
 #' is returned as `Inf` and `intercepts` carry the x-positions of the lines.
 #'
 #' @param crd Numeric matrix or data frame with exactly 2 columns.
@@ -246,7 +246,7 @@ axialLines <- function(crd,
     if (nrow(crd) != length(group)) stop("nrow(crd) must equal length(group)!")
     if (n_angles < 1L)         stop("n_angles must be >= 1!")
     if (!is.numeric(as.matrix(crd))) stop("Coordinate data must be numeric!")
-    
+
     group <- droplevels(as.factor(group))
     k     <- nlevels(group)
     if (k < 2)         stop("group must have at least 2 levels!")
@@ -257,13 +257,13 @@ axialLines <- function(crd,
     lev     <- levels(group)
     grp_int <- as.integer(group)
     n_pts   <- nrow(coords)
-    
+
     # cut_mat: cut-position combinations (independent of angle). Column ci
     # gives the k - 1 sorted positions after which a cut falls, so all k
     # regions are non-empty.
     cut_mat <- combn(n_pts - 1L, k - 1L)
     M       <- ncol(cut_mat)
-    
+
     # ---- Candidate angles to check (0, pi) ----
     # Grid in [0, pi) plus LDA's LD1 direction as a high-quality seed.
     lda_fit   <- lda(coords, grouping = group)
@@ -307,7 +307,7 @@ axialLines <- function(crd,
         pt_proj <- as.numeric(coords %*% w_t)
         ord     <- order(pt_proj)
         s_proj  <- pt_proj[ord]
-        
+
         # group sequence along the current theta line:
         s_grp  <- grp_int[ord]
 
@@ -348,7 +348,7 @@ axialLines <- function(crd,
         }
     }
 
-    
+
     # ---- Convert cuts to line geometry ----
     w        <- c(cos(best_theta), sin(best_theta))
     vertical <- abs(w[2]) < 1e-10

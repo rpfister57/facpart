@@ -70,8 +70,7 @@ ellipseInConfig <- function(crd,
     if (mid == "centroid") {
         centroid_x <- mean(coords[ , 1])
         centroid_y <- mean(coords[ , 2])
-    }
-    else {
+    } else {
         centroid_x <- 0
         centroid_y <- 0
     }

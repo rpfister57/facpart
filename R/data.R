@@ -1,9 +1,9 @@
 #' Guttman 1965 Intelligence Data
-#' 
+#'
 #' Data contain coordinates for 21 items from a MDS analysis of
 #' the original correlation matrix. For each item, the facet
 #' assignment is provided. Data are based on the smacof package.
-#' 
+#'
 #' @format
 #' A data frame with 21 observations and 3 variables:
 #' \describe{
@@ -14,20 +14,20 @@
 #' @examples
 #' plot(guttman65mds[ , 2:3], type = "n", asp = 1)
 #' text(guttman65mds[ , 2:3], labels = guttman65mds$gfacets, cex = 0.6)
-#' 
+#'
 #' # check for radial partitions
-#' ellipses_out <- radialEllipses(crd = guttman65mds[ , 2:3], 
+#' ellipses_out <- radialEllipses(crd = guttman65mds[ , 2:3],
 #'    group = guttman65mds$gfacets, fill = TRUE, add = TRUE)
 "guttman65mds"
 
 
 #' Guttman 1991 Intellligence Data
-#' 
-#' Data are based on the smacof package and on the original article by 
-#' Guttman and Levy (1991). The 12 test items are actually 12 subtests 
-#' from the WISC-R, and the sample are 2200 U.S. children 
+#'
+#' Data are based on the smacof package and on the original article by
+#' Guttman and Levy (1991). The 12 test items are actually 12 subtests
+#' from the WISC-R, and the sample are 2200 U.S. children
 #' aged 6.5 to 16.5 years (see Guttman & Levy, 1991).
-#' 
+#'
 #' @format
 #' A list with three components: gutt91_cor, gutt91_dis, gutt91_df:
 #' \describe{
@@ -53,17 +53,17 @@
 #' plot(gutt91_mds, main = "Guttman Levy 1991 Intelligence")
 #' # Angular partition of Modality
 #' angularPartition(crd = gutt91_mds$conf, group = Facets$Modality, add = FALSE)
-#' 
+#'
 "gutt91"
 
 
 #' BIS Intelligence Data
-#' 
-#' Data are based on analyses in: 
+#'
+#' Data are based on analyses in:
 #' Pfister, H.-R., & Beauducel, A. (1993). Data contain the correlation
 #' matrix among 12 intelligence tests, and the corresponding 2-facets
 #' assignment.
-#' 
+#'
 #' @format
 #' A list with two components: Bis1_cor is a correlation matrix, and
 #' Bis1_facets are the facet assignments. The correlations are among
@@ -85,10 +85,10 @@
 #' and content facets: A facet analysis of the Berlin model
 #' of intelligence structure BIS. Paper presented at the Fourth
 #' International Facet Theory Conference, Prague, 1993.
-#' 
+#'
 #' Pfister, H.-R., & Jäger, A. O. (1992). Topografische Analysen zum
 #' Berliner Intelligenzstrukturmodell BIS. Diagnostica, 38(2), 91-115.
-#' 
+#'
 #' Süß, H.-M. (2015). The construct validity of the Berlin Intelligence
 #' Structure Model (BIS). In: Roazzi, A., de Souza, B.C., Bilsky, W. (ed.):
 #' Facet theory. Recife: Editora UFPE (p. 123-138).
@@ -101,18 +101,18 @@
 #' Bis1Cells_mds
 #' plot(Bis1Cells_mds, main = "BIS 1, Cells", las = 1, asp = 1)
 #' Bis1Cells_mds_ax <- axialLines(crd = Bis1Cells_mds$conf,
-#'    group = Bis1Facets$Operation, 
+#'    group = Bis1Facets$Operation,
 #'    col = "steelblue", fill = TRUE)
 #' Bis1Cells_mds_ax$misclass
-#' 
+#'
 "BIS1"
 
 #' Life Satisfaction Data
-#' 
+#'
 #' Data are from Levy (1976; see Borg & Groenen, 2005). Life is a list
 #' containing the correlations among fifteen items asking about life
 #' satisfaction, and the corresponding assignments to two facets.
-#' 
+#'
 #' @format
 #' A list with two components: life is a correlation matrix of
 #' fifteen items from a survy asking about different areas of life
@@ -126,9 +126,9 @@
 #'   \item{Area}{The Area facet with 8 elements}
 #' }
 #' @references
-#' Borg, I., & Groenen, P. J. F. (2005) (2nd ed.). Modern multidimensional 
+#' Borg, I., & Groenen, P. J. F. (2005) (2nd ed.). Modern multidimensional
 #' scaling. Theory and applications. New York: Springer.
-#' 
+#'
 #' Levy, S. (1976). Use of the mapping sentence for coordinating theory
 #' and research: A cross-cultural example. Quality and Quantity, 10, 117-125.
 #' @examples
@@ -140,7 +140,7 @@
 #' life_mds
 #' plot(x = life_mds$conf, pch = 19,
 #'   xlim = c(-1, 1.5), ylim = c(-1, 1), asp = 1)
-#' text(x = life_mds$conf, labels = life_facets$Area, 
+#' text(x = life_mds$conf, labels = life_facets$Area,
 #'   cex = 0.7, pos = 4)
 #'   angularPartition(crd = life_mds$conf,
 #'                    group = life_facets$Area)

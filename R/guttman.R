@@ -17,7 +17,7 @@
 #'   are tied (zero absolute differences).
 #'
 #' @export
-#' 
+#'
 #' @examples
 #' mu2(c(1, 2, 3, 4), c(2, 3, 1, 4))
 mu2 <- function(x, y) {
@@ -43,7 +43,7 @@ mu2 <- function(x, y) {
 #'
 #' @param df A data frame (or coercible object) with numeric columns.
 #' @param as_dist If `TRUE`, return a lower-triangular [`dist`] object of
-#'   `1 - mu2` values. If `FALSE` (default), return a full 
+#'   `1 - mu2` values. If `FALSE` (default), return a full
 #'   symmetric correlation matrix.
 #'
 #' @return A square numeric matrix with `dimnames` set to the column names of
@@ -51,7 +51,7 @@ mu2 <- function(x, y) {
 #'   to the column names (when `as_dist = TRUE`).
 #'
 #' @export
-#' 
+#'
 #' @examples
 #' df <- data.frame(a = 1:5, b = c(2, 3, 1, 5, 4), c = 5:1)
 #' mu2df(df)
