@@ -78,7 +78,7 @@ Bis1Cells_mds
 #> 
 plot(Bis1Cells_mds, main = "BIS 1, Cells", las = 1, asp = 1)
 Bis1Cells_mds_ax <- axialLines(crd = Bis1Cells_mds$conf,
-   group = Bis1Facets$Operation, 
+   group = Bis1Facets$Operation,
    col = "steelblue", fill = TRUE)
 
 Bis1Cells_mds_ax$misclass
