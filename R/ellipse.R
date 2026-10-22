@@ -5,15 +5,16 @@
 
 #' Fit and draw an ellipse around a 2D configuration
 #'
+#' @description
 #' Three fitting strategies are available:
 #'
-#' - `"maxdist"` — covariance-based ellipse, scaled so all points lie inside
+#' - `"maxdist"`: covariance-based ellipse, scaled so all points lie inside
 #'   with a 5% buffer. Semi-axes are `sqrt(eigenvalue) * k`, where `k` is the
 #'   maximum Mahalanobis distance from the center.
-#' - `"bestfit"` — minimises the sum of squared normalised elliptic distances
+#' - `"bestfit"`: minimises the sum of squared normalised elliptic distances
 #'   `sqrt((u/a)^2 + (v/b)^2) - 1` via BFGS, starting from the covariance
 #'   ellipse.
-#' - `"minbound"` — minimum-area enclosing ellipse via [cluster::ellipsoidhull()].
+#' - `"minbound"`: minimum-area enclosing ellipse via [cluster::ellipsoidhull()].
 #'
 #' The ellipse is drawn on the currently active plot window.
 #'
@@ -79,18 +80,21 @@ ellipseInConfig <- function(crd,
 
     if (!add) plot(coords, asp = 1)
 
-    # covariance structure of the point cloud (starting geometry)
+    # covariance structure of the point cloud
+    # axes and rotation can be derived from principal components
+    # or eigenvalues and eigenvectors
     S     <- cov(coords)
     eig   <- eigen(S)   # eigenvalues in decreasing order
     S_inv <- solve(S)   # inverse of S
 
-    # angle of the major axis (eigenvector of largest eigenvalue),
+    # angle of the major axis PC1 (eigenvector of largest eigenvalue),
     #   in radians
     eig_angle <- atan2(eig$vectors[2, 1], eig$vectors[1, 1])
 
     # Mahalanobis distances from center for all points
-    centered <- sweep(coords, 2, center)
-    mah_dist <- sqrt(rowSums((centered %*% S_inv) * centered))
+    mah_dist <- sqrt(mahalanobis(coords, center, cov = S))
+    # centered <- sweep(coords, 2, center)
+    # mah_dist <- sqrt(rowSums((centered %*% S_inv) * centered))
 
 
     # == Maximum distance ellipse "maxdist" ==
@@ -100,9 +104,11 @@ ellipseInConfig <- function(crd,
         a   <- sqrt(eig$values[1]) * k
         b   <- sqrt(eig$values[2]) * k
 
-        draw.ellipse(centroid_x, centroid_y, a = a, b = b,
-                     angle = eig_angle * 180 / pi,
-                     border = col, col = fill, lwd = lwd, lty = lty)
+        draw.ellipse(centroid_x, centroid_y, 
+                     a = a, b = b,
+                     angle = eig_angle * 180 / pi,  # rad -> deg
+                     border = col, col = fill, 
+                     lwd = lwd, lty = lty)
 
         if (output) outList <- list(cx = centroid_x, cy = centroid_y,
                                     a = a, b = b, angle = eig_angle)
@@ -142,12 +148,16 @@ ellipseInConfig <- function(crd,
         fitted_b   <- abs(fit_result$par[4])
         fitted_ang <- fit_result$par[5]
 
-        draw.ellipse(fitted_cx, fitted_cy, a = fitted_a, b = fitted_b,
+        draw.ellipse(fitted_cx, fitted_cy, 
+                     a = fitted_a, b = fitted_b,
                      angle = fitted_ang * 180 / pi,
-                     border = col, col = fill, lwd = lwd, lty = lty)
+                     border = col, col = fill, 
+                     lwd = lwd, lty = lty)
 
-        if (output) outList <- list(cx = fitted_cx, cy = fitted_cy,
-                                    a = fitted_a, b = fitted_b,
+        if (output) outList <- list(cx = fitted_cx, 
+                                    cy = fitted_cy,
+                                    a = fitted_a, 
+                                    b = fitted_b,
                                     angle = fitted_ang)
     }
 

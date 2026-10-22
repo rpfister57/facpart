@@ -36,6 +36,7 @@ importFrom(plotrix,
 importFrom(stats,
   as.dist,
   cov,
+  mahalanobis,
   optim,
   predict
 )

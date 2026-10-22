@@ -25,6 +25,6 @@
 #' @importFrom grDevices adjustcolor hcl.colors
 #' @importFrom graphics abline par points polygon polypath segments
 #' @importFrom plotrix draw.circle draw.ellipse
-#' @importFrom stats as.dist cov optim predict
+#' @importFrom stats as.dist cov mahalanobis optim predict
 #' @importFrom utils combn
 "_PACKAGE"

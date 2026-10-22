@@ -48,16 +48,14 @@ If \code{output = TRUE}, a list with elements \code{cx}, \code{cy}, \code{a}, \c
 }
 \description{
 Three fitting strategies are available:
-}
-\details{
 \itemize{
-\item \code{"maxdist"} — covariance-based ellipse, scaled so all points lie inside
+\item \code{"maxdist"}: covariance-based ellipse, scaled so all points lie inside
 with a 5\% buffer. Semi-axes are \code{sqrt(eigenvalue) * k}, where \code{k} is the
 maximum Mahalanobis distance from the center.
-\item \code{"bestfit"} — minimises the sum of squared normalised elliptic distances
+\item \code{"bestfit"}: minimises the sum of squared normalised elliptic distances
 \code{sqrt((u/a)^2 + (v/b)^2) - 1} via BFGS, starting from the covariance
 ellipse.
-\item \code{"minbound"} — minimum-area enclosing ellipse via \code{\link[cluster:ellipsoidhull]{cluster::ellipsoidhull()}}.
+\item \code{"minbound"}: minimum-area enclosing ellipse via \code{\link[cluster:ellipsoidhull]{cluster::ellipsoidhull()}}.
 }
 
 The ellipse is drawn on the currently active plot window.
