@@ -2,6 +2,19 @@
 
 Three fitting strategies are available:
 
+- `"maxdist"`: covariance-based ellipse, scaled so all points lie inside
+  with a 5% buffer. Semi-axes are `sqrt(eigenvalue) * k`, where `k` is
+  the maximum Mahalanobis distance from the center.
+
+- `"bestfit"`: minimises the sum of squared normalised elliptic
+  distances `sqrt((u/a)^2 + (v/b)^2) - 1` via BFGS, starting from the
+  covariance ellipse.
+
+- `"minbound"`: minimum-area enclosing ellipse via
+  [`cluster::ellipsoidhull()`](https://rdrr.io/pkg/cluster/man/ellipsoidhull.html).
+
+The ellipse is drawn on the currently active plot window.
+
 ## Usage
 
 ``` r
@@ -68,21 +81,6 @@ ellipseInConfig(
 
 If `output = TRUE`, a list with elements `cx`, `cy`, `a`, `b`, `angle`
 (in radians).
-
-## Details
-
-- `"maxdist"` — covariance-based ellipse, scaled so all points lie
-  inside with a 5% buffer. Semi-axes are `sqrt(eigenvalue) * k`, where
-  `k` is the maximum Mahalanobis distance from the center.
-
-- `"bestfit"` — minimises the sum of squared normalised elliptic
-  distances `sqrt((u/a)^2 + (v/b)^2) - 1` via BFGS, starting from the
-  covariance ellipse.
-
-- `"minbound"` — minimum-area enclosing ellipse via
-  [`cluster::ellipsoidhull()`](https://rdrr.io/pkg/cluster/man/ellipsoidhull.html).
-
-The ellipse is drawn on the currently active plot window.
 
 ## Examples
 
