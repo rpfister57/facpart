@@ -527,32 +527,19 @@ Kor <- gutt91$gutt91_cor
 Facets <- gutt91$gutt91_df
 
 Facets
-#>                                 items Material  Modality     Rule         X1
-#> Information               Information     Oral    verbal applFact -0.2536557
-#> Similarities             Similarities     Oral    verbal    infer -0.1137925
-#> Arithmetic                 Arithmetic     Oral numerical applFact -0.4410249
-#> Vocabulary                 Vocabulary     Oral    verbal applFact -0.2341282
-#> Comprehension           Comprehension     Oral    verbal    infer -0.1887449
-#> DigitSpan                   DigitSpan     Oral numerical  applSTM -0.8928474
-#> PictureCompletion   PictureCompletion     Oral   figural applFact  0.1978224
-#> PictureArrangement PictureArrangement   Manual   figural applFact  0.3642192
-#> BlockDesign               BlockDesign   Manual   figural applFact  0.2707838
-#> ObjectAssembly         ObjectAssembly   Manual   figural applFact  0.5647150
-#> Coding                         Coding    Paper   figural  applSTM -0.2123476
-#> Mazes                           Mazes    Paper   figural  applSTM  0.9390008
-#>                             X2         D1          D2           D3
-#> Information        -0.15190509 -0.2607345 -0.14330818  0.022241000
-#> Similarities       -0.21840762 -0.1254660 -0.27272665  0.035737532
-#> Arithmetic          0.16780236 -0.4232661  0.10074101  0.310579184
-#> Vocabulary         -0.12571647 -0.2623318 -0.13834063 -0.012430979
-#> Comprehension      -0.41232278 -0.2455010 -0.32650735 -0.184040673
-#> DigitSpan           0.49987343 -0.7355785  0.63826052  0.363434120
-#> PictureCompletion  -0.68657756  0.3135845 -0.53410786  0.248713125
-#> PictureArrangement -0.47923328  0.2842056 -0.23684569 -0.567151304
-#> BlockDesign         0.06385235  0.2830315 -0.04178309  0.083479149
-#> ObjectAssembly     -0.18450416  0.6240344 -0.29125210  0.009257765
-#> Coding              1.18363379 -0.2406658  0.82913448 -0.701789299
-#> Mazes               0.34350503  0.7886878  0.41673555  0.391970379
+#>                 items    Modality Material        Rule
+#> 1         Information      verbal     Oral application
+#> 2        Similarities      verbal     Oral   inference
+#> 3          Arithmetic   numerical     Oral application
+#> 4          Vocabulary      verbal     Oral application
+#> 5       Comprehension      verbal     Oral   inference
+#> 6           DigitSpan   numerical     Oral    learning
+#> 7   PictureCompletion geometrical     Oral application
+#> 8  PictureArrangement geometrical   Manual application
+#> 9         BlockDesign geometrical   Manual application
+#> 10     ObjectAssembly geometrical   Manual application
+#> 11             Coding geometrical    Paper    learning
+#> 12              Mazes geometrical    Paper    learning
 Kor
 #>                    Information Similarities Arithmetic Vocabulary Comprehension
 #> Information               1.00         0.62       0.54       0.55          0.42
@@ -760,7 +747,7 @@ axialLines(crd = gutt91_mds$conf,
 #>  [1] 2 2 2 2 1 1 2 2 2 2 3 3
 #> 
 #> $majority
-#> [1] "infer"    "applFact" "applSTM" 
+#> [1] "inference"   "application" "learning"   
 #> 
 #> $pcoords
 #>                            D1          D2
@@ -778,17 +765,17 @@ axialLines(crd = gutt91_mds$conf,
 #> Mazes               0.9390008  0.34350503
 #> 
 #> $pgroup
-#>  [1] applFact infer    applFact applFact infer    applSTM  applFact applFact
-#>  [9] applFact applFact applSTM  applSTM 
-#> Levels: applFact applSTM infer
+#>  [1] application inference   application application inference   learning   
+#>  [7] application application application application learning    learning   
+#> Levels: inference application learning
 #> 
 #> $misclass
 #> [1] 2
 #> 
 #> $misclass_points
-#>                       x          y   label
-#> Similarities -0.1137925 -0.2184076   infer
-#> DigitSpan    -0.8928474  0.4998734 applSTM
+#>                       x          y     label
+#> Similarities -0.1137925 -0.2184076 inference
+#> DigitSpan    -0.8928474  0.4998734  learning
 
 radialCircles(crd = gutt91_mds$conf,
                  group = Facets$Rule)
@@ -808,7 +795,7 @@ radialCircles(crd = gutt91_mds$conf,
 #>  [1] 2 1 2 2 1 3 2 2 2 2 3 3
 #> 
 #> $majority
-#> [1] "infer"    "applFact" "applSTM" 
+#> [1] "inference"   "application" "learning"   
 #> 
 #> $pcoords
 #>                            D1          D2
@@ -826,9 +813,9 @@ radialCircles(crd = gutt91_mds$conf,
 #> Mazes               0.9390008  0.34350503
 #> 
 #> $pgroup
-#>  [1] applFact infer    applFact applFact infer    applSTM  applFact applFact
-#>  [9] applFact applFact applSTM  applSTM 
-#> Levels: applFact applSTM infer
+#>  [1] application inference   application application inference   learning   
+#>  [7] application application application application learning    learning   
+#> Levels: inference application learning
 #> 
 #> $misclass
 #> [1] 0
@@ -865,7 +852,7 @@ radialEllipses(crd = gutt91_mds$conf,
     #>  [1] 2 1 2 2 1 3 2 2 2 2 3 3
     #> 
     #> $majority
-    #> [1] "infer"    "applFact" "applSTM" 
+    #> [1] "inference"   "application" "learning"   
     #> 
     #> $pcoords
     #>                            D1          D2
@@ -883,9 +870,9 @@ radialEllipses(crd = gutt91_mds$conf,
     #> Mazes               0.9390008  0.34350503
     #> 
     #> $pgroup
-    #>  [1] applFact infer    applFact applFact infer    applSTM  applFact applFact
-    #>  [9] applFact applFact applSTM  applSTM 
-    #> Levels: applFact applSTM infer
+    #>  [1] application inference   application application inference   learning   
+    #>  [7] application application application application learning    learning   
+    #> Levels: inference application learning
     #> 
     #> $misclass
     #> $misclass$n

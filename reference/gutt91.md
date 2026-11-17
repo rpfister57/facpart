@@ -17,7 +17,7 @@ A list with three components: gutt91_cor, gutt91_dis, gutt91_df:
 
 - gutt91_cor:
 
-  A correlation matrix of 12 intelligence items
+  A correlation matrix of 12 intelligence test items
 
 - gutt91_dis:
 
@@ -25,11 +25,11 @@ A list with three components: gutt91_cor, gutt91_dis, gutt91_df:
 
 - gutt91_df:
 
-  A data frame with 12 rows and 9 variables:
+  A data frame with 12 rows and 4 variables:
 
 - items:
 
-  The labels for the tests
+  The labels for the 12 tests
 
 - Material:
 
@@ -37,19 +37,11 @@ A list with three components: gutt91_cor, gutt91_dis, gutt91_df:
 
 - Modality:
 
-  The assignment of the Modality facet (verbal, numerical, figural)
+  The assignment of the Modality facet (verbal, numerical, geometrical)
 
 - Rule:
 
-  The assignment of the Rule Task facet (infer, applFact, applSTM)
-
-- X1, X2:
-
-  Coordinates from a 2-dimensional ordinal MDS
-
-- D1, D2, D3:
-
-  Coordinates from a 3-dimensional ordinal MDS
+  The assignment of the Rule facet (inference, application, learning)
 
 ## Source
 
@@ -87,7 +79,7 @@ angularPartition(crd = gutt91_mds$conf, group = Facets$Modality, add = FALSE)
 #>  [1] 2 2 1 2 2 1 3 3 3 3 3 3
 #> 
 #> $majority
-#> [1] "numerical" "verbal"    "figural"  
+#> [1] "numerical"   "verbal"      "geometrical"
 #> 
 #> $center
 #> [1] 0 0
@@ -116,9 +108,9 @@ angularPartition(crd = gutt91_mds$conf, group = Facets$Modality, add = FALSE)
 #> Mazes               0.9390008  0.34350503
 #> 
 #> $pgroup
-#>  [1] verbal    verbal    numerical verbal    verbal    numerical figural  
-#>  [8] figural   figural   figural   figural   figural  
-#> Levels: verbal numerical figural
+#>  [1] verbal      verbal      numerical   verbal      verbal      numerical  
+#>  [7] geometrical geometrical geometrical geometrical geometrical geometrical
+#> Levels: verbal numerical geometrical
 #> 
 #> $misclass
 #> [1] 0
