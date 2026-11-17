@@ -31,15 +31,13 @@
 #' @format
 #' A list with three components: gutt91_cor, gutt91_dis, gutt91_df:
 #' \describe{
-#'   \item{gutt91_cor}{A correlation matrix of 12 intelligence items}
+#'   \item{gutt91_cor}{A correlation matrix of 12 intelligence test items}
 #'   \item{gutt91_dis}{A distance matrix derived from the correlation matrix}
-#'   \item{gutt91_df}{A data frame with 12 rows and 9 variables:}
-#'   \item{items}{The labels for the tests}
+#'   \item{gutt91_df}{A data frame with 12 rows and 4 variables:}
+#'   \item{items}{The labels for the 12 tests}
 #'   \item{Material}{The assignment of the Material facet (oral, manual, paper)}
-#'   \item{Modality}{The assignment of the Modality facet (verbal, numerical, figural)}
-#'   \item{Rule}{The assignment of the Rule Task facet (infer, applFact, applSTM)}
-#'   \item{X1, X2}{Coordinates from a 2-dimensional ordinal MDS}
-#'   \item{D1, D2, D3}{Coordinates from a 3-dimensional ordinal MDS}
+#'   \item{Modality}{The assignment of the Modality facet (verbal, numerical, geometrical)}
+#'   \item{Rule}{The assignment of the Rule facet (inference, application, learning)}
 #' }
 #' @source smacof package, data(Guttman1991)
 #' @references
