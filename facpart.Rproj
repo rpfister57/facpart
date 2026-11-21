@@ -20,5 +20,5 @@ PackageInstallArgs: --no-multiarch --with-keep.source
 PackageRoxygenize: rd,collate,namespace
 
 PythonType: system
-PythonVersion: 3.14.3
+PythonVersion: 3.14.2
 PythonPath: /Library/Frameworks/Python.framework/Versions/3.14/bin/python3.14
